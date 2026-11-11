@@ -13,6 +13,13 @@ namespace HunterSystem.Simulation
 
         public AttackDefinition LightAttack { get; set; } = new AttackDefinition();
 
+        public AttackDefinition HeavyAttack { get; set; } = new AttackDefinition
+        {
+            Damage = 25, Range = 2.5f, ArcDegrees = 90f, WindupSeconds = 0.35f, CooldownSeconds = 1f,
+        };
+
+        public SoftLockOnDefinition SoftLockOn { get; set; } = new SoftLockOnDefinition();
+
         public DodgeDefinition Dodge { get; set; } = new DodgeDefinition();
     }
 }

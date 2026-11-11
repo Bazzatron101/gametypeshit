@@ -23,6 +23,18 @@ namespace HunterSystem.Game
         [SerializeField, Range(1f, 360f)] private float lightAttackArcDegrees = 120f;
         [SerializeField, Min(0f)] private float lightAttackCooldownSeconds = 0.4f;
 
+        [Header("Heavy attack")]
+        [SerializeField, Min(0)] private int heavyAttackDamage = 25;
+        [SerializeField, Min(0f)] private float heavyAttackRange = 2.5f;
+        [SerializeField, Range(1f, 360f)] private float heavyAttackArcDegrees = 90f;
+        [SerializeField, Min(0f)] private float heavyAttackWindupSeconds = 0.35f;
+        [SerializeField, Min(0f)] private float heavyAttackCooldownSeconds = 1f;
+
+        [Header("Soft lock-on")]
+        [SerializeField] private bool softLockOnEnabled = true;
+        [SerializeField, Min(0f)] private float softLockOnRange = 4f;
+        [SerializeField, Range(1f, 360f)] private float softLockOnConeDegrees = 90f;
+
         [Header("Dodge")]
         [SerializeField, Min(0f)] private float dodgeDistance = 3f;
         [SerializeField, Min(0f)] private float dodgeDurationSeconds = 0.25f;
@@ -62,6 +74,20 @@ namespace HunterSystem.Game
                     Range = lightAttackRange,
                     ArcDegrees = lightAttackArcDegrees,
                     CooldownSeconds = lightAttackCooldownSeconds,
+                },
+                HeavyAttack = new AttackDefinition
+                {
+                    Damage = heavyAttackDamage,
+                    Range = heavyAttackRange,
+                    ArcDegrees = heavyAttackArcDegrees,
+                    WindupSeconds = heavyAttackWindupSeconds,
+                    CooldownSeconds = heavyAttackCooldownSeconds,
+                },
+                SoftLockOn = new SoftLockOnDefinition
+                {
+                    Enabled = softLockOnEnabled,
+                    Range = softLockOnRange,
+                    ConeDegrees = softLockOnConeDegrees,
                 },
             });
             _clock = new FixedTimestepClock(tickRate);

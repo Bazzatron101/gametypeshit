@@ -39,6 +39,17 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void HeavyAttackPressIsKeptUntilATickTakesItThenGivenToThatTickOnly()
+        {
+            var buffer = new PlayerCommandBuffer();
+            buffer.Add(new PlayerCommand(0f, 0f, heavyAttack: true));
+            buffer.Add(PlayerCommand.None);
+
+            Assert.That(buffer.TakeForTick().HeavyAttack, Is.True);
+            Assert.That(buffer.TakeForTick().HeavyAttack, Is.False);
+        }
+
+        [Test]
         public void MovementIsTheLatestSampleAndHoldsForEveryTick()
         {
             var buffer = new PlayerCommandBuffer();

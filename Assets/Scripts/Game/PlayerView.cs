@@ -19,10 +19,13 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Shown briefly when this player attacks")] private GameObject swingMarker;
         [SerializeField, Tooltip("Flashed on hit, squashed on dodge, laid down on defeat")] private Renderer body;
         [SerializeField] private Color hitFlashColor = new Color(1f, 0.25f, 0.25f);
+        [SerializeField, Tooltip("Body tint while winding up a heavy attack")] private Color windupColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField, Tooltip("Swing marker scale for a heavy attack, relative to a light one")] private float heavySwingScale = 1.6f;
 
         private SimulationRunner _runner;
         private readonly BodyTint _tint = new BodyTint();
         private float _swingUntil;
+        private Vector3 _swingScale;
         private Vector3 _bodyScale;
         private Vector3 _bodyPosition;
 
@@ -32,7 +35,11 @@ namespace HunterSystem.Game
         private void Start()
         {
             _runner = FindAnyObjectByType<SimulationRunner>();
-            if (swingMarker != null) swingMarker.SetActive(false);
+            if (swingMarker != null)
+            {
+                _swingScale = swingMarker.transform.localScale;
+                swingMarker.SetActive(false);
+            }
             if (body != null)
             {
                 _bodyScale = body.transform.localScale;
@@ -50,6 +57,10 @@ namespace HunterSystem.Game
                 {
                     case AttackPerformed swing when swing.Player == PlayerId:
                         _swingUntil = Time.time + SwingShowSeconds;
+                        if (swingMarker != null)
+                            swingMarker.transform.localScale = swing.Kind == AttackKind.Heavy
+                                ? Vector3.Scale(_swingScale, new Vector3(heavySwingScale, 1f, heavySwingScale))
+                                : _swingScale;
                         break;
                     case PlayerDamaged hit when hit.Target == PlayerId:
                         _tint.Flash(hitFlashColor, HitFlashSeconds);
@@ -80,7 +91,7 @@ namespace HunterSystem.Game
                 t.localScale = state.IsDodging ? Vector3.Scale(_bodyScale, new Vector3(1.15f, 0.55f, 1.15f)) : _bodyScale;
             }
 
-            _tint.Apply(body);
+            _tint.Apply(body, state.IsWindingUp ? windupColor : (Color?)null);
         }
     }
 }

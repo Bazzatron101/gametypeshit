@@ -9,12 +9,32 @@ namespace HunterSystem.Simulation
         protected SimulationEvent(int tick) => Tick = tick;
     }
 
-    /// <summary>A player swung a light attack, whether or not it hit anything.</summary>
+    /// <summary>A player's attack swung (landed its hit frame), whether or not it hit anything.</summary>
     public sealed class AttackPerformed : SimulationEvent
     {
         public PlayerId Player { get; }
+        public AttackKind Kind { get; }
 
-        public AttackPerformed(int tick, PlayerId player) : base(tick) => Player = player;
+        public AttackPerformed(int tick, PlayerId player, AttackKind kind) : base(tick)
+        {
+            Player = player;
+            Kind = kind;
+        }
+    }
+
+    /// <summary>A player started an attack with a windup (the heavy attack). It swings on <see cref="LandsAtTick"/> unless cancelled.</summary>
+    public sealed class AttackWindupStarted : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public AttackKind Kind { get; }
+        public int LandsAtTick { get; }
+
+        public AttackWindupStarted(int tick, PlayerId player, AttackKind kind, int landsAtTick) : base(tick)
+        {
+            Player = player;
+            Kind = kind;
+            LandsAtTick = landsAtTick;
+        }
     }
 
     public sealed class DamageDealt : SimulationEvent

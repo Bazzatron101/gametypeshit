@@ -21,7 +21,13 @@ namespace HunterSystem.Simulation
             public Vec3 Facing;
             public int Health;
             public PlayerLifeState LifeState;
-            public int AttackReadyAtTick;
+
+            /// <summary>Indexed by <see cref="AttackKind"/>: each attack has its own cooldown.</summary>
+            public readonly int[] AttackReadyAtTick = new int[AttackKindCount];
+
+            /// <summary>The attack being wound up; only meaningful while <see cref="PendingAttackLandsAtTick"/> is not 0.</summary>
+            public AttackKind PendingAttack;
+            public int PendingAttackLandsAtTick;
 
             // Tick bounds below are exclusive ends: "until tick N" means up to and including N - 1.
             public int DodgeReadyAtTick;
@@ -32,6 +38,7 @@ namespace HunterSystem.Simulation
             public bool IsAlive => LifeState == PlayerLifeState.Alive;
             public bool IsDodging(int tick) => IsAlive && tick < DodgeEndsAtTick;
             public bool IsInvulnerable(int tick) => IsAlive && tick < InvulnerableUntilTick;
+            public bool IsWindingUp => IsAlive && PendingAttackLandsAtTick != 0;
 
             /// <summary>
             /// The one place player health goes down. Returns the health actually removed; sets
@@ -63,8 +70,20 @@ namespace HunterSystem.Simulation
         }
 
         private readonly SimulationConfig _config;
-        private readonly int _lightAttackCooldownTicks;
-        private readonly float _lightAttackMinCos;
+        private static readonly int AttackKindCount = Enum.GetValues(typeof(AttackKind)).Length;
+
+        /// <summary>An attack definition with its seconds and degrees resolved once into ticks and cosines.</summary>
+        private sealed class ResolvedAttack
+        {
+            public AttackKind Kind;
+            public AttackDefinition Definition;
+            public int WindupTicks;
+            public int CooldownTicks;
+            public float MinCos;
+        }
+
+        private readonly ResolvedAttack[] _attacks;
+        private readonly float _softLockMinCos;
         private readonly int _dodgeTicks;
         private readonly int _dodgeInvulnerableTicks;
         private readonly int _dodgeCooldownTicks;
@@ -84,10 +103,14 @@ namespace HunterSystem.Simulation
             _config = config ?? throw new ArgumentNullException(nameof(config));
             if (config.TickRate <= 0) throw new ArgumentOutOfRangeException(nameof(config), "TickRate must be positive.");
             if (config.LightAttack == null) throw new ArgumentException("LightAttack must be set.", nameof(config));
+            if (config.HeavyAttack == null) throw new ArgumentException("HeavyAttack must be set.", nameof(config));
+            if (config.SoftLockOn == null) throw new ArgumentException("SoftLockOn must be set.", nameof(config));
             if (config.Dodge == null) throw new ArgumentException("Dodge must be set.", nameof(config));
             TickDelta = 1f / config.TickRate;
-            _lightAttackCooldownTicks = SecondsToTicks(config.LightAttack.CooldownSeconds);
-            _lightAttackMinCos = MathF.Cos(config.LightAttack.ArcDegrees * 0.5f * MathF.PI / 180f);
+            _attacks = new ResolvedAttack[AttackKindCount];
+            _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
+            _attacks[(int)AttackKind.Heavy] = Resolve(AttackKind.Heavy, config.HeavyAttack);
+            _softLockMinCos = HalfAngleCos(config.SoftLockOn.ConeDegrees);
             _dodgeTicks = Math.Max(1, SecondsToTicks(config.Dodge.DurationSeconds));
             _dodgeInvulnerableTicks = SecondsToTicks(config.Dodge.InvulnerabilitySeconds);
             _dodgeCooldownTicks = SecondsToTicks(config.Dodge.CooldownSeconds);
@@ -121,7 +144,7 @@ namespace HunterSystem.Simulation
         {
             var p = FindPlayer(id);
             return new PlayerState(p.Id, p.Position, p.Facing, p.Health, _config.PlayerMaxHealth,
-                p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick));
+                p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -152,7 +175,8 @@ namespace HunterSystem.Simulation
         /// <summary>
         /// Advances one tick: players dodge, move and attack, then enemies act. Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
-        /// Players act first, so a dodge pressed on the tick a hit lands still counts.
+        /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
+        /// cancels an attack windup.
         /// </summary>
         public void Step(IReadOnlyDictionary<PlayerId, PlayerCommand> commands)
         {
@@ -176,8 +200,20 @@ namespace HunterSystem.Simulation
                     continue; // no steering or attacking mid-dash
                 }
 
+                if (player.IsWindingUp)
+                {
+                    if (tick >= player.PendingAttackLandsAtTick)
+                    {
+                        var pending = _attacks[(int)player.PendingAttack];
+                        player.PendingAttackLandsAtTick = 0;
+                        SwingAttack(player, pending, tick);
+                    }
+                    continue; // committed: no steering or new attacks until it swings
+                }
+
                 MovePlayer(player, cmd);
-                if (cmd.LightAttack) TryLightAttack(player, tick);
+                if (cmd.HeavyAttack) TryStartAttack(player, _attacks[(int)AttackKind.Heavy], tick);
+                else if (cmd.LightAttack) TryStartAttack(player, _attacks[(int)AttackKind.Light], tick);
             }
 
             foreach (var enemy in _enemies)
@@ -185,6 +221,18 @@ namespace HunterSystem.Simulation
 
             Tick = tick;
         }
+
+        private ResolvedAttack Resolve(AttackKind kind, AttackDefinition definition) => new ResolvedAttack
+        {
+            Kind = kind,
+            Definition = definition,
+            WindupTicks = SecondsToTicks(definition.WindupSeconds),
+            CooldownTicks = SecondsToTicks(definition.CooldownSeconds),
+            MinCos = HalfAngleCos(definition.ArcDegrees),
+        };
+
+        /// <summary>Cosine of half a cone's total width: a direction is inside if its cosine to the centre is at least this.</summary>
+        private static float HalfAngleCos(float coneDegrees) => MathF.Cos(coneDegrees * 0.5f * MathF.PI / 180f);
 
         private int SecondsToTicks(float seconds) =>
             // Round up to whole ticks, but not when float error leaves a hair over a whole number (0.1 * 60 = 6.0000005).
@@ -219,35 +267,89 @@ namespace HunterSystem.Simulation
             player.DodgeEndsAtTick = tick + _dodgeTicks;
             player.InvulnerableUntilTick = tick + _dodgeInvulnerableTicks;
             player.DodgeReadyAtTick = tick + _dodgeCooldownTicks;
+            player.PendingAttackLandsAtTick = 0; // a dodge cancels any attack windup
             _events.Add(new DodgePerformed(tick, player.Id));
         }
 
-        private void TryLightAttack(Player player, int tick)
+        /// <summary>
+        /// Starts an attack if it is off cooldown: soft lock-on turns the player first, then the
+        /// attack swings now (no windup) or is held until its windup ends.
+        /// </summary>
+        private void TryStartAttack(Player player, ResolvedAttack attack, int tick)
         {
-            if (tick < player.AttackReadyAtTick) return;
-            player.AttackReadyAtTick = tick + _lightAttackCooldownTicks;
-            _events.Add(new AttackPerformed(tick, player.Id));
+            if (tick < player.AttackReadyAtTick[(int)attack.Kind]) return;
+            player.AttackReadyAtTick[(int)attack.Kind] = tick + attack.CooldownTicks;
 
-            var attack = _config.LightAttack;
+            ApplySoftLockOn(player, attack);
+
+            if (attack.WindupTicks == 0)
+            {
+                SwingAttack(player, attack, tick);
+                return;
+            }
+
+            player.PendingAttack = attack.Kind;
+            player.PendingAttackLandsAtTick = tick + attack.WindupTicks;
+            _events.Add(new AttackWindupStarted(tick, player.Id, attack.Kind, player.PendingAttackLandsAtTick));
+        }
+
+        /// <summary>
+        /// Turns the player toward the nearest live enemy inside the assist cone around their
+        /// current facing (which already reflects any direction they are holding). The turn is at
+        /// most half the cone: that is the nudge. Enemies outside the cone are ignored, so aiming
+        /// away overrides the assist. Only enemies this attack can reach count, so the assist never
+        /// drags a swing off a hittable enemy toward one it cannot touch.
+        /// </summary>
+        private void ApplySoftLockOn(Player player, ResolvedAttack attack)
+        {
+            var assist = _config.SoftLockOn;
+            if (!assist.Enabled) return;
+            var reach = MathF.Min(assist.Range, attack.Definition.Range);
+
+            Vec3? best = null;
+            var bestDistance = float.MaxValue;
             foreach (var enemy in _enemies)
             {
-                if (enemy.Health <= 0 || !InAttackCone(player, enemy.Position, attack.Range)) continue;
+                if (enemy.Health <= 0) continue;
+                var offset = Flat(enemy.Position - player.Position);
+                var distance = offset.Length;
+                if (distance < Epsilon || distance > reach || distance >= bestDistance) continue;
+                if (!WithinCone(player.Facing, offset, distance, _softLockMinCos)) continue;
+                best = offset * (1f / distance);
+                bestDistance = distance;
+            }
 
-                var amount = Math.Min(attack.Damage, enemy.Health);
+            if (best.HasValue) player.Facing = best.Value;
+        }
+
+        private void SwingAttack(Player player, ResolvedAttack attack, int tick)
+        {
+            _events.Add(new AttackPerformed(tick, player.Id, attack.Kind));
+
+            foreach (var enemy in _enemies)
+            {
+                if (enemy.Health <= 0 || !InAttackCone(player, enemy.Position, attack)) continue;
+
+                var amount = Math.Min(attack.Definition.Damage, enemy.Health);
                 enemy.Health -= amount;
                 _events.Add(new DamageDealt(tick, player.Id, enemy.Id, amount, enemy.Health));
                 if (enemy.Health == 0) _events.Add(new EnemyDefeated(tick, enemy.Id, player.Id));
             }
         }
 
-        private bool InAttackCone(Player player, Vec3 target, float range)
+        private static bool InAttackCone(Player player, Vec3 target, ResolvedAttack attack)
         {
             var offset = Flat(target - player.Position);
             var distance = offset.Length;
-            if (distance > range) return false;
+            if (distance > attack.Definition.Range) return false;
             if (distance < Epsilon) return true; // standing on top of it counts as a hit
-            var cos = (offset.X * player.Facing.X + offset.Z * player.Facing.Z) / distance;
-            return cos >= _lightAttackMinCos - 1e-6f;
+            return WithinCone(player.Facing, offset, distance, attack.MinCos);
+        }
+
+        private static bool WithinCone(Vec3 facing, Vec3 offset, float distance, float minCos)
+        {
+            var cos = (offset.X * facing.X + offset.Z * facing.Z) / distance;
+            return cos >= minCos - 1e-6f;
         }
 
         /// <summary>Winding up: hold still until the hit lands. Otherwise attack a target in reach, or chase the nearest one.</summary>

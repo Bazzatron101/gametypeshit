@@ -29,8 +29,11 @@ namespace HunterSystem.Simulation
         /// <summary>Damage is ignored this tick (dodge invulnerability frames).</summary>
         public readonly bool IsInvulnerable;
 
+        /// <summary>Committed to an attack windup (the heavy attack): no moving or other attacks until it swings.</summary>
+        public readonly bool IsWindingUp;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
-            PlayerLifeState lifeState, bool isDodging, bool isInvulnerable)
+            PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp)
         {
             Id = id;
             Position = position;
@@ -40,6 +43,7 @@ namespace HunterSystem.Simulation
             LifeState = lifeState;
             IsDodging = isDodging;
             IsInvulnerable = isInvulnerable;
+            IsWindingUp = isWindingUp;
         }
 
         public bool IsDefeated => LifeState == PlayerLifeState.Defeated;

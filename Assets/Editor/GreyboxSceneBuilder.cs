@@ -29,8 +29,11 @@ namespace HunterSystem.Editor
             light.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
             var camera = new GameObject("Main Camera") { tag = "MainCamera" }.AddComponent<Camera>();
-            camera.transform.position = new Vector3(0f, 12f, -12f);
-            camera.transform.rotation = Quaternion.Euler(45f, 0f, 0f);
+            // Matches the rig's starting orbit so the scene view looks right before Play.
+            var focus = Vector3.up * ThirdPersonCamera.DefaultTargetHeight;
+            camera.transform.position = CameraMath.OrbitPosition(focus, 0f, ThirdPersonCamera.DefaultPitch, ThirdPersonCamera.DefaultDistance);
+            camera.transform.rotation = Quaternion.LookRotation(focus - camera.transform.position, Vector3.up);
+            var cameraRig = camera.gameObject.AddComponent<ThirdPersonCamera>();
 
             var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             floor.name = "Floor";
@@ -50,6 +53,7 @@ namespace HunterSystem.Editor
             var swing = CreateVisual(player, PrimitiveType.Cube, "Swing Marker", new Vector3(0f, 1f, 1.1f), new Vector3(1.6f, 0.1f, 0.9f),
                 "Greybox_Swing", new Color(1f, 0.85f, 0.3f));
             Wire(playerView, ("swingMarker", swing.gameObject), ("body", playerBody));
+            Wire(cameraRig, ("target", player.transform));
 
             var enemy = new GameObject("Goblin");
             enemy.transform.position = new Vector3(0f, 0f, 8f);
