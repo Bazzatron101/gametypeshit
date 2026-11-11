@@ -32,8 +32,21 @@ namespace HunterSystem.Simulation
         /// <summary>Committed to an attack windup (the heavy attack): no moving or other attacks until it swings.</summary>
         public readonly bool IsWindingUp;
 
+        public readonly int Level;
+
+        /// <summary>XP earned toward the next level (resets on each level-up; 0 at the cap).</summary>
+        public readonly int Xp;
+
+        /// <summary>XP needed to reach the next level from the start of this one; 0 at the cap.</summary>
+        public readonly int XpToNextLevel;
+
+        public readonly bool IsAtLevelCap;
+        public readonly int UnspentStatPoints;
+        public readonly PlayerStats Stats;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
-            PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp)
+            PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
+            int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats)
         {
             Id = id;
             Position = position;
@@ -44,7 +57,14 @@ namespace HunterSystem.Simulation
             IsDodging = isDodging;
             IsInvulnerable = isInvulnerable;
             IsWindingUp = isWindingUp;
+            Level = level;
+            Xp = xp;
+            XpToNextLevel = xpToNextLevel;
+            IsAtLevelCap = isAtLevelCap;
+            UnspentStatPoints = unspentStatPoints;
+            Stats = stats;
         }
+
 
         public bool IsDefeated => LifeState == PlayerLifeState.Defeated;
     }

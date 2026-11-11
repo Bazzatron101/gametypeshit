@@ -21,5 +21,9 @@ namespace HunterSystem.Simulation
         public SoftLockOnDefinition SoftLockOn { get; set; } = new SoftLockOnDefinition();
 
         public DodgeDefinition Dodge { get; set; } = new DodgeDefinition();
+
+        public ProgressionDefinition Progression { get; set; } = new ProgressionDefinition();
+
+        public StatEffectsDefinition StatEffects { get; set; } = new StatEffectsDefinition();
     }
 }

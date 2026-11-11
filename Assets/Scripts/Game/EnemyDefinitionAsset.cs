@@ -18,6 +18,9 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Telegraph before the hit lands: the player's window to dodge")] private float attackWindupSeconds = 0.5f;
         [SerializeField, Min(0f)] private float attackCooldownSeconds = 1.5f;
 
+        [Header("Reward")]
+        [SerializeField, Min(0), Tooltip("XP every player gains when this enemy is defeated")] private int xpReward = 25;
+
         public EnemyDefinition ToDefinition() => new EnemyDefinition
         {
             Name = displayName,
@@ -28,6 +31,7 @@ namespace HunterSystem.Game
             AttackRange = attackRange,
             AttackWindupSeconds = attackWindupSeconds,
             AttackCooldownSeconds = attackCooldownSeconds,
+            XpReward = xpReward,
         };
 
         /// <summary>For editor tooling that creates definitions in code. Attack values keep their defaults unless set.</summary>

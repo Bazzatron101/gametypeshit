@@ -34,6 +34,23 @@ namespace HunterSystem.Game
         public float Distance => distance;
         public float TargetHeight => targetHeight;
 
+        /// <summary>False while a menu is open: clicks do not re-capture the cursor and the mouse does not orbit.</summary>
+        public bool InMenu { get; private set; }
+
+        /// <summary>Frees the cursor for a menu.</summary>
+        public void ReleaseCursorForMenu()
+        {
+            InMenu = true;
+            LockCursor(false);
+        }
+
+        /// <summary>Leaves the menu; re-captures the cursor only when asked (it was captured before the menu).</summary>
+        public void EndMenu(bool recapture)
+        {
+            InMenu = false;
+            if (recapture && Application.isFocused) LockCursor(true);
+        }
+
         private void Start()
         {
             _look = InputSystem.actions != null ? InputSystem.actions.FindAction("Player/Look") : null;
@@ -61,8 +78,9 @@ namespace HunterSystem.Game
             transform.rotation = Quaternion.LookRotation(focus - transform.position, Vector3.up);
         }
 
-        private static void HandleCursorLock()
+        private void HandleCursorLock()
         {
+            if (InMenu) return;
             var keyboard = Keyboard.current;
             var mouse = Mouse.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) LockCursor(false);

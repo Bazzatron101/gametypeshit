@@ -50,6 +50,18 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void QueuedStatAllocationsGoOutOnePerTickInOrder()
+        {
+            var buffer = new PlayerCommandBuffer();
+            buffer.QueueStatAllocation(Stat.Strength);
+            buffer.QueueStatAllocation(Stat.Vitality);
+
+            Assert.That(buffer.TakeForTick().AllocateStat, Is.EqualTo(Stat.Strength));
+            Assert.That(buffer.TakeForTick().AllocateStat, Is.EqualTo(Stat.Vitality));
+            Assert.That(buffer.TakeForTick().AllocateStat, Is.Null);
+        }
+
+        [Test]
         public void MovementIsTheLatestSampleAndHoldsForEveryTick()
         {
             var buffer = new PlayerCommandBuffer();

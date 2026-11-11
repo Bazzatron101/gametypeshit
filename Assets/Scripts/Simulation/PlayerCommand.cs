@@ -17,7 +17,11 @@ namespace HunterSystem.Simulation
         public readonly bool HeavyAttack;
         public readonly bool Dodge;
 
-        public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false)
+        /// <summary>Spend one unspent stat point on this stat, or null for none. One point per tick.</summary>
+        public readonly Stat? AllocateStat;
+
+        public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
+            Stat? allocateStat = null)
         {
             var length = MathF.Sqrt(moveX * moveX + moveZ * moveZ);
             if (length > 1f) { moveX /= length; moveZ /= length; }
@@ -26,6 +30,7 @@ namespace HunterSystem.Simulation
             LightAttack = lightAttack;
             HeavyAttack = heavyAttack;
             Dodge = dodge;
+            AllocateStat = allocateStat;
         }
     }
 }

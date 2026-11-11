@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HunterSystem.Simulation;
 
 namespace HunterSystem.Game
@@ -14,6 +15,7 @@ namespace HunterSystem.Game
         private bool _lightAttackPending;
         private bool _heavyAttackPending;
         private bool _dodgePending;
+        private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
 
         /// <summary>Call once per frame with that frame's sampled input.</summary>
         public void Add(PlayerCommand sampled)
@@ -25,11 +27,16 @@ namespace HunterSystem.Game
             _dodgePending |= sampled.Dodge;
         }
 
+        /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>
+        public void QueueStatAllocation(Stat stat) => _statAllocations.Enqueue(stat);
+
         /// <summary>Call once per simulation tick.</summary>
         public PlayerCommand TakeForTick()
         {
+            Stat? allocate = _statAllocations.Count > 0 ? _statAllocations.Dequeue() : (Stat?)null;
             var command = new PlayerCommand(_moveX, _moveZ,
-                lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending);
+                lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
+                allocateStat: allocate);
             _lightAttackPending = false;
             _heavyAttackPending = false;
             _dodgePending = false;

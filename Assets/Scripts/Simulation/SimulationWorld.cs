@@ -20,7 +20,13 @@ namespace HunterSystem.Simulation
             public Vec3 Position;
             public Vec3 Facing;
             public int Health;
+            public int MaxHealth;
             public PlayerLifeState LifeState;
+
+            public int Level = 1;
+            public int Xp;
+            public int UnspentStatPoints;
+            public int[] Stats;
 
             /// <summary>Indexed by <see cref="AttackKind"/>: each attack has its own cooldown.</summary>
             public readonly int[] AttackReadyAtTick = new int[AttackKindCount];
@@ -84,6 +90,7 @@ namespace HunterSystem.Simulation
 
         private readonly ResolvedAttack[] _attacks;
         private readonly float _softLockMinCos;
+        private readonly int _damagePerMillePerStrength;
         private readonly int _dodgeTicks;
         private readonly int _dodgeInvulnerableTicks;
         private readonly int _dodgeCooldownTicks;
@@ -106,6 +113,16 @@ namespace HunterSystem.Simulation
             if (config.HeavyAttack == null) throw new ArgumentException("HeavyAttack must be set.", nameof(config));
             if (config.SoftLockOn == null) throw new ArgumentException("SoftLockOn must be set.", nameof(config));
             if (config.Dodge == null) throw new ArgumentException("Dodge must be set.", nameof(config));
+            if (config.StatEffects == null) throw new ArgumentException("StatEffects must be set.", nameof(config));
+            var progression = config.Progression ?? throw new ArgumentException("Progression must be set.", nameof(config));
+            if (progression.LevelCap < 1) throw new ArgumentException("LevelCap must be at least 1.", nameof(config));
+            if (progression.XpToNextLevel == null || progression.XpToNextLevel.Length < progression.LevelCap - 1)
+                throw new ArgumentException($"XpToNextLevel needs {progression.LevelCap - 1} entries for a level cap of {progression.LevelCap}.", nameof(config));
+            for (var i = 0; i < progression.LevelCap - 1; i++)
+                if (progression.XpToNextLevel[i] <= 0)
+                    throw new ArgumentException($"XpToNextLevel[{i}] (level {i + 1} to {i + 2}) must be positive.", nameof(config));
+            // Per-mille integer so damage scaling is exact: 10 damage at +5% is 10.5, which rounds to 11.
+            _damagePerMillePerStrength = (int)MathF.Round(config.StatEffects.DamagePerStrength * 1000f);
             TickDelta = 1f / config.TickRate;
             _attacks = new ResolvedAttack[AttackKindCount];
             _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
@@ -134,17 +151,24 @@ namespace HunterSystem.Simulation
         public void AddPlayer(PlayerId id, Vec3 spawnPosition)
         {
             if (_playersById.ContainsKey(id)) throw new ArgumentException($"{id} is already in the simulation.", nameof(id));
-            var player = new Player { Id = id, Position = spawnPosition, Facing = DefaultFacing, Health = _config.PlayerMaxHealth };
+            var stats = new int[PlayerStats.Count];
+            for (var i = 0; i < stats.Length; i++) stats[i] = _config.Progression.StartingStatValue;
+            var player = new Player { Id = id, Position = spawnPosition, Facing = DefaultFacing, Stats = stats };
+            player.MaxHealth = ComputeMaxHealth(player);
+            player.Health = player.MaxHealth;
             _players.Add(player);
             _playersById.Add(id, player);
             _playerIds.Add(id);
         }
 
+        public bool HasPlayer(PlayerId id) => _playersById.ContainsKey(id);
+
         public PlayerState GetPlayer(PlayerId id)
         {
             var p = FindPlayer(id);
-            return new PlayerState(p.Id, p.Position, p.Facing, p.Health, _config.PlayerMaxHealth,
-                p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp);
+            return new PlayerState(p.Id, p.Position, p.Facing, p.Health, p.MaxHealth,
+                p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
+                p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats));
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -173,7 +197,8 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>
-        /// Advances one tick: players dodge, move and attack, then enemies act. Players with no
+        /// Advances one tick: stat points are spent first (so a point spent this tick already counts),
+        /// then players dodge, move and attack, then enemies act. Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
         /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
         /// cancels an attack windup.
@@ -186,6 +211,10 @@ namespace HunterSystem.Simulation
 
             _events.Clear();
             var tick = Tick + 1;
+
+            foreach (var player in _players)
+                if (commands.TryGetValue(player.Id, out var cmd) && cmd.AllocateStat.HasValue)
+                    TryAllocateStat(player, cmd.AllocateStat.Value, tick);
 
             foreach (var player in _players)
             {
@@ -254,7 +283,8 @@ namespace HunterSystem.Simulation
         {
             if (!TryGetMoveDirection(cmd, out var direction, out var magnitude)) return;
 
-            player.Position += direction * (magnitude * _config.PlayerMoveSpeed * TickDelta);
+            var speed = _config.PlayerMoveSpeed * (1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
+            player.Position += direction * (magnitude * speed * TickDelta);
             player.Facing = direction;
         }
 
@@ -325,15 +355,20 @@ namespace HunterSystem.Simulation
         private void SwingAttack(Player player, ResolvedAttack attack, int tick)
         {
             _events.Add(new AttackPerformed(tick, player.Id, attack.Kind));
+            var damage = ScaledDamage(player, attack.Definition.Damage);
 
             foreach (var enemy in _enemies)
             {
                 if (enemy.Health <= 0 || !InAttackCone(player, enemy.Position, attack)) continue;
 
-                var amount = Math.Min(attack.Definition.Damage, enemy.Health);
+                var amount = Math.Min(damage, enemy.Health);
                 enemy.Health -= amount;
                 _events.Add(new DamageDealt(tick, player.Id, enemy.Id, amount, enemy.Health));
-                if (enemy.Health == 0) _events.Add(new EnemyDefeated(tick, enemy.Id, player.Id));
+                if (enemy.Health == 0)
+                {
+                    _events.Add(new EnemyDefeated(tick, enemy.Id, player.Id));
+                    AwardXp(enemy, tick);
+                }
             }
         }
 
@@ -411,6 +446,76 @@ namespace HunterSystem.Simulation
                 if (d < distance) { distance = d; nearest = player; }
             }
             return nearest;
+        }
+
+        // --- Progression -------------------------------------------------------------------
+
+        private int PointsAboveStart(Player player, Stat stat) => player.Stats[(int)stat] - _config.Progression.StartingStatValue;
+
+        private int ComputeMaxHealth(Player player) =>
+            Math.Max(1, _config.PlayerMaxHealth + PointsAboveStart(player, Stat.Vitality) * _config.StatEffects.HealthPerVitality);
+
+        /// <summary>Integer maths in thousandths, rounding halves up, so the result never depends on float precision.</summary>
+        private int ScaledDamage(Player player, int baseDamage)
+        {
+            var perMille = 1000 + PointsAboveStart(player, Stat.Strength) * _damagePerMillePerStrength;
+            return (int)Math.Max(0L, ((long)baseDamage * perMille + 500) / 1000);
+        }
+
+        /// <summary>XP needed to leave the current level, or 0 at the cap.</summary>
+        private int XpToNextLevel(Player player) =>
+            player.Level >= _config.Progression.LevelCap ? 0 : _config.Progression.XpToNextLevel[player.Level - 1];
+
+        /// <summary>Every player gets the full reward: no splitting, no reduction for guests or carried players.</summary>
+        private void AwardXp(Enemy enemy, int tick)
+        {
+            var reward = enemy.Definition.XpReward;
+            if (reward <= 0) return;
+            foreach (var player in _players) GainXp(player, reward, enemy.Id, tick);
+        }
+
+        private void GainXp(Player player, int amount, EnemyId source, int tick)
+        {
+            var gained = 0;
+            var levelsGained = 0;
+            while (amount > 0 && player.Level < _config.Progression.LevelCap)
+            {
+                var needed = XpToNextLevel(player) - player.Xp;
+                var take = Math.Min(amount, needed);
+                player.Xp += take;
+                gained += take;
+                amount -= take;
+                if (player.Xp < XpToNextLevel(player)) break;
+
+                player.Level++;
+                player.Xp = 0;
+                player.UnspentStatPoints += _config.Progression.FreePointsPerLevel;
+                levelsGained++;
+            }
+
+            if (gained == 0) return; // at the cap: nothing counted
+            _events.Add(new XpGained(tick, player.Id, gained, source));
+            for (var i = levelsGained - 1; i >= 0; i--)
+                _events.Add(new PlayerLeveledUp(tick, player.Id, player.Level - i, _config.Progression.FreePointsPerLevel));
+
+            // The System restores a hunter who levels up.
+            if (levelsGained > 0 && player.IsAlive) player.Health = player.MaxHealth;
+        }
+
+        private void TryAllocateStat(Player player, Stat stat, int tick)
+        {
+            if (player.UnspentStatPoints <= 0) return;
+            player.UnspentStatPoints--;
+            player.Stats[(int)stat]++;
+
+            if (stat == Stat.Vitality)
+            {
+                var before = player.MaxHealth;
+                player.MaxHealth = ComputeMaxHealth(player);
+                if (player.IsAlive) player.Health += player.MaxHealth - before; // the new health arrives filled
+            }
+
+            _events.Add(new StatPointAllocated(tick, player.Id, stat, player.Stats[(int)stat]));
         }
 
         private static Vec3 Flat(Vec3 v) => new Vec3(v.X, 0f, v.Z);

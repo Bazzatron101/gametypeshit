@@ -8,8 +8,8 @@ using UnityEngine.Rendering;
 namespace HunterSystem.Editor
 {
     /// <summary>
-    /// Builds Assets/Scenes/Greybox.unity: a grey floor, one capsule player, one Goblin enemy,
-    /// a camera and a light, and makes it the first scene in the build. Regenerate from the menu or with:
+    /// Builds Assets/Scenes/Greybox.unity: a grey floor, one capsule player, three Goblins, the
+    /// System HUD, a camera and a light, and makes it the first scene in the build. Regenerate from the menu or with:
     /// Unity -batchmode -quit -projectPath . -executeMethod HunterSystem.Editor.GreyboxSceneBuilder.Build
     /// </summary>
     public static class GreyboxSceneBuilder
@@ -17,6 +17,10 @@ namespace HunterSystem.Editor
         public const string ScenePath = "Assets/Scenes/Greybox.unity";
         private const string MaterialsFolder = "Assets/Art/Materials";
         private const string EnemiesFolder = "Assets/Data/Enemies";
+        private const string ProgressionPath = "Assets/Data/Progression.asset";
+
+        /// <summary>Three Goblins at 25 XP each: enough for the first level-up (50 XP) in one fight.</summary>
+        private static readonly Vector3[] GoblinSpawns = { new Vector3(0f, 0f, 8f), new Vector3(-4f, 0f, 10f), new Vector3(4f, 0f, 10f) };
 
         [MenuItem("Hunter System/Rebuild Greybox Scene")]
         public static void Build()
@@ -41,8 +45,8 @@ namespace HunterSystem.Editor
             floor.GetComponent<Renderer>().sharedMaterial = GetOrCreateMaterial("Greybox_Floor", new Color(0.55f, 0.55f, 0.55f));
 
             var simulation = new GameObject("Simulation");
-            simulation.AddComponent<SimulationRunner>();
-            simulation.AddComponent<CombatHud>();
+            Wire(simulation.AddComponent<SimulationRunner>(), ("progression", GetOrCreateProgression()));
+            simulation.AddComponent<SystemHud>();
 
             // Views sit at the feet; their visuals are children above.
             var player = new GameObject("Player 1");
@@ -55,12 +59,16 @@ namespace HunterSystem.Editor
             Wire(playerView, ("swingMarker", swing.gameObject), ("body", playerBody));
             Wire(cameraRig, ("target", player.transform));
 
-            var enemy = new GameObject("Goblin");
-            enemy.transform.position = new Vector3(0f, 0f, 8f);
-            var enemyView = enemy.AddComponent<EnemyView>();
-            var enemyBody = CreateVisual(enemy, PrimitiveType.Capsule, "Body", new Vector3(0f, 0.8f, 0f), new Vector3(0.8f, 0.8f, 0.8f),
-                "Greybox_Goblin", new Color(0.8f, 0.2f, 0.2f));
-            Wire(enemyView, ("definition", GetOrCreateGoblinDefinition()), ("body", enemyBody));
+            var goblin = GetOrCreateGoblinDefinition();
+            for (var i = 0; i < GoblinSpawns.Length; i++)
+            {
+                var enemy = new GameObject($"Goblin {i + 1}");
+                enemy.transform.position = GoblinSpawns[i];
+                var enemyView = enemy.AddComponent<EnemyView>();
+                var enemyBody = CreateVisual(enemy, PrimitiveType.Capsule, "Body", new Vector3(0f, 0.8f, 0f), new Vector3(0.8f, 0.8f, 0.8f),
+                    "Greybox_Goblin", new Color(0.8f, 0.2f, 0.2f));
+                Wire(enemyView, ("definition", goblin), ("body", enemyBody));
+            }
 
             EditorSceneManager.SaveScene(scene, ScenePath);
 
@@ -95,10 +103,26 @@ namespace HunterSystem.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
+        private static void EnsureFolder(string parent, string name)
+        {
+            if (!AssetDatabase.IsValidFolder($"{parent}/{name}")) AssetDatabase.CreateFolder(parent, name);
+        }
+
+        private static ProgressionAsset GetOrCreateProgression()
+        {
+            EnsureFolder("Assets", "Data");
+            var asset = AssetDatabase.LoadAssetAtPath<ProgressionAsset>(ProgressionPath);
+            if (asset != null) return asset; // keep any tuning done in the Inspector
+
+            asset = ScriptableObject.CreateInstance<ProgressionAsset>(); // its defaults hold the default curve
+            AssetDatabase.CreateAsset(asset, ProgressionPath);
+            return asset;
+        }
+
         private static EnemyDefinitionAsset GetOrCreateGoblinDefinition()
         {
-            if (!AssetDatabase.IsValidFolder("Assets/Data")) AssetDatabase.CreateFolder("Assets", "Data");
-            if (!AssetDatabase.IsValidFolder(EnemiesFolder)) AssetDatabase.CreateFolder("Assets/Data", "Enemies");
+            EnsureFolder("Assets", "Data");
+            EnsureFolder("Assets/Data", "Enemies");
             var path = $"{EnemiesFolder}/Goblin.asset";
             var asset = AssetDatabase.LoadAssetAtPath<EnemyDefinitionAsset>(path);
             if (asset != null) return asset; // keep any tuning done in the Inspector

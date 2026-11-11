@@ -16,6 +16,7 @@ namespace HunterSystem.Game
         [SerializeField, Min(1)] private int tickRate = 60;
         [SerializeField, Min(0f)] private float playerMoveSpeed = 5f;
         [SerializeField, Min(1)] private int playerMaxHealth = 100;
+        [SerializeField, Tooltip("XP curve, level cap and stat effects. Defaults apply if empty.")] private ProgressionAsset progression;
 
         [Header("Light attack")]
         [SerializeField, Min(0)] private int lightAttackDamage = 10;
@@ -61,6 +62,8 @@ namespace HunterSystem.Game
                 TickRate = tickRate,
                 PlayerMoveSpeed = playerMoveSpeed,
                 PlayerMaxHealth = playerMaxHealth,
+                Progression = progression != null ? progression.ToProgression() : new ProgressionDefinition(),
+                StatEffects = progression != null ? progression.ToStatEffects() : new StatEffectsDefinition(),
                 Dodge = new DodgeDefinition
                 {
                     Distance = dodgeDistance,
@@ -116,6 +119,17 @@ namespace HunterSystem.Game
         {
             World.GetPlayer(id); // throws now, not every frame, if the player is not in the simulation
             _sources[id] = source ?? throw new System.ArgumentNullException(nameof(source));
+        }
+
+        /// <summary>
+        /// Spends one of the player's unspent stat points on <paramref name="stat"/>. It goes to the
+        /// simulation as a command on the next tick, so the simulation stays the authority.
+        /// </summary>
+        public void RequestStatAllocation(PlayerId id, Stat stat)
+        {
+            if (!_buffers.TryGetValue(id, out var buffer))
+                throw new System.ArgumentException($"{id} has no input buffer; only players spawned from a PlayerView can spend points.", nameof(id));
+            buffer.QueueStatAllocation(stat);
         }
 
         private void Update()

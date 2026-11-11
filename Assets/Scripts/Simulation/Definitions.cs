@@ -22,6 +22,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>Time after a hit lands (or misses) before the next attack can start.</summary>
         public float AttackCooldownSeconds { get; set; } = 1.5f;
+
+        /// <summary>XP every player in the world gains when this enemy is defeated.</summary>
+        public int XpReward { get; set; } = 25;
     }
 
     public enum AttackKind

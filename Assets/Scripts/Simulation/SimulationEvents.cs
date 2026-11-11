@@ -125,6 +125,50 @@ namespace HunterSystem.Simulation
         }
     }
 
+    /// <summary>A player earned XP. <see cref="Amount"/> is what actually counted (nothing past the level cap).</summary>
+    public sealed class XpGained : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public int Amount { get; }
+        public EnemyId Source { get; }
+
+        public XpGained(int tick, PlayerId player, int amount, EnemyId source) : base(tick)
+        {
+            Player = player;
+            Amount = amount;
+            Source = source;
+        }
+    }
+
+    /// <summary>One level gained. A large XP gain emits one of these per level.</summary>
+    public sealed class PlayerLeveledUp : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public int NewLevel { get; }
+        public int StatPointsGranted { get; }
+
+        public PlayerLeveledUp(int tick, PlayerId player, int newLevel, int statPointsGranted) : base(tick)
+        {
+            Player = player;
+            NewLevel = newLevel;
+            StatPointsGranted = statPointsGranted;
+        }
+    }
+
+    public sealed class StatPointAllocated : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public Stat Stat { get; }
+        public int NewValue { get; }
+
+        public StatPointAllocated(int tick, PlayerId player, Stat stat, int newValue) : base(tick)
+        {
+            Player = player;
+            Stat = stat;
+            NewValue = newValue;
+        }
+    }
+
     public sealed class EnemyDefeated : SimulationEvent
     {
         public EnemyId Enemy { get; }
