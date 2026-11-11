@@ -25,6 +25,13 @@ if (-not $editor) {
 }
 if (-not (Test-Path $editor)) { throw "Unity editor not found at '$editor'. Install the locked version via Unity Hub or set UNITY_EDITOR." }
 
+# Unity allows one editor per project; it holds Temp/UnityLockfile open while running.
+$lock = Join-Path $project 'Temp/UnityLockfile'
+if (Test-Path $lock) {
+    try { [IO.File]::Open($lock, 'Open', 'ReadWrite', 'None').Dispose() }
+    catch { Write-Host "The project is open in the Unity editor. Close it, or run the tests from Window > General > Test Runner."; exit 2 }
+}
+
 $out = Join-Path $project 'TestResults'
 New-Item -ItemType Directory -Force $out | Out-Null
 $results = Join-Path $out "$Platform.xml"
