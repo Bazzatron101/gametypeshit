@@ -6,9 +6,9 @@ namespace HunterSystem.Game
 {
     /// <summary>
     /// Drives the <see cref="SimulationWorld"/> from the Unity frame loop. Each frame it samples
-    /// one command per player and runs as many fixed ticks as real time calls for. The world
-    /// itself knows nothing about Unity; this class and <see cref="PlayerView"/> are the
-    /// only bridge.
+    /// one command per player, runs as many fixed ticks as real time calls for, and collects the
+    /// events those ticks produced. The world itself knows nothing about Unity; this class and
+    /// the views are the only bridge.
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public sealed class SimulationRunner : MonoBehaviour
@@ -16,16 +16,39 @@ namespace HunterSystem.Game
         [SerializeField, Min(1)] private int tickRate = 60;
         [SerializeField, Min(0f)] private float playerMoveSpeed = 5f;
 
+        [Header("Light attack")]
+        [SerializeField, Min(0)] private int lightAttackDamage = 10;
+        [SerializeField, Min(0f)] private float lightAttackRange = 2f;
+        [SerializeField, Range(1f, 360f)] private float lightAttackArcDegrees = 120f;
+        [SerializeField, Min(0f)] private float lightAttackCooldownSeconds = 0.4f;
+
         private readonly Dictionary<PlayerId, IPlayerCommandSource> _sources = new Dictionary<PlayerId, IPlayerCommandSource>();
+        private readonly Dictionary<PlayerId, PlayerCommandBuffer> _buffers = new Dictionary<PlayerId, PlayerCommandBuffer>();
         private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
-        private readonly Dictionary<PlayerId, Vec3> _previousPositions = new Dictionary<PlayerId, Vec3>();
+        private readonly Dictionary<PlayerId, Vec3> _previousPlayerPositions = new Dictionary<PlayerId, Vec3>();
+        private readonly Dictionary<EnemyId, Vec3> _previousEnemyPositions = new Dictionary<EnemyId, Vec3>();
+        private readonly List<SimulationEvent> _frameEvents = new List<SimulationEvent>();
         private FixedTimestepClock _clock;
 
         public SimulationWorld World { get; private set; }
 
+        /// <summary>Events from every tick run this frame, in order. Read them in LateUpdate.</summary>
+        public IReadOnlyList<SimulationEvent> FrameEvents => _frameEvents;
+
         private void Awake()
         {
-            World = new SimulationWorld(new SimulationConfig { TickRate = tickRate, PlayerMoveSpeed = playerMoveSpeed });
+            World = new SimulationWorld(new SimulationConfig
+            {
+                TickRate = tickRate,
+                PlayerMoveSpeed = playerMoveSpeed,
+                LightAttack = new AttackDefinition
+                {
+                    Damage = lightAttackDamage,
+                    Range = lightAttackRange,
+                    ArcDegrees = lightAttackArcDegrees,
+                    CooldownSeconds = lightAttackCooldownSeconds,
+                },
+            });
             _clock = new FixedTimestepClock(tickRate);
 
             foreach (var view in FindObjectsByType<PlayerView>(FindObjectsSortMode.None))
@@ -33,8 +56,17 @@ namespace HunterSystem.Game
                 var id = view.PlayerId;
                 var spawn = ToVec3(view.transform.position);
                 World.AddPlayer(id, spawn);
-                _previousPositions[id] = spawn;
+                _previousPlayerPositions[id] = spawn;
+                _buffers[id] = new PlayerCommandBuffer();
                 _sources[id] = view.IsLocal ? new LocalInputCommandSource() : new ConstantCommandSource(PlayerCommand.None);
+            }
+
+            foreach (var view in FindObjectsByType<EnemyView>(FindObjectsSortMode.None))
+            {
+                var spawn = ToVec3(view.transform.position);
+                var id = World.SpawnEnemy(view.CreateDefinition(), spawn);
+                _previousEnemyPositions[id] = spawn;
+                view.Bind(id);
             }
         }
 
@@ -47,24 +79,33 @@ namespace HunterSystem.Game
 
         private void Update()
         {
-            _commands.Clear();
-            foreach (var pair in _sources) _commands[pair.Key] = pair.Value.Sample();
+            _frameEvents.Clear();
+            foreach (var pair in _sources) _buffers[pair.Key].Add(pair.Value.Sample());
 
             var ticks = _clock.Advance(Time.deltaTime);
             for (var i = 0; i < ticks; i++)
             {
-                foreach (var id in World.PlayerIds) _previousPositions[id] = World.GetPlayer(id).Position;
+                _commands.Clear();
+                foreach (var pair in _buffers) _commands[pair.Key] = pair.Value.TakeForTick();
+
+                foreach (var id in World.PlayerIds) _previousPlayerPositions[id] = World.GetPlayer(id).Position;
+                foreach (var id in World.EnemyIds) _previousEnemyPositions[id] = World.GetEnemy(id).Position;
+
                 World.Step(_commands);
+                _frameEvents.AddRange(World.Events);
             }
         }
 
         /// <summary>Position to draw this frame, interpolated between the last two ticks.</summary>
-        public Vector3 GetRenderPosition(PlayerId id)
-        {
-            var previous = ToVector3(_previousPositions[id]);
-            var current = ToVector3(World.GetPlayer(id).Position);
-            return Vector3.Lerp(previous, current, _clock.Alpha);
-        }
+        public Vector3 GetRenderPosition(PlayerId id) =>
+            Interpolate(_previousPlayerPositions[id], World.GetPlayer(id).Position);
+
+        /// <summary>Position to draw this frame, interpolated between the last two ticks.</summary>
+        public Vector3 GetRenderPosition(EnemyId id) =>
+            Interpolate(_previousEnemyPositions[id], World.GetEnemy(id).Position);
+
+        private Vector3 Interpolate(Vec3 previous, Vec3 current) =>
+            Vector3.Lerp(ToVector3(previous), ToVector3(current), _clock.Alpha);
 
         private static Vec3 ToVec3(Vector3 v) => new Vec3(v.x, v.y, v.z);
         private static Vector3 ToVector3(Vec3 v) => new Vector3(v.X, v.Y, v.Z);

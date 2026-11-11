@@ -6,8 +6,14 @@ namespace HunterSystem.Simulation
         public readonly PlayerId Id;
         public readonly Vec3 Position;
 
-        public PlayerState(PlayerId id, Vec3 position) { Id = id; Position = position; }
+        /// <summary>Unit vector on the floor plane: the direction the player last moved. Attacks go this way.</summary>
+        public readonly Vec3 Facing;
 
-        internal PlayerState WithPosition(Vec3 position) => new PlayerState(Id, position);
+        public PlayerState(PlayerId id, Vec3 position, Vec3 facing)
+        {
+            Id = id;
+            Position = position;
+            Facing = facing;
+        }
     }
 }

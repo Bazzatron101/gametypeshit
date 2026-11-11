@@ -8,5 +8,7 @@ namespace HunterSystem.Simulation
 
         /// <summary>Player movement speed in metres per second at full input.</summary>
         public float PlayerMoveSpeed { get; set; } = 5f;
+
+        public AttackDefinition LightAttack { get; set; } = new AttackDefinition();
     }
 }

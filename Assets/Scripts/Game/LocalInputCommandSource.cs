@@ -5,26 +5,34 @@ using UnityEngine.InputSystem;
 namespace HunterSystem.Game
 {
     /// <summary>
-    /// Reads the local player's movement from the project-wide "Player/Move" action
-    /// (WASD, arrow keys or left stick). Movement is world-relative for now:
-    /// up/W is +Z. Camera-relative movement arrives with the camera ticket.
+    /// Reads the local player's input from the project-wide actions: "Player/Move" (WASD, arrow
+    /// keys or left stick) and "Player/Attack" (left mouse button or gamepad west button).
+    /// Movement is world-relative for now: up/W is +Z. Camera-relative movement arrives with the camera ticket.
     /// </summary>
     public sealed class LocalInputCommandSource : IPlayerCommandSource
     {
         private readonly InputAction _move;
+        private readonly InputAction _attack;
 
         public LocalInputCommandSource()
         {
-            _move = InputSystem.actions != null ? InputSystem.actions.FindAction("Player/Move") : null;
-            if (_move == null) Debug.LogWarning("No project-wide 'Player/Move' action found; local player will not move.");
-            else _move.Enable();
+            _move = Find("Player/Move");
+            _attack = Find("Player/Attack");
         }
 
         public PlayerCommand Sample()
         {
-            if (_move == null) return PlayerCommand.None;
-            var v = _move.ReadValue<Vector2>();
-            return new PlayerCommand(v.x, v.y);
+            var move = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
+            var attack = _attack != null && _attack.WasPressedThisFrame();
+            return new PlayerCommand(move.x, move.y, attack);
+        }
+
+        private static InputAction Find(string path)
+        {
+            var action = InputSystem.actions != null ? InputSystem.actions.FindAction(path) : null;
+            if (action == null) Debug.LogWarning($"No project-wide '{path}' action found; that input is ignored.");
+            else action.Enable();
+            return action;
         }
     }
 }
