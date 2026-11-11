@@ -20,6 +20,9 @@ namespace HunterSystem.Simulation
         private readonly ResolvedAttack[] _attacks;
         private readonly float _softLockMinCos;
         private readonly int _damagePerMillePerStrength;
+        private readonly int _damagePerMillePerIntelligence;
+        private readonly List<Projectile> _projectiles = new List<Projectile>();
+        private int _nextProjectileId = 1;
         private readonly int _dodgeTicks;
         private readonly int _dodgeInvulnerableTicks;
         private readonly int _dodgeCooldownTicks;
@@ -52,6 +55,8 @@ namespace HunterSystem.Simulation
                     throw new ArgumentException($"XpToNextLevel[{i}] (level {i + 1} to {i + 2}) must be positive.", nameof(config));
             // Per-mille integer so damage scaling is exact: 10 damage at +5% is 10.5, which rounds to 11.
             _damagePerMillePerStrength = (int)MathF.Round(config.StatEffects.DamagePerStrength * 1000f);
+            _damagePerMillePerIntelligence = (int)MathF.Round(config.StatEffects.DamagePerIntelligence * 1000f);
+            ValidateSkills(config.Skills, progression.LevelCap);
             TickDelta = 1f / config.TickRate;
             _attacks = new ResolvedAttack[AttackKindCount];
             _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
@@ -85,6 +90,7 @@ namespace HunterSystem.Simulation
             var player = new Player { Id = id, Position = spawnPosition, Facing = DefaultFacing, Stats = stats };
             player.MaxHealth = ComputeMaxHealth(player);
             player.Health = player.MaxHealth;
+            LearnStarterSkills(player);
             _players.Add(player);
             _playersById.Add(id, player);
             _playerIds.Add(id);
@@ -97,7 +103,8 @@ namespace HunterSystem.Simulation
             var p = FindPlayer(id);
             return new PlayerState(p.Id, p.Position, p.Facing, p.Health, p.MaxHealth,
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
-                p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats));
+                p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
+                SkillBarSnapshot(p), p.KnownSkills.ToArray());
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -127,7 +134,7 @@ namespace HunterSystem.Simulation
 
         /// <summary>
         /// Advances one tick: stat points are spent first (so a point spent this tick already counts),
-        /// then players dodge, move and attack, then enemies act. Players with no
+        /// then players dodge, move and attack or use a skill, then projectiles fly, then enemies act. Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
         /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
         /// cancels an attack windup.
@@ -170,9 +177,12 @@ namespace HunterSystem.Simulation
                 }
 
                 MovePlayer(player, cmd);
+                if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, tick)) continue; // a skill takes the tick
                 if (cmd.HeavyAttack) TryStartAttack(player, _attacks[(int)AttackKind.Heavy], tick);
                 else if (cmd.LightAttack) TryStartAttack(player, _attacks[(int)AttackKind.Light], tick);
             }
+
+            UpdateProjectiles(tick);
 
             foreach (var enemy in _enemies)
                 if (enemy.Health > 0) UpdateEnemy(enemy, tick);

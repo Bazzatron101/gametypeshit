@@ -62,6 +62,17 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void SkillPressIsKeptUntilATickTakesItThenGivenToThatTickOnly()
+        {
+            var buffer = new PlayerCommandBuffer();
+            buffer.Add(new PlayerCommand(0f, 0f, useSkillSlot: 2));
+            buffer.Add(PlayerCommand.None);
+
+            Assert.That(buffer.TakeForTick().UseSkillSlot, Is.EqualTo(2));
+            Assert.That(buffer.TakeForTick().UseSkillSlot, Is.Null);
+        }
+
+        [Test]
         public void MovementIsTheLatestSampleAndHoldsForEveryTick()
         {
             var buffer = new PlayerCommandBuffer();

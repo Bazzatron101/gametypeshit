@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace HunterSystem.Simulation
 {
     /// <summary>
@@ -44,9 +46,16 @@ namespace HunterSystem.Simulation
         public readonly int UnspentStatPoints;
         public readonly PlayerStats Stats;
 
+        /// <summary>The six-slot skill bar (keys 1 to 6).</summary>
+        public readonly IReadOnlyList<SkillSlotState> SkillSlots;
+
+        /// <summary>Every skill learned, in learning order, slotted or not.</summary>
+        public readonly IReadOnlyList<SkillDefinition> KnownSkills;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
-            int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats)
+            int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
+            IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills)
         {
             Id = id;
             Position = position;
@@ -63,6 +72,8 @@ namespace HunterSystem.Simulation
             IsAtLevelCap = isAtLevelCap;
             UnspentStatPoints = unspentStatPoints;
             Stats = stats;
+            SkillSlots = skillSlots;
+            KnownSkills = knownSkills;
         }
 
 

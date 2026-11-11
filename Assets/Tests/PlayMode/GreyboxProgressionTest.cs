@@ -37,8 +37,10 @@ namespace HunterSystem.Tests
             Assert.That(state.Level, Is.EqualTo(2), $"defeated {goblins.Count(g => g.ShowsDefeated)} of 3 Goblins");
             Assert.That(state.UnspentStatPoints, Is.EqualTo(3));
             yield return null; // let the HUD read this frame's events
-            Assert.That(hud.ToastVisible, Is.True);
-            StringAssert.Contains("level 2", hud.ToastText);
+            var announcement = hud.CurrentAnnouncement;
+            Assert.That(announcement.HasValue, Is.True, "the System announced the level-up");
+            Assert.That(announcement.Value.Title, Is.EqualTo("LEVEL UP"));
+            StringAssert.Contains("level 2", announcement.Value.Body);
 
             runner.RequestStatAllocation(LocalPlayer, Stat.Vitality);
             runner.RequestStatAllocation(LocalPlayer, Stat.Vitality);

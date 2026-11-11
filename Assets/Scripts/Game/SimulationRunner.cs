@@ -17,6 +17,7 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f)] private float playerMoveSpeed = 5f;
         [SerializeField, Min(1)] private int playerMaxHealth = 100;
         [SerializeField, Tooltip("XP curve, level cap and stat effects. Defaults apply if empty.")] private ProgressionAsset progression;
+        [SerializeField, Tooltip("Every skill in the game. Starters (unlock level 1) fill the bar in this order.")] private SkillDefinitionAsset[] skills = new SkillDefinitionAsset[0];
 
         [Header("Light attack")]
         [SerializeField, Min(0)] private int lightAttackDamage = 10;
@@ -64,6 +65,7 @@ namespace HunterSystem.Game
                 PlayerMaxHealth = playerMaxHealth,
                 Progression = progression != null ? progression.ToProgression() : new ProgressionDefinition(),
                 StatEffects = progression != null ? progression.ToStatEffects() : new StatEffectsDefinition(),
+                Skills = SkillDefinitions(),
                 Dodge = new DodgeDefinition
                 {
                     Distance = dodgeDistance,
@@ -112,6 +114,18 @@ namespace HunterSystem.Game
                 _previousEnemyPositions[id] = spawn;
                 view.Bind(id);
             }
+        }
+
+        /// <summary>The skill assets as simulation data. Empty entries in the list are skipped with a warning.</summary>
+        private SkillDefinition[] SkillDefinitions()
+        {
+            var list = new List<SkillDefinition>();
+            foreach (var asset in skills ?? new SkillDefinitionAsset[0])
+            {
+                if (asset == null) { Debug.LogWarning($"{name}: an empty entry in the skills list was skipped.", this); continue; }
+                list.Add(asset.ToDefinition());
+            }
+            return list.ToArray();
         }
 
         /// <summary>Replaces where a player's commands come from (tests, bots, network).</summary>

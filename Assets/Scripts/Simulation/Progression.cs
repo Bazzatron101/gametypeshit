@@ -59,12 +59,15 @@ namespace HunterSystem.Simulation
 
     /// <summary>
     /// What each stat point above <see cref="ProgressionDefinition.StartingStatValue"/> does.
-    /// Intelligence, Sense and Luck have no effect yet; they arrive with skills and loot.
+    /// Sense and Luck have no effect yet; Luck arrives with loot.
     /// </summary>
     public sealed class StatEffectsDefinition
     {
-        /// <summary>Attack damage multiplier gained per Strength point (0.05 = +5%).</summary>
+        /// <summary>Damage multiplier per Strength point, for attacks and Strength skills (0.05 = +5%).</summary>
         public float DamagePerStrength { get; set; } = 0.05f;
+
+        /// <summary>Damage multiplier per Intelligence point for skills that scale with Intelligence (0.05 = +5%).</summary>
+        public float DamagePerIntelligence { get; set; } = 0.05f;
 
         /// <summary>Max health gained per Vitality point.</summary>
         public int HealthPerVitality { get; set; } = 10;

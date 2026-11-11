@@ -17,7 +17,8 @@ namespace HunterSystem.Game
         private int[] xpToNextLevel = ProgressionDefinition.DefaultCurve(95);
 
         [Header("Stat effects, per point above the starting value")]
-        [SerializeField, Tooltip("0.05 = +5% attack damage per Strength point")] private float damagePerStrength = 0.05f;
+        [SerializeField, Tooltip("0.05 = +5% damage per Strength point (attacks and Strength skills)")] private float damagePerStrength = 0.05f;
+        [SerializeField, Tooltip("0.05 = +5% damage per Intelligence point (Intelligence skills)")] private float damagePerIntelligence = 0.05f;
         [SerializeField, Tooltip("Max health per Vitality point")] private int healthPerVitality = 10;
         [SerializeField, Tooltip("0.02 = +2% move speed per Agility point")] private float moveSpeedPerAgility = 0.02f;
 
@@ -32,6 +33,7 @@ namespace HunterSystem.Game
         public StatEffectsDefinition ToStatEffects() => new StatEffectsDefinition
         {
             DamagePerStrength = damagePerStrength,
+            DamagePerIntelligence = damagePerIntelligence,
             HealthPerVitality = healthPerVitality,
             MoveSpeedPerAgility = moveSpeedPerAgility,
         };

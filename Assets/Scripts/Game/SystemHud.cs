@@ -5,15 +5,14 @@ using UnityEngine.InputSystem;
 namespace HunterSystem.Game
 {
     /// <summary>
-    /// The System interface, greybox edition: a status panel (level, HP, XP), a level-up
-    /// announcement in the System's voice, and a stat screen (Tab) to spend stat points.
+    /// The System interface, greybox edition: a status panel (level, HP, XP), System
+    /// announcements (level-ups, new skills) shown one after another, the six-slot skill bar with
+    /// cooldowns, and a stat screen (Tab) to spend stat points.
     /// Reads from the simulation; stat spending goes back through the runner as commands.
     /// Drawn with IMGUI until the real UI pass.
     /// </summary>
     public sealed class SystemHud : MonoBehaviour
     {
-        private const float ToastSeconds = 3.5f;
-        private const float ToastFadeSeconds = 0.6f;
 
         private static readonly Color SystemBlue = new Color(0.35f, 0.75f, 1f);
         private static readonly Color PanelColor = new Color(0.03f, 0.06f, 0.12f, 0.85f);
@@ -24,7 +23,7 @@ namespace HunterSystem.Game
             (Stat.Strength, "Attack damage"),
             (Stat.Agility, "Move speed"),
             (Stat.Vitality, "Max health"),
-            (Stat.Intelligence, "Skills (coming soon)"),
+            (Stat.Intelligence, "Magic skill damage"),
             (Stat.Sense, "Perception (coming soon)"),
             (Stat.Luck, "Drop odds (coming soon)"),
         };
@@ -33,15 +32,16 @@ namespace HunterSystem.Game
 
         private SimulationRunner _runner;
         private ThirdPersonCamera _camera;
-        private float _toastShownAt = float.NegativeInfinity;
+        private readonly AnnouncementQueue _announcements = new AnnouncementQueue();
         private bool _cursorWasCapturedBeforeMenu;
-        private GUIStyle _label, _title, _toastTitle, _toastBody, _button;
+        private GUIStyle _label, _title, _toastTitle, _toastBody, _button, _skillName;
         private Texture2D _white;
 
         public PlayerId PlayerId => new PlayerId(playerId);
         public bool StatScreenOpen { get; private set; }
-        public string ToastText { get; private set; } = "";
-        public bool ToastVisible => Time.time - _toastShownAt < ToastSeconds;
+
+        /// <summary>The announcement on screen now, if any.</summary>
+        public AnnouncementQueue.Announcement? CurrentAnnouncement => _announcements.Current(Time.time);
 
         private void Start()
         {
@@ -62,10 +62,17 @@ namespace HunterSystem.Game
             if (_runner == null || _runner.World == null) return;
             foreach (var e in _runner.FrameEvents)
             {
-                if (e is PlayerLeveledUp levelUp && levelUp.Player == PlayerId)
+                switch (e)
                 {
-                    ToastText = $"You have reached level {levelUp.NewLevel}.  +{levelUp.StatPointsGranted} stat points.  Health restored.";
-                    _toastShownAt = Time.time;
+                    case PlayerLeveledUp levelUp when levelUp.Player == PlayerId:
+                        _announcements.Enqueue("LEVEL UP",
+                            $"You have reached level {levelUp.NewLevel}.  +{levelUp.StatPointsGranted} stat points.  Health restored.", Time.time);
+                        break;
+                    case SkillUnlocked unlocked when unlocked.Player == PlayerId:
+                        _announcements.Enqueue("NEW SKILL ACQUIRED", unlocked.Slot.HasValue
+                            ? $"{unlocked.Skill.Name}  is ready on key [{unlocked.Slot.Value + 1}]."
+                            : $"{unlocked.Skill.Name}  learned. Your skill bar is full.", Time.time);
+                        break;
                 }
             }
         }
@@ -97,7 +104,9 @@ namespace HunterSystem.Game
             var state = _runner.World.GetPlayer(PlayerId);
 
             DrawStatus(state);
-            if (ToastVisible) DrawToast();
+            DrawSkillBar(state);
+            var announcement = CurrentAnnouncement;
+            if (announcement.HasValue) DrawAnnouncement(announcement.Value);
             if (StatScreenOpen) DrawStatScreen(state);
         }
 
@@ -130,21 +139,57 @@ namespace HunterSystem.Game
             }
         }
 
-        private void DrawToast()
+        private void DrawAnnouncement(AnnouncementQueue.Announcement announcement)
         {
-            var age = Time.time - _toastShownAt;
-            var alpha = Mathf.Clamp01((ToastSeconds - age) / ToastFadeSeconds);
             var box = new Rect((Screen.width - 520) / 2f, 70, 520, 86);
 
             var previous = GUI.color;
-            GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.color = new Color(1f, 1f, 1f, announcement.Alpha);
             Fill(box, PanelColor);
             Outline(box, SystemBlue);
             _toastTitle.normal.textColor = SystemBlue;
-            GUI.Label(new Rect(box.x, box.y + 10, box.width, 30), "[ SYSTEM ]   LEVEL UP", _toastTitle);
+            GUI.Label(new Rect(box.x, box.y + 10, box.width, 30), $"[ SYSTEM ]   {announcement.Title}", _toastTitle);
             _toastBody.normal.textColor = Color.white;
-            GUI.Label(new Rect(box.x, box.y + 46, box.width, 26), ToastText, _toastBody);
+            GUI.Label(new Rect(box.x, box.y + 46, box.width, 26), announcement.Body, _toastBody);
             GUI.color = previous;
+        }
+
+        /// <summary>Six slots along the bottom: key, skill name, and a darkened sweep with seconds left while cooling down.</summary>
+        private void DrawSkillBar(PlayerState state)
+        {
+            const float size = 78f, gap = 8f;
+            var width = SimulationWorld.SkillSlotCount * size + (SimulationWorld.SkillSlotCount - 1) * gap;
+            var x0 = (Screen.width - width) / 2f;
+            var y = Screen.height - size - 18f;
+            var tickRate = 1f / _runner.World.TickDelta;
+
+            for (var i = 0; i < SimulationWorld.SkillSlotCount; i++)
+            {
+                var slot = state.SkillSlots[i];
+                var box = new Rect(x0 + i * (size + gap), y, size, size);
+                Fill(box, PanelColor);
+                Outline(box, slot.IsEmpty ? new Color(0.3f, 0.35f, 0.45f) : SystemBlue);
+
+                _label.normal.textColor = Color.gray;
+                GUI.Label(new Rect(box.x + 6, box.y + 2, 30, 18), (i + 1).ToString(), _label);
+                if (slot.IsEmpty) continue;
+
+                var remaining = slot.TicksUntilReady(_runner.World.Tick) / tickRate;
+                if (remaining > 0f)
+                {
+                    var total = Mathf.Max(slot.Skill.CooldownSeconds, 0.0001f);
+                    var fraction = Mathf.Clamp01(remaining / total);
+                    Fill(new Rect(box.x, box.yMax - box.height * fraction, box.width, box.height * fraction), new Color(0f, 0f, 0f, 0.6f));
+                }
+
+                _skillName.normal.textColor = remaining > 0f ? Color.gray : Color.white;
+                GUI.Label(new Rect(box.x + 4, box.y + 22, box.width - 8, 34), slot.Skill.Name, _skillName);
+                if (remaining > 0f)
+                {
+                    _label.normal.textColor = Color.white;
+                    GUI.Label(new Rect(box.x + 6, box.yMax - 22, box.width - 8, 20), remaining.ToString("0.0") + "s", _label);
+                }
+            }
         }
 
         private void DrawStatScreen(PlayerState state)
@@ -212,6 +257,7 @@ namespace HunterSystem.Game
             _toastTitle = new GUIStyle(GUI.skin.label) { fontSize = 22, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
             _toastBody = new GUIStyle(GUI.skin.label) { fontSize = 15, alignment = TextAnchor.MiddleCenter };
             _button = new GUIStyle(GUI.skin.button) { fontSize = 16, fontStyle = FontStyle.Bold };
+            _skillName = new GUIStyle(GUI.skin.label) { fontSize = 12, fontStyle = FontStyle.Bold, wordWrap = true, alignment = TextAnchor.MiddleCenter };
         }
     }
 }

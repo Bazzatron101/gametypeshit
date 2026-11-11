@@ -20,8 +20,11 @@ namespace HunterSystem.Simulation
         /// <summary>Spend one unspent stat point on this stat, or null for none. One point per tick.</summary>
         public readonly Stat? AllocateStat;
 
+        /// <summary>Use the skill in this bar slot (0 to 5, keys 1 to 6), or null for none.</summary>
+        public readonly int? UseSkillSlot;
+
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
-            Stat? allocateStat = null)
+            Stat? allocateStat = null, int? useSkillSlot = null)
         {
             var length = MathF.Sqrt(moveX * moveX + moveZ * moveZ);
             if (length > 1f) { moveX /= length; moveZ /= length; }
@@ -31,6 +34,7 @@ namespace HunterSystem.Simulation
             HeavyAttack = heavyAttack;
             Dodge = dodge;
             AllocateStat = allocateStat;
+            UseSkillSlot = useSkillSlot;
         }
     }
 }

@@ -46,7 +46,7 @@ namespace HunterSystem.Simulation
             if (tick < player.AttackReadyAtTick[(int)attack.Kind]) return;
             player.AttackReadyAtTick[(int)attack.Kind] = tick + attack.CooldownTicks;
 
-            ApplySoftLockOn(player, attack);
+            ApplySoftLockOn(player, attack.Definition.Range);
 
             if (attack.WindupTicks == 0)
             {
@@ -63,14 +63,14 @@ namespace HunterSystem.Simulation
         /// Turns the player toward the nearest live enemy inside the assist cone around their
         /// current facing (which already reflects any direction they are holding). The turn is at
         /// most half the cone: that is the nudge. Enemies outside the cone are ignored, so aiming
-        /// away overrides the assist. Only enemies this attack can reach count, so the assist never
-        /// drags a swing off a hittable enemy toward one it cannot touch.
+        /// away overrides the assist. Only enemies within <paramref name="attackReach"/> count, so the
+        /// assist never drags a swing off a hittable enemy toward one it cannot touch.
         /// </summary>
-        private void ApplySoftLockOn(Player player, ResolvedAttack attack)
+        private void ApplySoftLockOn(Player player, float attackReach)
         {
             var assist = _config.SoftLockOn;
             if (!assist.Enabled) return;
-            var reach = MathF.Min(assist.Range, attack.Definition.Range);
+            var reach = MathF.Min(assist.Range, attackReach);
 
             Vec3? best = null;
             var bestDistance = float.MaxValue;
@@ -91,30 +91,40 @@ namespace HunterSystem.Simulation
         private void SwingAttack(Player player, ResolvedAttack attack, int tick)
         {
             _events.Add(new AttackPerformed(tick, player.Id, attack.Kind));
-            var damage = ScaledDamage(player, attack.Definition.Damage);
+            var damage = ScaledDamage(player, attack.Definition.Damage, Stat.Strength);
 
+            DamageEnemiesWhere(player, damage, tick, skill: null, at => InCone(player, at, attack.Definition.Range, attack.MinCos));
+        }
+
+        /// <summary>Damages every live enemy whose position passes <paramref name="inShape"/>.</summary>
+        private void DamageEnemiesWhere(Player attacker, int damage, int tick, SkillDefinition skill, Func<Vec3, bool> inShape)
+        {
             foreach (var enemy in _enemies)
-            {
-                if (enemy.Health <= 0 || !InAttackCone(player, enemy.Position, attack)) continue;
+                if (enemy.Health > 0 && inShape(enemy.Position))
+                    DamageEnemy(attacker, enemy, damage, tick, skill);
+        }
 
-                var amount = Math.Min(damage, enemy.Health);
-                enemy.Health -= amount;
-                _events.Add(new DamageDealt(tick, player.Id, enemy.Id, amount, enemy.Health));
-                if (enemy.Health == 0)
-                {
-                    _events.Add(new EnemyDefeated(tick, enemy.Id, player.Id));
-                    AwardXp(enemy, tick);
-                }
+        /// <summary>The one place enemy health goes down, from attacks, skills and projectiles alike.</summary>
+        private void DamageEnemy(Player attacker, Enemy enemy, int damage, int tick, SkillDefinition skill)
+        {
+            var amount = Math.Min(Math.Max(0, damage), enemy.Health);
+            if (amount == 0) return;
+            enemy.Health -= amount;
+            _events.Add(new DamageDealt(tick, attacker.Id, enemy.Id, amount, enemy.Health, skill));
+            if (enemy.Health == 0)
+            {
+                _events.Add(new EnemyDefeated(tick, enemy.Id, attacker.Id));
+                AwardXp(enemy, tick);
             }
         }
 
-        private static bool InAttackCone(Player player, Vec3 target, ResolvedAttack attack)
+        private static bool InCone(Player player, Vec3 target, float range, float minCos)
         {
             var offset = Flat(target - player.Position);
             var distance = offset.Length;
-            if (distance > attack.Definition.Range) return false;
+            if (distance > range) return false;
             if (distance < Epsilon) return true; // standing on top of it counts as a hit
-            return WithinCone(player.Facing, offset, distance, attack.MinCos);
+            return WithinCone(player.Facing, offset, distance, minCos);
         }
 
         private static bool WithinCone(Vec3 facing, Vec3 offset, float distance, float minCos)

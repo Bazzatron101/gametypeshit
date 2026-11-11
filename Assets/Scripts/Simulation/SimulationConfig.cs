@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace HunterSystem.Simulation
 {
     /// <summary>Tunable simulation values. Configuration, not code constants.</summary>
@@ -25,5 +28,8 @@ namespace HunterSystem.Simulation
         public ProgressionDefinition Progression { get; set; } = new ProgressionDefinition();
 
         public StatEffectsDefinition StatEffects { get; set; } = new StatEffectsDefinition();
+
+        /// <summary>Every skill in the game. Starters (unlock level 1) fill the bar in this order.</summary>
+        public IReadOnlyList<SkillDefinition> Skills { get; set; } = Array.Empty<SkillDefinition>();
     }
 }

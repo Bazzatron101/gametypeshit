@@ -11,10 +11,16 @@ namespace HunterSystem.Simulation
         private int ComputeMaxHealth(Player player) =>
             Math.Max(1, _config.PlayerMaxHealth + PointsAboveStart(player, Stat.Vitality) * _config.StatEffects.HealthPerVitality);
 
-        /// <summary>Integer maths in thousandths, rounding halves up, so the result never depends on float precision.</summary>
-        private int ScaledDamage(Player player, int baseDamage)
+        /// <summary>
+        /// Damage raised by <paramref name="scalingStat"/>'s points above the start. Integer maths in
+        /// thousandths, rounding halves up, so the result never depends on float precision.
+        /// </summary>
+        private int ScaledDamage(Player player, int baseDamage, Stat scalingStat)
         {
-            var perMille = 1000 + PointsAboveStart(player, Stat.Strength) * _damagePerMillePerStrength;
+            var perPoint = scalingStat == Stat.Strength ? _damagePerMillePerStrength
+                : scalingStat == Stat.Intelligence ? _damagePerMillePerIntelligence
+                : 0;
+            var perMille = 1000 + PointsAboveStart(player, scalingStat) * perPoint;
             return (int)Math.Max(0L, ((long)baseDamage * perMille + 500) / 1000);
         }
 
@@ -53,6 +59,8 @@ namespace HunterSystem.Simulation
             _events.Add(new XpGained(tick, player.Id, gained, source));
             for (var i = levelsGained - 1; i >= 0; i--)
                 _events.Add(new PlayerLeveledUp(tick, player.Id, player.Level - i, _config.Progression.FreePointsPerLevel));
+            for (var i = levelsGained - 1; i >= 0; i--)
+                UnlockSkillsForLevel(player, player.Level - i, tick);
 
             // The System restores a hunter who levels up.
             if (levelsGained > 0 && player.IsAlive) player.Health = player.MaxHealth;

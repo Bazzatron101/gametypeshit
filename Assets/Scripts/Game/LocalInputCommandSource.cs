@@ -9,7 +9,8 @@ namespace HunterSystem.Game
     /// world-space command:
     /// "Player/Move" (WASD, arrow keys or left stick, relative to the camera),
     /// "Player/Attack" (left mouse or gamepad west), "Player/HeavyAttack" (right mouse or
-    /// right trigger) and "Player/Dodge" (space or gamepad east). All input is ignored while the
+    /// right trigger), "Player/Dodge" (space or gamepad east) and "Player/Skill1" to "Skill6"
+    /// (keys 1 to 6). All input is ignored while the
     /// cursor is free (a menu is open, or after Escape).
     /// </summary>
     public sealed class LocalInputCommandSource : IPlayerCommandSource
@@ -18,6 +19,7 @@ namespace HunterSystem.Game
         private readonly InputAction _attack;
         private readonly InputAction _heavyAttack;
         private readonly InputAction _dodge;
+        private readonly InputAction[] _skills = new InputAction[SimulationWorld.SkillSlotCount];
 
         public LocalInputCommandSource()
         {
@@ -25,6 +27,7 @@ namespace HunterSystem.Game
             _attack = Find("Player/Attack");
             _heavyAttack = Find("Player/HeavyAttack");
             _dodge = Find("Player/Dodge");
+            for (var i = 0; i < _skills.Length; i++) _skills[i] = Find($"Player/Skill{i + 1}");
         }
 
         public PlayerCommand Sample()
@@ -37,8 +40,11 @@ namespace HunterSystem.Game
             var stick = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
             var camera = Camera.main;
             var move = camera != null ? CameraMath.CameraRelativeMove(stick, camera.transform.eulerAngles.y) : stick;
+            int? skillSlot = null;
+            for (var i = 0; i < _skills.Length && skillSlot == null; i++)
+                if (Pressed(_skills[i])) skillSlot = i;
             return new PlayerCommand(move.x, move.y,
-                lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack));
+                lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack), useSkillSlot: skillSlot);
         }
 
         private static bool Pressed(InputAction action) => action != null && action.WasPressedThisFrame();

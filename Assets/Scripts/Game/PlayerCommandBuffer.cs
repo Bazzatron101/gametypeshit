@@ -15,6 +15,7 @@ namespace HunterSystem.Game
         private bool _lightAttackPending;
         private bool _heavyAttackPending;
         private bool _dodgePending;
+        private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
 
         /// <summary>Call once per frame with that frame's sampled input.</summary>
@@ -25,6 +26,7 @@ namespace HunterSystem.Game
             _lightAttackPending |= sampled.LightAttack;
             _heavyAttackPending |= sampled.HeavyAttack;
             _dodgePending |= sampled.Dodge;
+            if (sampled.UseSkillSlot.HasValue) _skillSlotPending = sampled.UseSkillSlot; // the latest press wins
         }
 
         /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>
@@ -36,10 +38,11 @@ namespace HunterSystem.Game
             Stat? allocate = _statAllocations.Count > 0 ? _statAllocations.Dequeue() : (Stat?)null;
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
-                allocateStat: allocate);
+                allocateStat: allocate, useSkillSlot: _skillSlotPending);
             _lightAttackPending = false;
             _heavyAttackPending = false;
             _dodgePending = false;
+            _skillSlotPending = null;
             return command;
         }
     }

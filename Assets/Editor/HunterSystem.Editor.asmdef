@@ -2,7 +2,8 @@
     "name": "HunterSystem.Editor",
     "rootNamespace": "HunterSystem.Editor",
     "references": [
-        "HunterSystem.Game"
+        "HunterSystem.Game",
+        "HunterSystem.Simulation"
     ],
     "includePlatforms": [
         "Editor"

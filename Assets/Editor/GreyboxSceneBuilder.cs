@@ -1,5 +1,6 @@
 using System.Linq;
 using HunterSystem.Game;
+using HunterSystem.Simulation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -9,7 +10,9 @@ namespace HunterSystem.Editor
 {
     /// <summary>
     /// Builds Assets/Scenes/Greybox.unity: a grey floor, one capsule player, three Goblins, the
-    /// System HUD, a camera and a light, and makes it the first scene in the build. Regenerate from the menu or with:
+    /// System HUD, skill visuals, a camera and a light, and makes it the first scene in the build.
+    /// Data assets (progression, enemies, skills) are created once and then left alone, so tuning
+    /// done in the Inspector survives a rebuild. Regenerate from the menu or with:
     /// Unity -batchmode -quit -projectPath . -executeMethod HunterSystem.Editor.GreyboxSceneBuilder.Build
     /// </summary>
     public static class GreyboxSceneBuilder
@@ -18,6 +21,33 @@ namespace HunterSystem.Editor
         private const string MaterialsFolder = "Assets/Art/Materials";
         private const string EnemiesFolder = "Assets/Data/Enemies";
         private const string ProgressionPath = "Assets/Data/Progression.asset";
+        private const string SkillsFolder = "Assets/Data/Skills";
+
+        /// <summary>The first skills, as created on a fresh project. After that the assets are the source of truth.</summary>
+        private static readonly SkillDefinition[] StarterSkillData =
+        {
+            new SkillDefinition
+            {
+                Id = "rending-slash", Name = "Rending Slash", Effect = SkillEffectKind.Cone, Damage = 30, Range = 3f, ArcDegrees = 160f,
+                CooldownSeconds = 4f, UnlockLevel = 1, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "ground-slam", Name = "Ground Slam", Effect = SkillEffectKind.Area, Damage = 20, Radius = 3.5f,
+                CooldownSeconds = 6f, UnlockLevel = 1, ScalingStat = Stat.Strength, Tags = new[] { "melee", "area", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "fire-bolt", Name = "Fire Bolt", Effect = SkillEffectKind.Projectile, Damage = 25, Range = 12f, Radius = 0.5f,
+                ProjectileSpeed = 15f, CooldownSeconds = 2f, UnlockLevel = 1, ScalingStat = Stat.Intelligence,
+                Tags = new[] { "fire", "projectile", "magic" },
+            },
+            new SkillDefinition
+            {
+                Id = "flame-burst", Name = "Flame Burst", Effect = SkillEffectKind.Area, Damage = 35, Radius = 4f,
+                CooldownSeconds = 8f, UnlockLevel = 3, ScalingStat = Stat.Intelligence, Tags = new[] { "fire", "area", "magic" },
+            },
+        };
 
         /// <summary>Three Goblins at 25 XP each: enough for the first level-up (50 XP) in one fight.</summary>
         private static readonly Vector3[] GoblinSpawns = { new Vector3(0f, 0f, 8f), new Vector3(-4f, 0f, 10f), new Vector3(4f, 0f, 10f) };
@@ -45,8 +75,14 @@ namespace HunterSystem.Editor
             floor.GetComponent<Renderer>().sharedMaterial = GetOrCreateMaterial("Greybox_Floor", new Color(0.55f, 0.55f, 0.55f));
 
             var simulation = new GameObject("Simulation");
-            Wire(simulation.AddComponent<SimulationRunner>(), ("progression", GetOrCreateProgression()));
+            var runner = simulation.AddComponent<SimulationRunner>();
+            Wire(runner, ("progression", GetOrCreateProgression()));
+            WireArray(runner, "skills", StarterSkillData.Select(GetOrCreateSkill).ToArray<Object>());
             simulation.AddComponent<SystemHud>();
+            Wire(simulation.AddComponent<SkillEffectsView>(),
+                ("projectileMaterial", GetOrCreateMaterial("Greybox_Fire", new Color(1f, 0.45f, 0.1f))),
+                ("areaMaterial", GetOrCreateMaterial("Greybox_SkillArea", new Color(1f, 0.75f, 0.3f))),
+                ("coneMaterial", GetOrCreateMaterial("Greybox_SkillCone", new Color(0.6f, 0.85f, 1f))));
 
             // Views sit at the feet; their visuals are children above.
             var player = new GameObject("Player 1");
@@ -101,6 +137,30 @@ namespace HunterSystem.Editor
             var so = new SerializedObject(target);
             foreach (var (field, value) in fields) so.FindProperty(field).objectReferenceValue = value;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>Assigns a private [SerializeField] array of references.</summary>
+        private static void WireArray(Object target, string field, Object[] values)
+        {
+            var so = new SerializedObject(target);
+            var property = so.FindProperty(field);
+            property.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++) property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static SkillDefinitionAsset GetOrCreateSkill(SkillDefinition data)
+        {
+            EnsureFolder("Assets", "Data");
+            EnsureFolder("Assets/Data", "Skills");
+            var path = $"{SkillsFolder}/{data.Name.Replace(" ", "")}.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<SkillDefinitionAsset>(path);
+            if (asset != null) return asset; // keep any tuning done in the Inspector
+
+            asset = ScriptableObject.CreateInstance<SkillDefinitionAsset>();
+            asset.CopyFrom(data);
+            AssetDatabase.CreateAsset(asset, path);
+            return asset;
         }
 
         private static void EnsureFolder(string parent, string name)

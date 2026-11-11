@@ -20,6 +20,12 @@ namespace HunterSystem.Simulation
             public int UnspentStatPoints;
             public int[] Stats;
 
+            public readonly SkillDefinition[] SkillSlots = new SkillDefinition[SkillSlotCount];
+            public readonly List<SkillDefinition> KnownSkills = new List<SkillDefinition>();
+
+            /// <summary>Cooldowns are per skill (by Id), so moving a skill between slots would not reset it.</summary>
+            public readonly Dictionary<string, int> SkillReadyAtTick = new Dictionary<string, int>();
+
             /// <summary>Indexed by <see cref="AttackKind"/>: each attack has its own cooldown.</summary>
             public readonly int[] AttackReadyAtTick = new int[AttackKindCount];
 
@@ -65,6 +71,24 @@ namespace HunterSystem.Simulation
             /// <summary>0 when not winding up.</summary>
             public int AttackLandsAtTick;
             public Player AttackTarget;
+        }
+
+        private sealed class Projectile
+        {
+            public int Id;
+            public Player Owner;
+            public SkillDefinition Skill;
+
+            // Fixed at launch, so stats spent or data changed mid-flight do not alter a bolt already thrown.
+            public int Damage;
+            public float Speed;
+            public float Range;
+            public float HitRadius;
+
+            public Vec3 Position;
+            public Vec3 Direction;
+            public float Travelled;
+            public int LaunchTick;
         }
 
         /// <summary>An attack definition with its seconds and degrees resolved once into ticks and cosines.</summary>

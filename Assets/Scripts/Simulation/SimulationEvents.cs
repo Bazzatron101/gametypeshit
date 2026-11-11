@@ -42,13 +42,18 @@ namespace HunterSystem.Simulation
         public PlayerId Attacker { get; }
         public EnemyId Target { get; }
 
+        /// <summary>The skill that dealt it, or null for a light or heavy attack.</summary>
+        public SkillDefinition Skill { get; }
+
         /// <summary>Health actually removed. Never more than the target had left.</summary>
         public int Amount { get; }
 
         public int RemainingHealth { get; }
 
-        public DamageDealt(int tick, PlayerId attacker, EnemyId target, int amount, int remainingHealth) : base(tick)
+        public DamageDealt(int tick, PlayerId attacker, EnemyId target, int amount, int remainingHealth, SkillDefinition skill = null)
+            : base(tick)
         {
+            Skill = skill;
             Attacker = attacker;
             Target = target;
             Amount = amount;
@@ -166,6 +171,50 @@ namespace HunterSystem.Simulation
             Player = player;
             Stat = stat;
             NewValue = newValue;
+        }
+    }
+
+    public sealed class SkillUsed : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public SkillDefinition Skill { get; }
+        public int Slot { get; }
+
+        public SkillUsed(int tick, PlayerId player, SkillDefinition skill, int slot) : base(tick)
+        {
+            Player = player;
+            Skill = skill;
+            Slot = slot;
+        }
+    }
+
+    /// <summary>A player learned a skill on level-up. <see cref="Slot"/> is where it went, or null if the bar was full.</summary>
+    public sealed class SkillUnlocked : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public SkillDefinition Skill { get; }
+        public int? Slot { get; }
+
+        public SkillUnlocked(int tick, PlayerId player, SkillDefinition skill, int? slot) : base(tick)
+        {
+            Player = player;
+            Skill = skill;
+            Slot = slot;
+        }
+    }
+
+    /// <summary>A projectile hit an enemy or reached its range.</summary>
+    public sealed class ProjectileEnded : SimulationEvent
+    {
+        public int Projectile { get; }
+        public bool HitEnemy { get; }
+        public Vec3 Position { get; }
+
+        public ProjectileEnded(int tick, int projectile, bool hitEnemy, Vec3 position) : base(tick)
+        {
+            Projectile = projectile;
+            HitEnemy = hitEnemy;
+            Position = position;
         }
     }
 
