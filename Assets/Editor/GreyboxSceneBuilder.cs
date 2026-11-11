@@ -22,6 +22,32 @@ namespace HunterSystem.Editor
         private const string EnemiesFolder = "Assets/Data/Enemies";
         private const string ProgressionPath = "Assets/Data/Progression.asset";
         private const string SkillsFolder = "Assets/Data/Skills";
+        private const string ModifiersFolder = "Assets/Data/Modifiers";
+
+        /// <summary>Demo modifiers toggled by F5 to F8, as created on a fresh project.</summary>
+        private static readonly ModifierDefinition[] DemoModifierData =
+        {
+            new ModifierDefinition
+            {
+                Id = "searing", Name = "Searing", Description = "Fire skills deal 50% more damage.",
+                AppliesToTag = SkillTags.Fire, DamagePercent = 50,
+            },
+            new ModifierDefinition
+            {
+                Id = "split-shot", Name = "Split Shot", Description = "Projectile skills fire three bolts in a fan.",
+                AppliesToTag = SkillTags.Projectile, ExtraProjectiles = 2, ProjectileSpreadDegrees = 20f,
+            },
+            new ModifierDefinition
+            {
+                Id = "ember-core", Name = "Ember Core", Description = "Every fire hit bursts, burning nearby enemies for half the damage.",
+                AppliesToTag = SkillTags.Fire, ExplosionRadius = 2.5f, ExplosionDamagePercent = 50,
+            },
+            new ModifierDefinition
+            {
+                Id = "deep-rend", Name = "Deep Rend", Description = "Rending Slash: 50% more damage, 25% shorter cooldown, 1 m longer reach.",
+                AppliesToSkillId = "rending-slash", DamagePercent = 50, CooldownPercent = -25, RangeAdd = 1f,
+            },
+        };
 
         /// <summary>The first skills, as created on a fresh project. After that the assets are the source of truth.</summary>
         private static readonly SkillDefinition[] StarterSkillData =
@@ -82,7 +108,10 @@ namespace HunterSystem.Editor
             Wire(simulation.AddComponent<SkillEffectsView>(),
                 ("projectileMaterial", GetOrCreateMaterial("Greybox_Fire", new Color(1f, 0.45f, 0.1f))),
                 ("areaMaterial", GetOrCreateMaterial("Greybox_SkillArea", new Color(1f, 0.75f, 0.3f))),
-                ("coneMaterial", GetOrCreateMaterial("Greybox_SkillCone", new Color(0.6f, 0.85f, 1f))));
+                ("coneMaterial", GetOrCreateMaterial("Greybox_SkillCone", new Color(0.6f, 0.85f, 1f))),
+                ("explosionMaterial", GetOrCreateMaterial("Greybox_Explosion", new Color(1f, 0.3f, 0.05f))));
+            WireArray(simulation.AddComponent<DebugModifierToggles>(), "modifiers",
+                DemoModifierData.Select(GetOrCreateModifier).ToArray<Object>());
 
             // Views sit at the feet; their visuals are children above.
             var player = new GameObject("Player 1");
@@ -158,6 +187,20 @@ namespace HunterSystem.Editor
             if (asset != null) return asset; // keep any tuning done in the Inspector
 
             asset = ScriptableObject.CreateInstance<SkillDefinitionAsset>();
+            asset.CopyFrom(data);
+            AssetDatabase.CreateAsset(asset, path);
+            return asset;
+        }
+
+        private static ModifierDefinitionAsset GetOrCreateModifier(ModifierDefinition data)
+        {
+            EnsureFolder("Assets", "Data");
+            EnsureFolder("Assets/Data", "Modifiers");
+            var path = $"{ModifiersFolder}/{data.Name.Replace(" ", "")}.asset";
+            var asset = AssetDatabase.LoadAssetAtPath<ModifierDefinitionAsset>(path);
+            if (asset != null) return asset; // keep any tuning done in the Inspector
+
+            asset = ScriptableObject.CreateInstance<ModifierDefinitionAsset>();
             asset.CopyFrom(data);
             AssetDatabase.CreateAsset(asset, path);
             return asset;

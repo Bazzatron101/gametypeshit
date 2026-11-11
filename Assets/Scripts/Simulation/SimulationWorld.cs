@@ -22,6 +22,7 @@ namespace HunterSystem.Simulation
         private readonly int _damagePerMillePerStrength;
         private readonly int _damagePerMillePerIntelligence;
         private readonly List<Projectile> _projectiles = new List<Projectile>();
+        private readonly HashSet<string> _knownTags;
         private int _nextProjectileId = 1;
         private readonly int _dodgeTicks;
         private readonly int _dodgeInvulnerableTicks;
@@ -56,7 +57,8 @@ namespace HunterSystem.Simulation
             // Per-mille integer so damage scaling is exact: 10 damage at +5% is 10.5, which rounds to 11.
             _damagePerMillePerStrength = (int)MathF.Round(config.StatEffects.DamagePerStrength * 1000f);
             _damagePerMillePerIntelligence = (int)MathF.Round(config.StatEffects.DamagePerIntelligence * 1000f);
-            ValidateSkills(config.Skills, progression.LevelCap);
+            _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
+            ValidateSkills(config.Skills, progression.LevelCap, _knownTags);
             TickDelta = 1f / config.TickRate;
             _attacks = new ResolvedAttack[AttackKindCount];
             _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
@@ -104,7 +106,7 @@ namespace HunterSystem.Simulation
             return new PlayerState(p.Id, p.Position, p.Facing, p.Health, p.MaxHealth,
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
-                SkillBarSnapshot(p), p.KnownSkills.ToArray());
+                SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray());
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -133,7 +135,8 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>
-        /// Advances one tick: stat points are spent first (so a point spent this tick already counts),
+        /// Advances one tick: queued modifier grants and revokes apply first, then stat points are
+        /// spent (so a point spent this tick already counts),
         /// then players dodge, move and attack or use a skill, then projectiles fly, then enemies act. Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
         /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
@@ -147,6 +150,8 @@ namespace HunterSystem.Simulation
 
             _events.Clear();
             var tick = Tick + 1;
+
+            ApplyPendingModifierChanges(tick);
 
             foreach (var player in _players)
                 if (commands.TryGetValue(player.Id, out var cmd) && cmd.AllocateStat.HasValue)

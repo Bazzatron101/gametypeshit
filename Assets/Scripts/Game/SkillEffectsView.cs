@@ -6,7 +6,7 @@ namespace HunterSystem.Game
 {
     /// <summary>
     /// Greybox visuals for skills: a sphere per projectile in flight, and a brief flat flash for
-    /// the area or cone a skill covered. Reads the simulation only.
+    /// the area or cone a skill covered and for each explosion. Reads the simulation only.
     /// </summary>
     public sealed class SkillEffectsView : MonoBehaviour
     {
@@ -16,6 +16,7 @@ namespace HunterSystem.Game
         [SerializeField] private Material projectileMaterial;
         [SerializeField] private Material areaMaterial;
         [SerializeField] private Material coneMaterial;
+        [SerializeField] private Material explosionMaterial;
 
         private SimulationRunner _runner;
         private readonly Dictionary<int, GameObject> _projectiles = new Dictionary<int, GameObject>();
@@ -31,7 +32,11 @@ namespace HunterSystem.Game
             if (_runner == null || _runner.World == null) return;
 
             foreach (var e in _runner.FrameEvents)
+            {
                 if (e is SkillUsed used) Flash(used);
+                else if (e is Explosion explosion)
+                    FlashDisc(explosion.Position, explosion.Radius, explosionMaterial != null ? explosionMaterial : areaMaterial, "Explosion Flash");
+            }
 
             SyncProjectiles();
         }
@@ -46,26 +51,29 @@ namespace HunterSystem.Game
             switch (skill.Effect)
             {
                 case SkillEffectKind.Area:
-                {
-                    var disc = Visual(PrimitiveType.Cylinder, areaMaterial, "Area Flash");
-                    disc.transform.position = origin;
-                    disc.transform.localScale = new Vector3(skill.Radius * 2f, 0.02f, skill.Radius * 2f);
-                    Destroy(disc, FlashSeconds);
+                    FlashDisc(player.Position, used.Radius, areaMaterial, "Area Flash");
                     break;
-                }
                 case SkillEffectKind.Cone:
                 {
                     // A flat slab as wide as the cone's far edge, out to its reach.
                     var halfArc = Mathf.Min(skill.ArcDegrees, 180f) * 0.5f * Mathf.Deg2Rad;
-                    var width = Mathf.Max(0.5f, 2f * skill.Range * Mathf.Sin(halfArc));
+                    var width = Mathf.Max(0.5f, 2f * used.Range * Mathf.Sin(halfArc));
                     var slab = Visual(PrimitiveType.Cube, coneMaterial, "Cone Flash");
                     slab.transform.rotation = Quaternion.LookRotation(facing, Vector3.up);
-                    slab.transform.position = origin + facing * (skill.Range * 0.5f) + Vector3.up * EffectHeight * 0.5f;
-                    slab.transform.localScale = new Vector3(width, 0.05f, skill.Range);
+                    slab.transform.position = origin + facing * (used.Range * 0.5f) + Vector3.up * EffectHeight * 0.5f;
+                    slab.transform.localScale = new Vector3(width, 0.05f, used.Range);
                     Destroy(slab, FlashSeconds);
                     break;
                 }
             }
+        }
+
+        private void FlashDisc(Vec3 at, float radius, Material material, string name)
+        {
+            var disc = Visual(PrimitiveType.Cylinder, material, name);
+            disc.transform.position = new Vector3(at.X, 0.05f, at.Z);
+            disc.transform.localScale = new Vector3(radius * 2f, 0.02f, radius * 2f);
+            Destroy(disc, FlashSeconds);
         }
 
         private void SyncProjectiles()

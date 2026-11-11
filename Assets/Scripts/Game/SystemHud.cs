@@ -32,6 +32,7 @@ namespace HunterSystem.Game
 
         private SimulationRunner _runner;
         private ThirdPersonCamera _camera;
+        private DebugModifierToggles _toggles;
         private readonly AnnouncementQueue _announcements = new AnnouncementQueue();
         private bool _cursorWasCapturedBeforeMenu;
         private GUIStyle _label, _title, _toastTitle, _toastBody, _button, _skillName;
@@ -47,6 +48,7 @@ namespace HunterSystem.Game
         {
             _runner = FindAnyObjectByType<SimulationRunner>();
             _camera = FindAnyObjectByType<ThirdPersonCamera>();
+            _toggles = FindAnyObjectByType<DebugModifierToggles>();
         }
 
         private void Update()
@@ -104,6 +106,7 @@ namespace HunterSystem.Game
             var state = _runner.World.GetPlayer(PlayerId);
 
             DrawStatus(state);
+            DrawModifiers(state);
             DrawSkillBar(state);
             var announcement = CurrentAnnouncement;
             if (announcement.HasValue) DrawAnnouncement(announcement.Value);
@@ -154,6 +157,41 @@ namespace HunterSystem.Game
             GUI.color = previous;
         }
 
+        /// <summary>Active modifiers under the status panel, with the greybox toggle keys.</summary>
+        private void DrawModifiers(PlayerState state)
+        {
+            var toggles = _toggles;
+            var rows = toggles != null ? toggles.Count : 0;
+            if (rows == 0 && state.ActiveModifiers.Count == 0) return;
+
+            var box = new Rect(16, 140, 300, 30 + Mathf.Max(rows, state.ActiveModifiers.Count) * 20);
+            Fill(box, PanelColor);
+            Outline(box, SystemBlue);
+            _label.normal.textColor = SystemBlue;
+            GUI.Label(new Rect(box.x + 12, box.y + 4, 280, 20), "MODIFIERS", _label);
+
+            if (rows > 0)
+            {
+                for (var i = 0; i < rows; i++)
+                {
+                    var asset = toggles[i];
+                    if (asset == null) continue;
+                    var active = toggles.IsActive(i);
+                    _label.normal.textColor = active ? Color.white : Color.gray;
+                    GUI.Label(new Rect(box.x + 12, box.y + 24 + i * 20, 280, 20),
+                        $"[{DebugModifierToggles.KeyName(i)}] {(active ? "ON " : "off")}  {asset.DisplayName}", _label);
+                }
+            }
+            else
+            {
+                for (var i = 0; i < state.ActiveModifiers.Count; i++)
+                {
+                    _label.normal.textColor = Color.white;
+                    GUI.Label(new Rect(box.x + 12, box.y + 24 + i * 20, 280, 20), state.ActiveModifiers[i].Name, _label);
+                }
+            }
+        }
+
         /// <summary>Six slots along the bottom: key, skill name, and a darkened sweep with seconds left while cooling down.</summary>
         private void DrawSkillBar(PlayerState state)
         {
@@ -177,7 +215,7 @@ namespace HunterSystem.Game
                 var remaining = slot.TicksUntilReady(_runner.World.Tick) / tickRate;
                 if (remaining > 0f)
                 {
-                    var total = Mathf.Max(slot.Skill.CooldownSeconds, 0.0001f);
+                    var total = Mathf.Max(slot.CooldownTicks / tickRate, 0.0001f);
                     var fraction = Mathf.Clamp01(remaining / total);
                     Fill(new Rect(box.x, box.yMax - box.height * fraction, box.width, box.height * fraction), new Color(0f, 0f, 0f, 0.6f));
                 }

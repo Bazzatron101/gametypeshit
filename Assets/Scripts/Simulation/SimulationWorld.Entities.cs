@@ -26,6 +26,15 @@ namespace HunterSystem.Simulation
             /// <summary>Cooldowns are per skill (by Id), so moving a skill between slots would not reset it.</summary>
             public readonly Dictionary<string, int> SkillReadyAtTick = new Dictionary<string, int>();
 
+            /// <summary>Length of each skill's last cooldown in ticks, after modifiers.</summary>
+            public readonly Dictionary<string, int> SkillCooldownTicks = new Dictionary<string, int>();
+
+            public readonly List<ModifierDefinition> Modifiers = new List<ModifierDefinition>();
+
+            /// <summary>Grants (modifier set) and revokes (id set) waiting for the start of the next tick.</summary>
+            public readonly List<(ModifierDefinition grant, string revokeId)> PendingModifierChanges =
+                new List<(ModifierDefinition, string)>();
+
             /// <summary>Indexed by <see cref="AttackKind"/>: each attack has its own cooldown.</summary>
             public readonly int[] AttackReadyAtTick = new int[AttackKindCount];
 
@@ -82,8 +91,9 @@ namespace HunterSystem.Simulation
             // Fixed at launch, so stats spent or data changed mid-flight do not alter a bolt already thrown.
             public int Damage;
             public float Speed;
-            public float Range;
-            public float HitRadius;
+
+            /// <summary>The skill as resolved for this use: range, hit radius, bursts, and who it has already hit.</summary>
+            public ResolvedSkill Resolved;
 
             public Vec3 Position;
             public Vec3 Direction;

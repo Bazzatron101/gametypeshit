@@ -68,10 +68,14 @@ namespace HunterSystem.Simulation
         /// <summary>The first tick on which the skill can be used again.</summary>
         public readonly int ReadyAtTick;
 
-        public SkillSlotState(SkillDefinition skill, int readyAtTick)
+        /// <summary>Length of the cooldown last started, in ticks, after modifiers (for drawing progress).</summary>
+        public readonly int CooldownTicks;
+
+        public SkillSlotState(SkillDefinition skill, int readyAtTick, int cooldownTicks)
         {
             Skill = skill;
             ReadyAtTick = readyAtTick;
+            CooldownTicks = cooldownTicks;
         }
 
         public bool IsEmpty => Skill == null;

@@ -104,18 +104,22 @@ namespace HunterSystem.Simulation
                     DamageEnemy(attacker, enemy, damage, tick, skill);
         }
 
-        /// <summary>The one place enemy health goes down, from attacks, skills and projectiles alike.</summary>
-        private void DamageEnemy(Player attacker, Enemy enemy, int damage, int tick, SkillDefinition skill)
+        /// <summary>
+        /// The one place enemy health goes down, from attacks, skills, projectiles and explosions alike.
+        /// Returns the health actually removed.
+        /// </summary>
+        private int DamageEnemy(Player attacker, Enemy enemy, int damage, int tick, SkillDefinition skill, bool secondary = false)
         {
             var amount = Math.Min(Math.Max(0, damage), enemy.Health);
-            if (amount == 0) return;
+            if (amount == 0) return 0;
             enemy.Health -= amount;
-            _events.Add(new DamageDealt(tick, attacker.Id, enemy.Id, amount, enemy.Health, skill));
+            _events.Add(new DamageDealt(tick, attacker.Id, enemy.Id, amount, enemy.Health, skill, secondary));
             if (enemy.Health == 0)
             {
                 _events.Add(new EnemyDefeated(tick, enemy.Id, attacker.Id));
                 AwardXp(enemy, tick);
             }
+            return amount;
         }
 
         private static bool InCone(Player player, Vec3 target, float range, float minCos)

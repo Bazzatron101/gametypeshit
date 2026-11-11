@@ -45,15 +45,20 @@ namespace HunterSystem.Simulation
         /// <summary>The skill that dealt it, or null for a light or heavy attack.</summary>
         public SkillDefinition Skill { get; }
 
+        /// <summary>True for knock-on damage (an explosion), false for the skill's or attack's own hit.</summary>
+        public bool IsSecondary { get; }
+
         /// <summary>Health actually removed. Never more than the target had left.</summary>
         public int Amount { get; }
 
         public int RemainingHealth { get; }
 
-        public DamageDealt(int tick, PlayerId attacker, EnemyId target, int amount, int remainingHealth, SkillDefinition skill = null)
+        public DamageDealt(int tick, PlayerId attacker, EnemyId target, int amount, int remainingHealth, SkillDefinition skill = null,
+            bool isSecondary = false)
             : base(tick)
         {
             Skill = skill;
+            IsSecondary = isSecondary;
             Attacker = attacker;
             Target = target;
             Amount = amount;
@@ -180,11 +185,45 @@ namespace HunterSystem.Simulation
         public SkillDefinition Skill { get; }
         public int Slot { get; }
 
-        public SkillUsed(int tick, PlayerId player, SkillDefinition skill, int slot) : base(tick)
+        /// <summary>Cone reach or projectile range for this use, after modifiers.</summary>
+        public float Range { get; }
+
+        /// <summary>Area radius or projectile hit radius for this use, after modifiers.</summary>
+        public float Radius { get; }
+
+        public SkillUsed(int tick, PlayerId player, SkillDefinition skill, int slot, float range, float radius) : base(tick)
         {
             Player = player;
             Skill = skill;
             Slot = slot;
+            Range = range;
+            Radius = radius;
+        }
+    }
+
+    /// <summary>A modifier came into effect for a player at the start of this tick.</summary>
+    public sealed class ModifierGranted : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public ModifierDefinition Modifier { get; }
+
+        public ModifierGranted(int tick, PlayerId player, ModifierDefinition modifier) : base(tick)
+        {
+            Player = player;
+            Modifier = modifier;
+        }
+    }
+
+    /// <summary>A modifier stopped applying to a player at the start of this tick.</summary>
+    public sealed class ModifierRevoked : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public string ModifierId { get; }
+
+        public ModifierRevoked(int tick, PlayerId player, string modifierId) : base(tick)
+        {
+            Player = player;
+            ModifierId = modifierId;
         }
     }
 
@@ -200,6 +239,23 @@ namespace HunterSystem.Simulation
             Player = player;
             Skill = skill;
             Slot = slot;
+        }
+    }
+
+    /// <summary>A skill hit burst at an enemy (from a modifier such as Ember Core).</summary>
+    public sealed class Explosion : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public SkillDefinition Skill { get; }
+        public Vec3 Position { get; }
+        public float Radius { get; }
+
+        public Explosion(int tick, PlayerId player, SkillDefinition skill, Vec3 position, float radius) : base(tick)
+        {
+            Player = player;
+            Skill = skill;
+            Position = position;
+            Radius = radius;
         }
     }
 

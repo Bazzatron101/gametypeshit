@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5aa151ae8eb49b4b9fb1e0d8507e902, type: 3}
+  m_Name: DeepRend
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.ModifierDefinitionAsset
+  id: deep-rend
+  displayName: Deep Rend
+  description: 'Rending Slash: 50% more damage, 25% shorter cooldown, 1 m longer reach.'
+  appliesTo: 1
+  target: rending-slash
+  damagePercent: 50
+  cooldownPercent: -25
+  rangeAdd: 1
+  radiusAdd: 0
+  extraProjectiles: 0
+  projectileSpreadDegrees: 15
+  explosionRadius: 0
+  explosionDamagePercent: 0

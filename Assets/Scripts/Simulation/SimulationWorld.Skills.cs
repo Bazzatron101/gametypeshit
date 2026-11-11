@@ -20,7 +20,7 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>Content validation: every skill must be usable as written, or the world refuses to start.</summary>
-        private static void ValidateSkills(IReadOnlyList<SkillDefinition> skills, int levelCap)
+        private static void ValidateSkills(IReadOnlyList<SkillDefinition> skills, int levelCap, HashSet<string> knownTags)
         {
             if (skills == null) throw new ArgumentException("Skills must be set (it may be empty).", nameof(skills));
             var ids = new HashSet<string>();
@@ -37,6 +37,7 @@ namespace HunterSystem.Simulation
                 Require(ids.Add(skill.Id), "shares its Id with another skill.");
                 Require(!string.IsNullOrWhiteSpace(skill.Name), "has no Name.");
                 Require(skill.Tags != null, "Tags must not be null (use an empty list).");
+                foreach (var tag in skill.Tags) Require(knownTags.Contains(tag), $"tag '{tag}' is not a known tag.");
                 Require(skill.UnlockLevel >= 1 && skill.UnlockLevel <= levelCap, $"UnlockLevel {skill.UnlockLevel} is outside 1 to the level cap ({levelCap}).");
                 Require(skill.CooldownSeconds >= 0f, "CooldownSeconds is negative.");
                 Require(skill.Damage >= 0, "Damage is negative.");
@@ -61,7 +62,10 @@ namespace HunterSystem.Simulation
             for (var i = 0; i < SkillSlotCount; i++)
             {
                 var skill = player.SkillSlots[i];
-                slots[i] = new SkillSlotState(skill, skill != null && player.SkillReadyAtTick.TryGetValue(skill.Id, out var ready) ? ready : 0);
+                if (skill == null) { slots[i] = new SkillSlotState(null, 0, 0); continue; }
+                player.SkillReadyAtTick.TryGetValue(skill.Id, out var ready);
+                var cooldown = player.SkillCooldownTicks.TryGetValue(skill.Id, out var c) ? c : SecondsToTicks(skill.CooldownSeconds);
+                slots[i] = new SkillSlotState(skill, ready, cooldown);
             }
             return slots;
         }
@@ -105,40 +109,71 @@ namespace HunterSystem.Simulation
             if (skill == null) return false;
             if (player.SkillReadyAtTick.TryGetValue(skill.Id, out var readyAt) && tick < readyAt) return false;
 
-            player.SkillReadyAtTick[skill.Id] = tick + SecondsToTicks(skill.CooldownSeconds);
-            _events.Add(new SkillUsed(tick, player.Id, skill, slot));
-            var damage = ScaledDamage(player, skill.Damage, skill.ScalingStat);
+            var resolved = Resolve(player, skill);
+            player.SkillReadyAtTick[skill.Id] = tick + resolved.CooldownTicks;
+            player.SkillCooldownTicks[skill.Id] = resolved.CooldownTicks;
+            _events.Add(new SkillUsed(tick, player.Id, skill, slot, resolved.Range, resolved.Radius));
+            var damage = ScaledDamage(player, resolved.BaseDamage, skill.ScalingStat);
 
             switch (skill.Effect)
             {
                 case SkillEffectKind.Cone:
-                    ApplySoftLockOn(player, skill.Range);
+                    ApplySoftLockOn(player, resolved.Range);
                     var minCos = HalfAngleCos(skill.ArcDegrees);
-                    DamageEnemiesWhere(player, damage, tick, skill, at => InCone(player, at, skill.Range, minCos));
+                    HitEnemiesWhere(player, damage, tick, resolved, at => InCone(player, at, resolved.Range, minCos));
                     break;
 
                 case SkillEffectKind.Area:
-                    DamageEnemiesWhere(player, damage, tick, skill, at => Flat(at - player.Position).Length <= skill.Radius);
+                    HitEnemiesWhere(player, damage, tick, resolved, at => Flat(at - player.Position).Length <= resolved.Radius);
                     break;
 
                 case SkillEffectKind.Projectile:
-                    ApplySoftLockOn(player, skill.Range);
-                    _projectiles.Add(new Projectile
+                    ApplySoftLockOn(player, resolved.Range);
+                    for (var i = 0; i < resolved.ProjectileCount; i++)
                     {
-                        Id = _nextProjectileId++,
-                        Owner = player,
-                        Skill = skill,
-                        Damage = damage,
-                        Speed = skill.ProjectileSpeed,
-                        Range = skill.Range,
-                        HitRadius = skill.Radius,
-                        Position = player.Position,
-                        Direction = player.Facing,
-                        LaunchTick = tick,
-                    });
+                        // Fan the bolts out evenly around the aim: -s, 0, +s for three.
+                        var offset = (i - (resolved.ProjectileCount - 1) * 0.5f) * resolved.SpreadDegrees;
+                        _projectiles.Add(new Projectile
+                        {
+                            Id = _nextProjectileId++,
+                            Owner = player,
+                            Skill = skill,
+                            Resolved = resolved,
+                            Damage = damage,
+                            Speed = skill.ProjectileSpeed,
+                            Position = player.Position,
+                            Direction = RotateFlat(player.Facing, offset),
+                            LaunchTick = tick,
+                        });
+                    }
                     break;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Lands a skill's direct hit on every live enemy inside its shape, then sets off any bursts.
+        /// Targets are chosen first, so a burst cannot change who the skill itself hits.
+        /// </summary>
+        private void HitEnemiesWhere(Player attacker, int damage, int tick, ResolvedSkill skill, Func<Vec3, bool> inShape)
+        {
+            var targets = new List<Enemy>();
+            foreach (var enemy in _enemies)
+                if (enemy.Health > 0 && inShape(enemy.Position)) targets.Add(enemy);
+
+            foreach (var enemy in targets) skill.DirectlyHit.Add(enemy);
+            foreach (var enemy in targets) DamageEnemy(attacker, enemy, damage, tick, skill.Definition);
+            foreach (var enemy in targets) ExplodeIfModified(attacker, enemy, damage, skill, tick);
+        }
+
+        /// <summary>Turns a floor direction by <paramref name="degrees"/> (positive turns right, toward +X from +Z).</summary>
+        private static Vec3 RotateFlat(Vec3 direction, float degrees)
+        {
+            if (degrees == 0f) return direction;
+            var r = degrees * MathF.PI / 180f;
+            var cos = MathF.Cos(r);
+            var sin = MathF.Sin(r);
+            return new Vec3(direction.X * cos + direction.Z * sin, 0f, -direction.X * sin + direction.Z * cos);
         }
 
         /// <summary>Moves each projectile, hitting the first live enemy along this tick's stretch of its path.</summary>
@@ -149,20 +184,22 @@ namespace HunterSystem.Simulation
                 var p = _projectiles[i];
                 if (p.LaunchTick == tick) continue; // it leaves the hand this tick and starts flying next tick
 
-                var step = MathF.Min(p.Speed * TickDelta, p.Range - p.Travelled);
+                var step = MathF.Min(p.Speed * TickDelta, p.Resolved.Range - p.Travelled);
                 var from = p.Position;
-                var hit = FirstEnemyAlong(from, p.Direction, step, p.HitRadius, out var along);
+                var hit = FirstEnemyAlong(from, p.Direction, step, p.Resolved.Radius, out var along);
                 if (hit != null)
                 {
                     p.Position = from + p.Direction * along;
+                    p.Resolved.DirectlyHit.Add(hit);
                     DamageEnemy(p.Owner, hit, p.Damage, tick, p.Skill);
+                    ExplodeIfModified(p.Owner, hit, p.Damage, p.Resolved, tick);
                     EndProjectile(i, p, tick, hitEnemy: true);
                     continue;
                 }
 
                 p.Position = from + p.Direction * step;
                 p.Travelled += step;
-                if (p.Travelled >= p.Range - Epsilon) EndProjectile(i, p, tick, hitEnemy: false);
+                if (p.Travelled >= p.Resolved.Range - Epsilon) EndProjectile(i, p, tick, hitEnemy: false);
             }
         }
 

@@ -29,6 +29,9 @@ namespace HunterSystem.Simulation
 
         public StatEffectsDefinition StatEffects { get; set; } = new StatEffectsDefinition();
 
+        /// <summary>Tags skills and modifiers may use; anything else is rejected as a typo.</summary>
+        public IReadOnlyCollection<string> KnownTags { get; set; } = SkillTags.Standard;
+
         /// <summary>Every skill in the game. Starters (unlock level 1) fill the bar in this order.</summary>
         public IReadOnlyList<SkillDefinition> Skills { get; set; } = Array.Empty<SkillDefinition>();
     }

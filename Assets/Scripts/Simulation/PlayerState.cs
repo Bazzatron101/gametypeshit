@@ -52,10 +52,14 @@ namespace HunterSystem.Simulation
         /// <summary>Every skill learned, in learning order, slotted or not.</summary>
         public readonly IReadOnlyList<SkillDefinition> KnownSkills;
 
+        /// <summary>Modifiers in effect, in the order they were granted.</summary>
+        public readonly IReadOnlyList<ModifierDefinition> ActiveModifiers;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
-            IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills)
+            IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
+            IReadOnlyList<ModifierDefinition> activeModifiers)
         {
             Id = id;
             Position = position;
@@ -74,6 +78,7 @@ namespace HunterSystem.Simulation
             Stats = stats;
             SkillSlots = skillSlots;
             KnownSkills = knownSkills;
+            ActiveModifiers = activeModifiers;
         }
 
 
