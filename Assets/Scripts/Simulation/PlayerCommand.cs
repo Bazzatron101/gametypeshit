@@ -13,14 +13,16 @@ namespace HunterSystem.Simulation
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
+        public readonly bool Dodge;
 
-        public PlayerCommand(float moveX, float moveZ, bool lightAttack = false)
+        public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false)
         {
             var length = MathF.Sqrt(moveX * moveX + moveZ * moveZ);
             if (length > 1f) { moveX /= length; moveZ /= length; }
             MoveX = moveX;
             MoveZ = moveZ;
             LightAttack = lightAttack;
+            Dodge = dodge;
         }
     }
 }

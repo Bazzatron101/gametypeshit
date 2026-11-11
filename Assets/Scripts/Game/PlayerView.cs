@@ -6,19 +6,25 @@ namespace HunterSystem.Game
     /// <summary>
     /// Presentation for one player. Its starting transform is the spawn point; after that it
     /// only reads state from the simulation and never writes to it. Place it at the feet;
-    /// child visuals (the capsule) sit above. It turns to face the simulation's facing and
-    /// briefly shows a swing marker on each light attack.
+    /// child visuals (the capsule) sit above. It turns to the simulation's facing, shows a swing
+    /// marker on each light attack, flashes when hit, squashes while dodging and lies down when defeated.
     /// </summary>
     public sealed class PlayerView : MonoBehaviour
     {
         private const float SwingShowSeconds = 0.12f;
+        private const float HitFlashSeconds = 0.15f;
 
         [SerializeField, Min(1)] private int playerId = 1;
         [SerializeField, Tooltip("Driven by this machine's keyboard/gamepad.")] private bool isLocal = true;
         [SerializeField, Tooltip("Shown briefly when this player attacks")] private GameObject swingMarker;
+        [SerializeField, Tooltip("Flashed on hit, squashed on dodge, laid down on defeat")] private Renderer body;
+        [SerializeField] private Color hitFlashColor = new Color(1f, 0.25f, 0.25f);
 
         private SimulationRunner _runner;
+        private readonly BodyTint _tint = new BodyTint();
         private float _swingUntil;
+        private Vector3 _bodyScale;
+        private Vector3 _bodyPosition;
 
         public PlayerId PlayerId => new PlayerId(playerId);
         public bool IsLocal => isLocal;
@@ -27,6 +33,11 @@ namespace HunterSystem.Game
         {
             _runner = FindAnyObjectByType<SimulationRunner>();
             if (swingMarker != null) swingMarker.SetActive(false);
+            if (body != null)
+            {
+                _bodyScale = body.transform.localScale;
+                _bodyPosition = body.transform.localPosition;
+            }
         }
 
         private void LateUpdate()
@@ -34,12 +45,42 @@ namespace HunterSystem.Game
             if (_runner == null || _runner.World == null) return;
 
             foreach (var e in _runner.FrameEvents)
-                if (e is AttackPerformed swing && swing.Player == PlayerId) _swingUntil = Time.time + SwingShowSeconds;
+            {
+                switch (e)
+                {
+                    case AttackPerformed swing when swing.Player == PlayerId:
+                        _swingUntil = Time.time + SwingShowSeconds;
+                        break;
+                    case PlayerDamaged hit when hit.Target == PlayerId:
+                        _tint.Flash(hitFlashColor, HitFlashSeconds);
+                        break;
+                }
+            }
 
             var state = _runner.World.GetPlayer(PlayerId);
             transform.position = _runner.GetRenderPosition(PlayerId);
             transform.rotation = Quaternion.LookRotation(new Vector3(state.Facing.X, 0f, state.Facing.Z), Vector3.up);
-            if (swingMarker != null) swingMarker.SetActive(Time.time < _swingUntil);
+            if (swingMarker != null) swingMarker.SetActive(!state.IsDefeated && Time.time < _swingUntil);
+            if (body != null) PoseBody(state);
+        }
+
+        private void PoseBody(PlayerState state)
+        {
+            var t = body.transform;
+            if (state.IsDefeated)
+            {
+                t.localRotation = Quaternion.Euler(90f, 0f, 0f); // lying on the floor
+                t.localPosition = new Vector3(0f, _bodyScale.x * 0.5f, 0f);
+                t.localScale = _bodyScale;
+            }
+            else
+            {
+                t.localRotation = Quaternion.identity;
+                t.localPosition = state.IsDodging ? new Vector3(0f, _bodyPosition.y * 0.55f, 0f) : _bodyPosition;
+                t.localScale = state.IsDodging ? Vector3.Scale(_bodyScale, new Vector3(1.15f, 0.55f, 1.15f)) : _bodyScale;
+            }
+
+            _tint.Apply(body);
         }
     }
 }

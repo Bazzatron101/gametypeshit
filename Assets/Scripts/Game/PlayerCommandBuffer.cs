@@ -12,6 +12,7 @@ namespace HunterSystem.Game
     {
         private float _moveX, _moveZ;
         private bool _lightAttackPending;
+        private bool _dodgePending;
 
         /// <summary>Call once per frame with that frame's sampled input.</summary>
         public void Add(PlayerCommand sampled)
@@ -19,13 +20,15 @@ namespace HunterSystem.Game
             _moveX = sampled.MoveX;
             _moveZ = sampled.MoveZ;
             _lightAttackPending |= sampled.LightAttack;
+            _dodgePending |= sampled.Dodge;
         }
 
         /// <summary>Call once per simulation tick.</summary>
         public PlayerCommand TakeForTick()
         {
-            var command = new PlayerCommand(_moveX, _moveZ, _lightAttackPending);
+            var command = new PlayerCommand(_moveX, _moveZ, _lightAttackPending, _dodgePending);
             _lightAttackPending = false;
+            _dodgePending = false;
             return command;
         }
     }

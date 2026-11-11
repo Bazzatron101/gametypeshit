@@ -9,6 +9,10 @@ namespace HunterSystem.Simulation
         /// <summary>Player movement speed in metres per second at full input.</summary>
         public float PlayerMoveSpeed { get; set; } = 5f;
 
+        public int PlayerMaxHealth { get; set; } = 100;
+
         public AttackDefinition LightAttack { get; set; } = new AttackDefinition();
+
+        public DodgeDefinition Dodge { get; set; } = new DodgeDefinition();
     }
 }

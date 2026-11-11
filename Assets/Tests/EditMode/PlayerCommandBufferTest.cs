@@ -28,6 +28,17 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void DodgePressIsKeptUntilATickTakesItThenGivenToThatTickOnly()
+        {
+            var buffer = new PlayerCommandBuffer();
+            buffer.Add(new PlayerCommand(0f, 0f, dodge: true));
+            buffer.Add(PlayerCommand.None);
+
+            Assert.That(buffer.TakeForTick().Dodge, Is.True);
+            Assert.That(buffer.TakeForTick().Dodge, Is.False);
+        }
+
+        [Test]
         public void MovementIsTheLatestSampleAndHoldsForEveryTick()
         {
             var buffer = new PlayerCommandBuffer();

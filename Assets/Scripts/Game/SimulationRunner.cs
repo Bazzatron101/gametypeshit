@@ -15,12 +15,19 @@ namespace HunterSystem.Game
     {
         [SerializeField, Min(1)] private int tickRate = 60;
         [SerializeField, Min(0f)] private float playerMoveSpeed = 5f;
+        [SerializeField, Min(1)] private int playerMaxHealth = 100;
 
         [Header("Light attack")]
         [SerializeField, Min(0)] private int lightAttackDamage = 10;
         [SerializeField, Min(0f)] private float lightAttackRange = 2f;
         [SerializeField, Range(1f, 360f)] private float lightAttackArcDegrees = 120f;
         [SerializeField, Min(0f)] private float lightAttackCooldownSeconds = 0.4f;
+
+        [Header("Dodge")]
+        [SerializeField, Min(0f)] private float dodgeDistance = 3f;
+        [SerializeField, Min(0f)] private float dodgeDurationSeconds = 0.25f;
+        [SerializeField, Min(0f)] private float dodgeInvulnerabilitySeconds = 0.3f;
+        [SerializeField, Min(0f)] private float dodgeCooldownSeconds = 0.8f;
 
         private readonly Dictionary<PlayerId, IPlayerCommandSource> _sources = new Dictionary<PlayerId, IPlayerCommandSource>();
         private readonly Dictionary<PlayerId, PlayerCommandBuffer> _buffers = new Dictionary<PlayerId, PlayerCommandBuffer>();
@@ -41,6 +48,14 @@ namespace HunterSystem.Game
             {
                 TickRate = tickRate,
                 PlayerMoveSpeed = playerMoveSpeed,
+                PlayerMaxHealth = playerMaxHealth,
+                Dodge = new DodgeDefinition
+                {
+                    Distance = dodgeDistance,
+                    DurationSeconds = dodgeDurationSeconds,
+                    InvulnerabilitySeconds = dodgeInvulnerabilitySeconds,
+                    CooldownSeconds = dodgeCooldownSeconds,
+                },
                 LightAttack = new AttackDefinition
                 {
                     Damage = lightAttackDamage,

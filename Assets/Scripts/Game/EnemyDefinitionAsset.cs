@@ -12,15 +12,25 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Metres per second")] private float moveSpeed = 3f;
         [SerializeField, Min(0f), Tooltip("Stops chasing this close to its target, in metres")] private float stopDistance = 1.2f;
 
+        [Header("Attack")]
+        [SerializeField, Min(0)] private int attackDamage = 10;
+        [SerializeField, Min(0f), Tooltip("Starts an attack when the target is this close; the hit lands only if it still is")] private float attackRange = 1.6f;
+        [SerializeField, Min(0f), Tooltip("Telegraph before the hit lands: the player's window to dodge")] private float attackWindupSeconds = 0.5f;
+        [SerializeField, Min(0f)] private float attackCooldownSeconds = 1.5f;
+
         public EnemyDefinition ToDefinition() => new EnemyDefinition
         {
             Name = displayName,
             MaxHealth = maxHealth,
             MoveSpeed = moveSpeed,
             StopDistance = stopDistance,
+            AttackDamage = attackDamage,
+            AttackRange = attackRange,
+            AttackWindupSeconds = attackWindupSeconds,
+            AttackCooldownSeconds = attackCooldownSeconds,
         };
 
-        /// <summary>For editor tooling that creates definitions in code.</summary>
+        /// <summary>For editor tooling that creates definitions in code. Attack values keep their defaults unless set.</summary>
         public void SetStats(string name, int maxHealth, float moveSpeed, float stopDistance)
         {
             displayName = name;

@@ -37,17 +37,19 @@ namespace HunterSystem.Editor
             floor.transform.localScale = new Vector3(5f, 1f, 5f); // 50 m x 50 m
             floor.GetComponent<Renderer>().sharedMaterial = GetOrCreateMaterial("Greybox_Floor", new Color(0.55f, 0.55f, 0.55f));
 
-            new GameObject("Simulation").AddComponent<SimulationRunner>();
+            var simulation = new GameObject("Simulation");
+            simulation.AddComponent<SimulationRunner>();
+            simulation.AddComponent<CombatHud>();
 
             // Views sit at the feet; their visuals are children above.
             var player = new GameObject("Player 1");
             var playerView = player.AddComponent<PlayerView>();
-            CreateVisual(player, PrimitiveType.Capsule, "Capsule", new Vector3(0f, 1f, 0f), Vector3.one,
+            var playerBody = CreateVisual(player, PrimitiveType.Capsule, "Capsule", new Vector3(0f, 1f, 0f), Vector3.one,
                 "Greybox_Player", new Color(0.2f, 0.45f, 0.85f));
             // A flat slab in front of the player, shown for a moment on each light attack.
             var swing = CreateVisual(player, PrimitiveType.Cube, "Swing Marker", new Vector3(0f, 1f, 1.1f), new Vector3(1.6f, 0.1f, 0.9f),
                 "Greybox_Swing", new Color(1f, 0.85f, 0.3f));
-            Wire(playerView, ("swingMarker", swing.gameObject));
+            Wire(playerView, ("swingMarker", swing.gameObject), ("body", playerBody));
 
             var enemy = new GameObject("Goblin");
             enemy.transform.position = new Vector3(0f, 0f, 8f);
