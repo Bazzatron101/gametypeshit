@@ -30,6 +30,10 @@ namespace HunterSystem.Game
             _heavyAttackPending |= sampled.HeavyAttack;
             _dodgePending |= sampled.Dodge;
             if (sampled.UseSkillSlot.HasValue) _skillSlotPending = sampled.UseSkillSlot; // the latest press wins
+            // A source that chooses stats or skills itself (a bot) is queued like a menu choice: once each, in order.
+            // So such a source must put each choice in one sample only, not repeat it every frame (BotBrain does this).
+            if (sampled.AllocateStat.HasValue) _statAllocations.Enqueue(sampled.AllocateStat.Value);
+            if (sampled.AssignSkill.HasValue) _skillAssignments.Enqueue(sampled.AssignSkill.Value);
         }
 
         /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>

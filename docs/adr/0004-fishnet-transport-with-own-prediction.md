@@ -84,9 +84,10 @@ reasons it was the front-runner; interest management becomes ours to build (see 
   Facepunch.Steamworks 2.5.2, Steam test app ID 480 until the game has its own.
 - Fish-Net's network tick is set to 60 Hz on both network managers, so sends line up with our
   simulation. At 30 Hz the local round trip was about 13 ticks; at 60 Hz, about 9.
-- **Bandwidth:** full snapshots every 3 ticks cost about 15 KB/s per client now. They grow with players,
-  enemies and projectiles; the 10-bot stress test (14) must measure this, and delta snapshots or our own
-  area-of-interest culling (Fish-Net's is not used) are the likely next step.
+- **Bandwidth:** full snapshots every 3 ticks cost about 15 KB/s per client with two players. The 10-bot
+  stress test (14) measured about 98 KB/s per client and **about 880 KB/s of host upload** for ten players
+  (`docs/measurements/ten-bot-stress-test.md`): the main scaling problem. Compression (measured at 23%),
+  then delta snapshots, then our own area-of-interest culling (Fish-Net's is not used) are ticket 31.
 - **Spawn point (ticket 13):** joiners and rejoiners appear beside the party (`JoinPoint.BesideParty`:
   beside the first standing player, each at its own angle); a rejoiner is moved there, not left where
   they dropped. ADR 0003's "latest activated checkpoint" replaces this with the gate runtime (17).

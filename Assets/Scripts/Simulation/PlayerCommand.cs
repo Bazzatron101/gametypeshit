@@ -12,6 +12,10 @@ namespace HunterSystem.Simulation
     {
         public static readonly PlayerCommand None = default;
 
+        /// <summary>This command with a different stat allocation (or none).</summary>
+        public PlayerCommand WithAllocateStat(Stat? stat) =>
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots);
+
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
         public readonly bool HeavyAttack;

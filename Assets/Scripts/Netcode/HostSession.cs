@@ -74,6 +74,12 @@ namespace HunterSystem.Netcode
 
         public int ConnectedClients => _byConnection.Count;
 
+        /// <summary>Everything sent to clients so far (welcomes, snapshots, refusals), in bytes: the host's upload.</summary>
+        public long BytesSent { get; private set; }
+
+        /// <summary>Everything received from clients so far, in bytes.</summary>
+        public long BytesReceived { get; private set; }
+
         /// <summary>Messages from clients that could not be read and were ignored.</summary>
         public int MalformedMessages { get; private set; }
 
@@ -103,7 +109,7 @@ namespace HunterSystem.Netcode
                 _eventsSinceSnapshot.Clear();
                 var message = Wire.Snapshot(snapshot);
                 LastSnapshotSize = message.Length;
-                foreach (var connection in _byConnection.Keys) _transport.Send(connection, message);
+                foreach (var connection in _byConnection.Keys) Send(connection, message);
             }
         }
 
@@ -144,6 +150,7 @@ namespace HunterSystem.Netcode
                         }
                         break;
                     case NetEventKind.Data:
+                        BytesReceived += payload?.Length ?? 0;
                         HandleData(connection, payload);
                         break;
                 }
@@ -208,7 +215,7 @@ namespace HunterSystem.Netcode
             {
                 if (World.PlayerIds.Count >= MaxPlayers)
                 {
-                    _transport.Send(connection, Wire.Refused($"The session is full ({MaxPlayers} players)."));
+                    Send(connection, Wire.Refused($"The session is full ({MaxPlayers} players)."));
                     return;
                 }
                 remote = new Remote { Id = new PlayerId(_nextPlayerId++), Key = key };
@@ -226,7 +233,13 @@ namespace HunterSystem.Netcode
 
             remote.ResetConnection(connection);
             _byConnection[connection] = remote;
-            _transport.Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
+            Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
+        }
+
+        private void Send(int connection, byte[] message)
+        {
+            BytesSent += message.Length;
+            _transport.Send(connection, message);
         }
 
         private SnapshotMessage CurrentSnapshot()

@@ -365,6 +365,20 @@ namespace HunterSystem.Tests
             Assert.That(client.IsConnected, Is.False);
         }
 
+        [Test]
+        public void TheHostCountsTheBytesItSendsAndReceives()
+        {
+            var rig = new Rig();
+            rig.Join("alice");
+            rig.Join("bob");
+            rig.Input[rig.Clients[0]] = East;
+            rig.Tick(120);
+
+            Assert.That(rig.Host.BytesSent, Is.EqualTo(rig.Network.BytesToClients).And.GreaterThan(0));
+            // Received lags sent by the latency: what is still in flight has not arrived.
+            Assert.That(rig.Host.BytesReceived, Is.GreaterThan(0).And.LessThanOrEqualTo(rig.Network.BytesToHost));
+        }
+
         // --- Ticket 13: what clients show -------------------------------------------------------
 
         /// <summary>Ticks the rig, collecting each client's presentation events.</summary>

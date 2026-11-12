@@ -118,5 +118,21 @@ namespace HunterSystem.Tests
 
             Assert.That((cmd.MoveX, cmd.MoveZ, cmd.LightAttack), Is.EqualTo((0f, 0f, false)));
         }
+        [Test]
+        public void AStatOrSkillChoiceInASampledCommandIsQueuedLikeAMenuChoice()
+        {
+            // Bots (and any scripted source) pick stats and skills through their commands, not the menus.
+            var buffer = new PlayerCommandBuffer();
+            buffer.Add(new PlayerCommand(1f, 0f, allocateStat: Stat.Strength, assignSkill: new SkillAssignment(2, "slam")));
+            buffer.Add(new PlayerCommand(1f, 0f));
+
+            var first = buffer.TakeForTick();
+            var second = buffer.TakeForTick();
+
+            Assert.That(first.AllocateStat, Is.EqualTo(Stat.Strength));
+            Assert.That(first.AssignSkill, Is.EqualTo(new SkillAssignment(2, "slam")));
+            Assert.That(second.AllocateStat, Is.Null, "once, not every tick");
+            Assert.That(second.AssignSkill, Is.Null);
+        }
     }
 }

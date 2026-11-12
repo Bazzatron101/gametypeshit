@@ -26,6 +26,10 @@ namespace HunterSystem.Netcode
         /// <summary>While true, data sent by clients never reaches the host.</summary>
         public bool DropClientMessages { get; set; }
 
+        /// <summary>Bytes the host handed to the network for clients, and clients for the host (sent, not necessarily delivered).</summary>
+        public long BytesToClients { get; private set; }
+        public long BytesToHost { get; private set; }
+
         public void Advance() => _now++;
 
         /// <summary>
@@ -62,6 +66,7 @@ namespace HunterSystem.Netcode
 
             public void Send(int connection, byte[] payload)
             {
+                _net.BytesToClients += payload.Length;
                 if (_net._clients.TryGetValue(connection, out var client) && client.Open)
                     client.Inbox.Add((_net._now + _net._latencyTicks, payload));
             }
@@ -99,7 +104,9 @@ namespace HunterSystem.Netcode
 
             public void Send(byte[] payload)
             {
-                if (!Open || _net.DropClientMessages) return;
+                if (!Open) return;
+                _net.BytesToHost += payload.Length;
+                if (_net.DropClientMessages) return;
                 _net._toHost.Add((_net._now + _net._latencyTicks, Connection, NetEventKind.Data, payload));
             }
 

@@ -19,7 +19,8 @@ namespace HunterSystem.Online
     /// <para>
     /// The same can be done from the command line, which is how two built copies are tested
     /// without anyone at the keyboard:
-    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-autotest SECONDS FILE]</c>.
+    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
+    /// With <c>-bot</c> this copy's player is a <see cref="BotPlayer"/> (the 10-bot stress test).
     /// Steam's "Join Game" passes <c>+connect STEAMID</c>, which joins over Steam; a copy already
     /// running at the menu (or disconnected) gets the same request from Steam and joins straight away.
     /// </para>
@@ -227,9 +228,25 @@ namespace HunterSystem.Online
             else if (Arg("-coop") == "host") Host(steam);
             else if (Arg("-coop") == "join") Join(steam, Arg("-address") ?? "localhost", Arg("-player-key"));
 
-            if (Arg("-autotest") != null && float.TryParse(Arg("-autotest"), System.Globalization.NumberStyles.Float,
-                    System.Globalization.CultureInfo.InvariantCulture, out var seconds))
+            var seconds = 0f;
+            var hasAutotest = Arg("-autotest") != null && float.TryParse(Arg("-autotest"), System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out seconds);
+            if (Array.IndexOf(args, "-bot") >= 0 && _network == null)
+            {
+                _status = "-bot needs -coop host or -coop join; ignored.";
+            }
+            else if (Array.IndexOf(args, "-bot") >= 0)
+            {
+                // A bot (ticket 14): -bot [SEED] [-bot-expect CLIENTS]; with -autotest it measures and quits.
+                var seed = int.TryParse(Arg("-bot"), out var s) ? s : Environment.TickCount;
+                var expect = int.TryParse(Arg("-bot-expect"), out var e) ? e : 0;
+                gameObject.AddComponent<BotPlayer>().Begin(_runner, seed, hasAutotest ? seconds : 0f,
+                    hasAutotest ? Arg("-autotest", 2) ?? "coop-bot.json" : null, expect);
+            }
+            else if (hasAutotest)
+            {
                 StartCoroutine(AutoTest(seconds, Arg("-autotest", 2) ?? "coop-autotest.json"));
+            }
         }
 
         [Serializable]
