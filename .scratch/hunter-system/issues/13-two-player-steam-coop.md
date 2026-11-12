@@ -66,3 +66,10 @@ Still open:
   - The snapshot helpers widened to internal for the codec
   - `CoopLauncher` doing several jobs (splitting it was already "consider")
   - A defeated player who rejoins comes back still defeated (ADR 0003 keeps the run's state; revive rules arrive with gates)
+
+**2026-11-13 (developer test, recorded by agent):** Steam on two PCs: joining by SteamID from inside the game works. Both players fought Goblins together (24 killed) with a round trip of about 100 ms and no corrections.
+
+**Box 1 stays open.** On test app 480, accepting an invite or using "Join Game" makes Steam launch Valve's Spacewar, the game it has installed for 480, instead of ours. The co-op panel now says so.
+- **To close box 1:** get the game its own Steam app ID (Steamworks, $100 fee) and test invites and Join Game again.
+- **Still untried:** whether "Join Game" reaches a copy of our game that is already running.
+- **Also untried:** play across the internet. The test above was on one home network.

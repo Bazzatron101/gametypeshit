@@ -395,7 +395,8 @@ namespace HunterSystem.Online
                 GUILayout.EndHorizontal();
                 GUI.enabled = true;
                 GUILayout.Label(_steamReady
-                    ? "Or: accept a friend's Steam invite, or right-click them in your friends list > Join Game."
+                    ? "To join, start this game first, then paste the host's SteamID above. (Steam invites and Join Game launch " +
+                      "Steam's test game, Spacewar, until this game has its own Steam app ID.)"
                     : _status, _label);
             }
             else

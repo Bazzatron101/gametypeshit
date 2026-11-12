@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] Two instances play the same slice over Steam transport with a relay, using the front-runner library
+- [x] Two instances play the same slice over Steam transport with a relay, using the front-runner library
 - [x] At least one alternative is tried or ruled out with reasons
 - [x] Prediction and reconciliation are demonstrated or their absence documented
 - [x] Library choice recorded, with the rationale and any version constraints
@@ -58,3 +58,8 @@
   - Snapshots exclude queued operations.
   - Fish-Net's interest culling is given up.
 
+**2026-11-13 (developer test, recorded by agent):** Two PCs on two Steam accounts played together over Steam: the client joined by SteamID, and both fought Goblins together (24 killed).
+- Round trip about 100 ms, largest correction 0, snapshots 2,783 bytes. The timing looked good.
+- Both PCs were in the same room on one network (host on Wi-Fi, client on Ethernet).
+
+ADR 0004 is now Accepted.

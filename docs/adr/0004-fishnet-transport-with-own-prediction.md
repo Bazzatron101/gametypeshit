@@ -1,6 +1,6 @@
 # 0004: Fish-Net for connections and Steam; prediction in our own simulation
 
-**Status:** Proposed (2026-11-13). It becomes Accepted when a client on a second Steam account joins and plays over the Steam relay; until then the Steam path is unproven (see "Evidence").
+**Status:** Accepted (2026-11-13), after a client on a second Steam account joined and played over Steam (see "Evidence").
 
 ## Context
 
@@ -74,8 +74,12 @@ reasons it was the front-runner; interest management becomes ours to build (see 
   walked about 32 m while attacking, then stood still; its predicted position matched the host's to
   under a millimetre. Largest correction 8 cm. Snapshots 738 bytes (2 players, 3 enemies).
 - A built copy hosted on Steam (app 480): Steam initialised and the FishyFacepunch relay server started.
-- **Not yet shown:** a client joining over Steam from a second account. This needs the developer's
-  second PC (ticket 12's first checkbox stays open until then).
+- **Two PCs, two Steam accounts (2026-11-13):** the client joined the host by SteamID over FishyFacepunch
+  (app 480) and both fought Goblins together (24 killed).
+  - Round trip about 100 ms, largest correction 0, snapshots 2,783 bytes.
+  - The developer judged the timing good.
+  - Both PCs were in the same room on the same network: the host on Wi-Fi, the client on Ethernet. Play
+    across the internet is still untried.
 
 ## Consequences and constraints
 
@@ -93,6 +97,9 @@ reasons it was the front-runner; interest management becomes ours to build (see 
   they dropped. ADR 0003's "latest activated checkpoint" replaces this with the gate runtime (17).
 - **Steam invites (ticket 13):** the game starts Steam at the menu, so a friend's invite or "Join Game"
   reaches a running copy (`OnGameRichPresenceJoinRequested`) as well as a newly launched one (`+connect`).
+  **On test app 480 this does not work from a closed game:** Steam launches the app it has installed for
+  480 (Valve's Spacewar), not ours. Joining by SteamID from inside the game works. Invites need the
+  game's own Steam app ID.
 - **Disconnection (ticket 13):** a client notices a closed connection and offers Rejoin, which reconnects
   without restarting; the host hands back the same character. Characters of disconnected players count
   towards the 10.
