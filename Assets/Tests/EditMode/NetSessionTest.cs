@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using HunterSystem.Netcode;
@@ -38,9 +39,9 @@ namespace HunterSystem.Tests
             public readonly Dictionary<ClientSession, PlayerCommand> Input = new Dictionary<ClientSession, PlayerCommand>();
             public PlayerCommand HostInput;
 
-            public Rig(SimulationConfig hostConfig = null, int snapshotEveryTicks = 3)
+            public Rig(SimulationConfig hostConfig = null, int snapshotEveryTicks = 3, Func<PlayerId, Vec3> spawnPoint = null)
             {
-                Host = new HostSession(hostConfig ?? Config(), Network.HostEndpoint, _ => new Vec3(0f, 0f, 0f), snapshotEveryTicks);
+                Host = new HostSession(hostConfig ?? Config(), Network.HostEndpoint, spawnPoint ?? (_ => new Vec3(0f, 0f, 0f)), snapshotEveryTicks);
                 Host.AddLocalPlayer();
             }
 
@@ -362,6 +363,162 @@ namespace HunterSystem.Tests
             client.Disconnect();
 
             Assert.That(client.IsConnected, Is.False);
+        }
+
+        // --- Ticket 13: what clients show -------------------------------------------------------
+
+        /// <summary>Ticks the rig, collecting each client's presentation events.</summary>
+        private static Dictionary<ClientSession, List<SimulationEvent>> TickAndCollect(Rig rig, int times)
+        {
+            var seen = rig.Clients.ToDictionary(c => c, _ => new List<SimulationEvent>());
+            for (var i = 0; i < times; i++)
+            {
+                rig.Tick();
+                foreach (var c in rig.Clients) seen[c].AddRange(c.Events);
+            }
+            return seen;
+        }
+
+        [Test]
+        public void EveryClientSeesAKillOnceAndTheAttackerSeesTheirSwingAtOnce()
+        {
+            var rig = new Rig();
+            var alice = rig.Join("alice");
+            var bob = rig.Join("bob");
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(0f, 0f, 1f));
+            rig.Tick(Latency * 2); // the enemy reaches both clients
+
+            rig.Input[bob] = new PlayerCommand(0f, 0f, lightAttack: true);
+            rig.Tick();
+            var bobsFirstTick = bob.Events.ToList();
+            rig.Input[bob] = PlayerCommand.None;
+            var seen = TickAndCollect(rig, Latency * 3);
+            seen[bob].InsertRange(0, bobsFirstTick);
+
+            var bobId = bob.PlayerId.Value;
+            Assert.That(bobsFirstTick.OfType<AttackPerformed>().Count(a => a.Player == bobId), Is.EqualTo(1),
+                "bob's swing shows on the tick he pressed, predicted");
+            foreach (var client in new[] { alice, bob })
+            {
+                var events = seen[client];
+                var who = client == bob ? "bob" : "alice";
+                Assert.That(events.OfType<AttackPerformed>().Count(a => a.Player == bobId), Is.EqualTo(1), $"{who} sees the swing once");
+                Assert.That(events.OfType<EnemyDefeated>().Count(d => d.DefeatedBy == bobId), Is.EqualTo(1), $"{who} sees the kill once");
+                Assert.That(events.OfType<DamageDealt>().Count(d => d.Attacker == bobId), Is.EqualTo(1), $"{who} sees the hit once");
+                Assert.That(events.OfType<PlayerLeveledUp>().Count(l => l.Player == bobId), Is.EqualTo(1), $"{who} sees bob level up");
+            }
+        }
+
+        [Test]
+        public void ALateJoinerIsNotShownWhatHappenedBeforeItArrived()
+        {
+            var rig = new Rig(snapshotEveryTicks: 30); // a long gap, so events wait a while before they are sent
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(0f, 0f, 1f));
+            rig.HostInput = new PlayerCommand(0f, 0f, lightAttack: true);
+            rig.Tick();
+            rig.HostInput = PlayerCommand.None;
+
+            var carol = rig.Join("carol"); // welcomed before the snapshot carrying the kill goes out
+            var seen = TickAndCollect(rig, 60);
+
+            Assert.That(carol.IsJoined, Is.True);
+            Assert.That(seen[carol].OfType<EnemyDefeated>(), Is.Empty);
+        }
+
+        [Test]
+        public void RemotePlayersGlideBetweenSnapshotsAndArriveWhereTheHostSays()
+        {
+            var rig = new Rig();
+            var alice = rig.Join("alice");
+            var bob = rig.Join("bob");
+            rig.Tick(Latency * 2 + 2);
+            var bobId = bob.PlayerId.Value;
+            var step = 5f / 60f;
+
+            rig.Input[bob] = East;
+            rig.Tick(Latency * 3); // bob is walking steadily by now
+            var largestRawStep = 0f;
+            var largestShownStep = 0f;
+            for (var i = 0; i < 30; i++)
+            {
+                var raw = alice.World.GetPlayer(bobId).Position;
+                var shown = alice.DisplayPosition(bobId);
+                rig.Tick();
+                largestRawStep = Math.Max(largestRawStep, (alice.World.GetPlayer(bobId).Position - raw).Length);
+                largestShownStep = Math.Max(largestShownStep, (alice.DisplayPosition(bobId) - shown).Length);
+            }
+
+            Assert.That(largestRawStep, Is.GreaterThan(2.5f * step), "the world itself jumps a snapshot's worth at a time");
+            Assert.That(largestShownStep, Is.LessThan(1.5f * step), "but alice is shown bob walking at his own pace");
+
+            rig.Input[bob] = PlayerCommand.None;
+            rig.Tick(Latency * 3 + 6);
+            Assert.That(alice.DisplayPosition(bobId).X, Is.EqualTo(rig.HostView(bob).Position.X).Within(1e-4f), "and he ends where the host has him");
+        }
+
+        [Test]
+        public void TheClientsOwnPlayerIsShownWhereItIsPredicted()
+        {
+            var rig = new Rig();
+            var alice = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+
+            rig.Input[alice] = East;
+            rig.Tick(10);
+
+            var me = alice.PlayerId.Value;
+            Assert.That(alice.DisplayPosition(me), Is.EqualTo(alice.World.GetPlayer(me).Position));
+        }
+
+        [Test]
+        public void AJoinerAppearsBesideTheParty()
+        {
+            var world = new SimulationWorld(Config());
+            var fallback = new Vec3(0f, 0f, -20f);
+            var first = new PlayerId(1);
+            Assert.That(JoinPoint.BesideParty(world, first, fallback), Is.EqualTo(fallback), "nobody to stand beside yet");
+
+            world.AddPlayer(first, new Vec3(40f, 0f, 12f));
+            var second = JoinPoint.BesideParty(world, new PlayerId(2), fallback);
+            world.AddPlayer(new PlayerId(2), second);
+            var third = JoinPoint.BesideParty(world, new PlayerId(3), fallback);
+
+            Assert.That((second - new Vec3(40f, 0f, 12f)).Length, Is.InRange(1.5f, 3f), "close to the party");
+            Assert.That((third - second).Length, Is.GreaterThan(1f), "and not on top of each other");
+        }
+
+        [Test]
+        public void ARejoinerAppearsBesideTheParty()
+        {
+            var world = new SimulationWorld(Config());
+            world.AddPlayer(new PlayerId(1), new Vec3(40f, 0f, 12f));
+            world.AddPlayer(new PlayerId(2), new Vec3(-30f, 0f, 0f)); // left the game a long way back
+
+            var point = JoinPoint.BesideParty(world, new PlayerId(2), Vec3.Zero);
+
+            Assert.That((point - new Vec3(40f, 0f, 12f)).Length, Is.LessThan(3f), "beside the others, not where they left");
+        }
+
+        [Test]
+        public void TheHostPlacesARejoinerAtTheJoinPointAgain()
+        {
+            var joinAt = new Vec3(0f, 0f, 0f);
+            var rig = new Rig(spawnPoint: _ => joinAt);
+            var alice = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+            rig.Input[alice] = East;
+            rig.Tick(30);
+            alice.Disconnect();
+            rig.Clients.Remove(alice);
+            rig.Tick(Latency + 2);
+
+            joinAt = new Vec3(0f, 0f, 50f); // the party has moved on
+            var again = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(rig.HostView(again).Position, Is.EqualTo(joinAt));
+            Assert.That(again.World.GetPlayer(again.PlayerId.Value).Position, Is.EqualTo(joinAt), "and the welcome shows it");
         }
     }
 }

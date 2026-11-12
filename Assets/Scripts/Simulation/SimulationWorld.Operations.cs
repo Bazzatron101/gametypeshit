@@ -97,6 +97,17 @@ namespace HunterSystem.Simulation
             });
         }
 
+        /// <summary>
+        /// Puts a player at <paramref name="position"/> at once (a rejoin at the party or a
+        /// checkpoint). Immediate, like <see cref="AddPlayer"/>, so the welcome snapshot sent
+        /// straight after already shows it.
+        /// </summary>
+        public void PlacePlayer(PlayerId id, Vec3 position)
+        {
+            if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
+            player.Position = position;
+        }
+
         public bool HasEnemy(EnemyId id) => _enemiesById.ContainsKey(id);
 
         /// <summary>

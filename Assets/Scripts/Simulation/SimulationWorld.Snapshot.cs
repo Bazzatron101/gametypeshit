@@ -193,7 +193,7 @@ namespace HunterSystem.Simulation
             w.Write(d.XpReward);
         }
 
-        private static void WriteModifier(BinaryWriter w, ModifierDefinition m)
+        internal static void WriteModifier(BinaryWriter w, ModifierDefinition m)
         {
             WriteNullable(w, m.Id);
             WriteNullable(w, m.Name);
@@ -210,7 +210,7 @@ namespace HunterSystem.Simulation
             w.Write(m.ExplosionDamagePercent);
         }
 
-        private static void WriteVec(BinaryWriter w, Vec3 v)
+        internal static void WriteVec(BinaryWriter w, Vec3 v)
         {
             w.Write(v.X);
             w.Write(v.Y);
@@ -242,7 +242,7 @@ namespace HunterSystem.Simulation
             }
         }
 
-        private static void WriteNullable(BinaryWriter w, string value)
+        internal static void WriteNullable(BinaryWriter w, string value)
         {
             w.Write(value != null);
             if (value != null) w.Write(value);
@@ -389,7 +389,7 @@ namespace HunterSystem.Simulation
             XpReward = r.ReadInt32(),
         };
 
-        private static ModifierDefinition ReadModifier(BinaryReader r) => new ModifierDefinition
+        internal static ModifierDefinition ReadModifier(BinaryReader r) => new ModifierDefinition
         {
             Id = ReadNullable(r),
             Name = ReadNullable(r),
@@ -409,7 +409,7 @@ namespace HunterSystem.Simulation
         private SkillDefinition SkillById(string id) =>
             _config.Skills.FirstOrDefault(s => s.Id == id) ?? throw new FormatException($"The snapshot names skill '{id}', which this world does not have.");
 
-        private static Vec3 ReadVec(BinaryReader r) => new Vec3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+        internal static Vec3 ReadVec(BinaryReader r) => new Vec3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
 
         /// <summary>A collection size, checked so a corrupt snapshot cannot ask for a huge allocation.</summary>
         private static int ReadCount(BinaryReader r)
@@ -433,6 +433,6 @@ namespace HunterSystem.Simulation
             for (int i = 0, n = ReadCount(r); i < n; i++) table[r.ReadString()] = r.ReadInt32();
         }
 
-        private static string ReadNullable(BinaryReader r) => r.ReadBoolean() ? r.ReadString() : null;
+        internal static string ReadNullable(BinaryReader r) => r.ReadBoolean() ? r.ReadString() : null;
     }
 }
