@@ -16,3 +16,5 @@
 - A party member who disconnects may rejoin the same run at the latest checkpoint, keeping what the run gave them.
 - Consequences: late join (full gate-state transfer) is a netcode requirement; the party-size tier is recomputed on join but only affects enemies spawned afterwards; revives are tracked per player and survive a rejoin; a solo run that gains a friend switches to the co-op death rule; a joiner earns full XP, loot and the clear reward from arrival.
 - Open for the death rules (17): whether co-op "respawn at the entrance" should become "respawn at the latest checkpoint". This decision makes the checkpoint the natural choice.
+
+**2026-11-13 (developer, recorded by agent):** The open point above is settled: co-op players respawn at the closest checkpoint (see ticket 17).
