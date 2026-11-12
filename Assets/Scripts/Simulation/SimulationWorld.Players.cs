@@ -15,11 +15,11 @@ namespace HunterSystem.Simulation
             return magnitude >= Epsilon;
         }
 
-        private void MovePlayer(Player player, PlayerCommand cmd)
+        private void MovePlayer(Player player, PlayerCommand cmd, float speedFactor = 1f)
         {
             if (!TryGetMoveDirection(cmd, out var direction, out var magnitude)) return;
 
-            var speed = _config.PlayerMoveSpeed * (1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
+            var speed = speedFactor * _config.PlayerMoveSpeed * (1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
             player.Position += direction * (magnitude * speed * TickDelta);
             player.Facing = direction;
         }

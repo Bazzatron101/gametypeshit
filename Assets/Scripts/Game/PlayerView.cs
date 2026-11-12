@@ -20,6 +20,7 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Flashed on hit, squashed on dodge, laid down on defeat")] private Renderer body;
         [SerializeField] private Color hitFlashColor = new Color(1f, 0.25f, 0.25f);
         [SerializeField, Tooltip("Body tint while winding up a heavy attack")] private Color windupColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField, Tooltip("Body tint at full charge; it builds up from the normal colour")] private Color chargeColor = new Color(0.55f, 0.9f, 1f);
         [SerializeField, Tooltip("Swing marker scale for a heavy attack, relative to a light one")] private float heavySwingScale = 1.6f;
 
         private SimulationRunner _runner;
@@ -91,7 +92,10 @@ namespace HunterSystem.Game
                 t.localScale = state.IsDodging ? Vector3.Scale(_bodyScale, new Vector3(1.15f, 0.55f, 1.15f)) : _bodyScale;
             }
 
-            _tint.Apply(body, state.IsWindingUp ? windupColor : (Color?)null);
+            Color? bodyTint = null;
+            if (state.IsWindingUp) bodyTint = windupColor;
+            else if (state.ChargingSlot.HasValue) bodyTint = Color.Lerp(Color.white, chargeColor, state.ChargeFraction);
+            _tint.Apply(body, bodyTint);
         }
     }
 }

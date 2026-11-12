@@ -27,3 +27,7 @@ MonoBehaviour:
   arcDegrees: 120
   radius: 0.5
   projectileSpeed: 15
+  chargeSeconds: 0
+  chargedSizePercent: 0
+  chargedDamagePercent: 0
+  chargeUnlockLevel: 1

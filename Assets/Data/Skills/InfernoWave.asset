@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 636b85facfdade0438af0441a68d0f68, type: 3}
+  m_Name: InfernoWave
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.SkillDefinitionAsset
+  id: inferno-wave
+  displayName: Inferno Wave
+  cooldownSeconds: 10
+  unlockLevel: 15
+  tags:
+  - fire
+  - magic
+  scalingStat: 3
+  effect: 0
+  damage: 45
+  range: 6
+  arcDegrees: 70
+  radius: 3
+  projectileSpeed: 15
+  chargeSeconds: 1
+  chargedSizePercent: 60
+  chargedDamagePercent: 0
+  chargeUnlockLevel: 18

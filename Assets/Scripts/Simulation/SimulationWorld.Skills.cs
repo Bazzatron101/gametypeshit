@@ -46,6 +46,13 @@ namespace HunterSystem.Simulation
                 Require(skill.Radius >= 0f, "Radius is negative.");
                 if (skill.Effect == SkillEffectKind.Cone)
                     Require(skill.ArcDegrees > 0f && skill.ArcDegrees <= 360f, "ArcDegrees must be above 0 and at most 360.");
+                Require(skill.ChargeSeconds >= 0f, "ChargeSeconds is negative.");
+                Require(skill.ChargedSizePercent >= 0, "ChargedSizePercent is negative.");
+                Require(skill.ChargedDamagePercent >= 0, "ChargedDamagePercent is negative.");
+                if (skill.CanCharge)
+                    Require(skill.ChargedSizePercent > 0 || skill.ChargedDamagePercent > 0, "a charge needs a size or damage bonus.");
+                Require(skill.ChargeUnlockLevel >= 1 && skill.ChargeUnlockLevel <= levelCap,
+                    $"ChargeUnlockLevel {skill.ChargeUnlockLevel} is outside 1 to the level cap ({levelCap}).");
                 if (skill.Effect == SkillEffectKind.Projectile)
                 {
                     Require(skill.ProjectileSpeed > 0f, "a projectile needs a positive ProjectileSpeed.");
@@ -66,7 +73,7 @@ namespace HunterSystem.Simulation
                 if (skill == null) { slots[i] = new SkillSlotState(null, 0, 0); continue; }
                 player.SkillReadyAtTick.TryGetValue(skill.Id, out var ready);
                 var cooldown = player.SkillCooldownTicks.TryGetValue(skill.Id, out var c) ? c : SecondsToTicks(skill.CooldownSeconds);
-                slots[i] = new SkillSlotState(skill, ready, cooldown);
+                slots[i] = new SkillSlotState(skill, ready, cooldown, IsChargeUnlocked(player, skill));
             }
             return slots;
         }
@@ -111,6 +118,7 @@ namespace HunterSystem.Simulation
         {
             var slot = assignment.Slot;
             if (slot < 0 || slot >= SkillSlotCount) return;
+            if (player.IsCharging) return; // the bar is locked while a charge is held
 
             SkillDefinition skill = null;
             if (assignment.SkillId != null)
@@ -129,24 +137,90 @@ namespace HunterSystem.Simulation
             _events.Add(new SkillSlotChanged(tick, player.Id, from, displaced));
         }
 
-        /// <summary>Uses the skill in <paramref name="slot"/> if there is one and it is off cooldown. Returns whether it fired.</summary>
-        private bool TryUseSkill(Player player, int slot, int tick)
+        private static bool IsChargeUnlocked(Player player, SkillDefinition skill) =>
+            skill.CanCharge && player.Level >= skill.EffectiveChargeLevel;
+
+        /// <summary>Announces charges that become usable at <paramref name="level"/>, for skills the player knows.</summary>
+        private void UnlockChargesForLevel(Player player, int level, int tick)
+        {
+            foreach (var skill in player.KnownSkills)
+                if (skill.ChargeUnlocksSeparatelyAt(level))
+                    _events.Add(new SkillChargeUnlocked(tick, player.Id, skill));
+        }
+
+        /// <summary>How full a charge is: nothing during the tap grace, then building to 1 over the skill's charge time.</summary>
+        private float ChargeFraction(ActiveCharge charge, int tick)
+        {
+            var full = Math.Max(1, SecondsToTicks(charge.Skill.ChargeSeconds));
+            var building = tick - charge.StartTick - SecondsToTicks(_config.ChargeTapGraceSeconds);
+            return Math.Clamp((float)building / full, 0f, 1f);
+        }
+
+        /// <summary>
+        /// The press of a skill key. If the skill can charge (and its charge is unlocked) and the key
+        /// is still held, charging starts; otherwise the skill fires now. Returns whether the tick was used.
+        /// </summary>
+        private bool TryUseSkill(Player player, int slot, bool keyStillHeld, int tick)
         {
             if (slot < 0 || slot >= SkillSlotCount) return false;
             var skill = player.SkillSlots[slot];
             if (skill == null) return false;
             if (player.SkillReadyAtTick.TryGetValue(skill.Id, out var readyAt) && tick < readyAt) return false;
 
+            if (keyStillHeld && IsChargeUnlocked(player, skill))
+            {
+                player.Charge = new ActiveCharge { Skill = skill, Slot = slot, StartTick = tick };
+                _events.Add(new SkillChargeStarted(tick, player.Id, skill, slot));
+                return true;
+            }
+
+            FireSkill(player, skill, slot, tick, chargeFraction: 0f, counter: false);
+            return true;
+        }
+
+        /// <summary>The key was let go: fire with the charge built so far.</summary>
+        private void ReleaseCharge(Player player, int tick)
+        {
+            var charge = player.TakeCharge();
+            FireSkill(player, charge.Skill, charge.Slot, tick, ChargeFraction(charge, tick), counter: false);
+        }
+
+        /// <summary>A perfect dodge while charging: turn to the attacker and fire at full charge.</summary>
+        private void CounterWithCharge(Player player, Enemy attacker, int tick)
+        {
+            var charge = player.TakeCharge();
+            var toward = Flat(attacker.Position - player.Position);
+            var distance = toward.Length;
+            if (distance > Epsilon) player.Facing = toward * (1f / distance);
+            FireSkill(player, charge.Skill, charge.Slot, tick, chargeFraction: 1f, counter: true);
+        }
+
+        /// <summary>
+        /// Fires a skill: modifiers, then the charge bonus (size and damage scaled by
+        /// <paramref name="chargeFraction"/>), then the effect. A counter keeps its aim on the attacker
+        /// instead of using soft lock-on. The cooldown starts now.
+        /// </summary>
+        private void FireSkill(Player player, SkillDefinition skill, int slot, int tick, float chargeFraction, bool counter)
+        {
             var resolved = Resolve(player, skill);
+            if (chargeFraction > 0f)
+            {
+                var size = 1f + skill.ChargedSizePercent / 100f * chargeFraction;
+                if (skill.Effect == SkillEffectKind.Cone) resolved.Range *= size;
+                else resolved.Radius *= size;
+                var damagePercent = (int)MathF.Round(skill.ChargedDamagePercent * chargeFraction, MidpointRounding.AwayFromZero);
+                resolved.BaseDamage = PercentOf(resolved.BaseDamage, 100 + damagePercent);
+            }
+
             player.SkillReadyAtTick[skill.Id] = tick + resolved.CooldownTicks;
             player.SkillCooldownTicks[skill.Id] = resolved.CooldownTicks;
-            _events.Add(new SkillUsed(tick, player.Id, skill, slot, resolved.Range, resolved.Radius));
+            _events.Add(new SkillUsed(tick, player.Id, skill, slot, resolved.Range, resolved.Radius, chargeFraction, counter));
             var damage = ScaledDamage(player, resolved.BaseDamage, skill.ScalingStat);
 
             switch (skill.Effect)
             {
                 case SkillEffectKind.Cone:
-                    ApplySoftLockOn(player, resolved.Range);
+                    if (!counter) ApplySoftLockOn(player, resolved.Range);
                     var minCos = HalfAngleCos(skill.ArcDegrees);
                     HitEnemiesWhere(player, damage, tick, resolved, at => InCone(player, at, resolved.Range, minCos));
                     break;
@@ -156,7 +230,7 @@ namespace HunterSystem.Simulation
                     break;
 
                 case SkillEffectKind.Projectile:
-                    ApplySoftLockOn(player, resolved.Range);
+                    if (!counter) ApplySoftLockOn(player, resolved.Range);
                     for (var i = 0; i < resolved.ProjectileCount; i++)
                     {
                         // Fan the bolts out evenly around the aim: -s, 0, +s for three.
@@ -176,7 +250,6 @@ namespace HunterSystem.Simulation
                     }
                     break;
             }
-            return true;
         }
 
         /// <summary>

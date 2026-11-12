@@ -193,13 +193,50 @@ namespace HunterSystem.Simulation
         /// <summary>Area radius or projectile hit radius for this use, after modifiers.</summary>
         public float Radius { get; }
 
-        public SkillUsed(int tick, PlayerId player, SkillDefinition skill, int slot, float range, float radius) : base(tick)
+        /// <summary>0 for a tap, up to 1 for a full charge.</summary>
+        public float ChargeFraction { get; }
+
+        /// <summary>True when a perfect dodge launched it at the attacker.</summary>
+        public bool IsCounter { get; }
+
+        public SkillUsed(int tick, PlayerId player, SkillDefinition skill, int slot, float range, float radius,
+            float chargeFraction = 0f, bool isCounter = false) : base(tick)
         {
             Player = player;
             Skill = skill;
             Slot = slot;
             Range = range;
             Radius = radius;
+            ChargeFraction = chargeFraction;
+            IsCounter = isCounter;
+        }
+    }
+
+    /// <summary>A player began charging a skill by holding its key.</summary>
+    public sealed class SkillChargeStarted : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public SkillDefinition Skill { get; }
+        public int Slot { get; }
+
+        public SkillChargeStarted(int tick, PlayerId player, SkillDefinition skill, int slot) : base(tick)
+        {
+            Player = player;
+            Skill = skill;
+            Slot = slot;
+        }
+    }
+
+    /// <summary>A skill's charged version became available on level-up (only when later than the skill itself).</summary>
+    public sealed class SkillChargeUnlocked : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public SkillDefinition Skill { get; }
+
+        public SkillChargeUnlocked(int tick, PlayerId player, SkillDefinition skill) : base(tick)
+        {
+            Player = player;
+            Skill = skill;
         }
     }
 

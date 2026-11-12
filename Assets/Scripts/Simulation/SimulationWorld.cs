@@ -106,7 +106,8 @@ namespace HunterSystem.Simulation
             return new PlayerState(p.Id, p.Position, p.Facing, p.Health, p.MaxHealth,
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
-                SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray());
+                SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -137,7 +138,8 @@ namespace HunterSystem.Simulation
         /// <summary>
         /// Advances one tick: queued world operations (modifier grants, granted XP, taught skills...)
         /// apply first, then loadout changes and stat points (so a point spent this tick already counts),
-        /// then players dodge, move and attack or use a skill, then projectiles fly, then enemies act. Players with no
+        /// then players dodge, release or keep charging, move and attack or use a skill, then
+        /// projectiles fly, then enemies act (a perfect dodge while charging fires the charge there). Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
         /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
         /// cancels an attack windup.
@@ -165,7 +167,10 @@ namespace HunterSystem.Simulation
                 if (!player.IsAlive) continue;
                 commands.TryGetValue(player.Id, out var cmd);
 
-                if (cmd.Dodge) TryDodge(player, cmd, tick);
+                if (cmd.Dodge) TryDodge(player, cmd, tick); // a dodge keeps any charge going
+
+                // Letting go of the key fires the charge, even mid-dash.
+                if (player.IsCharging && !cmd.IsSkillHeld(player.Charge.Slot)) ReleaseCharge(player, tick);
 
                 if (player.IsDodging(tick))
                 {
@@ -184,8 +189,14 @@ namespace HunterSystem.Simulation
                     continue; // committed: no steering or new attacks until it swings
                 }
 
+                if (player.IsCharging)
+                {
+                    MovePlayer(player, cmd, _config.ChargeMoveSpeedPercent / 100f);
+                    continue; // charging: slowed, no attacks or other skills
+                }
+
                 MovePlayer(player, cmd);
-                if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, tick)) continue; // a skill takes the tick
+                if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, cmd.IsSkillHeld(cmd.UseSkillSlot.Value), tick)) continue; // a skill takes the tick
                 if (cmd.HeavyAttack) TryStartAttack(player, _attacks[(int)AttackKind.Heavy], tick);
                 else if (cmd.LightAttack) TryStartAttack(player, _attacks[(int)AttackKind.Light], tick);
             }

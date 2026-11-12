@@ -45,6 +45,7 @@ namespace HunterSystem.Simulation
             if (target.IsInvulnerable(tick))
             {
                 _events.Add(new AttackDodged(tick, enemy.Id, target.Id));
+                if (target.IsCharging) CounterWithCharge(target, enemy, tick); // a perfect dodge
                 return;
             }
 

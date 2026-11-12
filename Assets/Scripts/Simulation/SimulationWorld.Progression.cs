@@ -60,7 +60,10 @@ namespace HunterSystem.Simulation
             for (var i = levelsGained - 1; i >= 0; i--)
                 _events.Add(new PlayerLeveledUp(tick, player.Id, player.Level - i, _config.Progression.FreePointsPerLevel));
             for (var i = levelsGained - 1; i >= 0; i--)
+            {
                 UnlockSkillsForLevel(player, player.Level - i, tick);
+                UnlockChargesForLevel(player, player.Level - i, tick);
+            }
 
             // The System restores a hunter who levels up.
             if (levelsGained > 0 && player.IsAlive) player.Health = player.MaxHealth;

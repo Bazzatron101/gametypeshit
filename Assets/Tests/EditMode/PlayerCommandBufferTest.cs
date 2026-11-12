@@ -85,6 +85,19 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void HeldSkillKeyIsTheLatestSampleAndHoldsForEveryTick()
+        {
+            var buffer = new PlayerCommandBuffer();
+            buffer.Add(new PlayerCommand(0f, 0f, useSkillSlot: 1, heldSkillSlots: 1 << 1));
+
+            Assert.That(buffer.TakeForTick().IsSkillHeld(1), Is.True);
+            Assert.That(buffer.TakeForTick().IsSkillHeld(1), Is.True, "still held on a second tick in the same frame");
+
+            buffer.Add(PlayerCommand.None); // let go
+            Assert.That(buffer.TakeForTick().IsSkillHeld(1), Is.False);
+        }
+
+        [Test]
         public void MovementIsTheLatestSampleAndHoldsForEveryTick()
         {
             var buffer = new PlayerCommandBuffer();

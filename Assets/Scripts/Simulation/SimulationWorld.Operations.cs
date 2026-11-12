@@ -90,7 +90,8 @@ namespace HunterSystem.Simulation
             {
                 player.Health = player.MaxHealth;
                 player.LifeState = PlayerLifeState.Alive;
-                player.PendingAttackLandsAtTick = 0; // back on their feet, not mid-swing
+                player.PendingAttackLandsAtTick = 0; // back on their feet, not mid-swing or mid-charge
+                player.ClearCharge();
                 player.DodgeEndsAtTick = 0;
                 player.InvulnerableUntilTick = 0;
             });

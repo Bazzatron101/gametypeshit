@@ -34,6 +34,8 @@ namespace HunterSystem.Game
         private ThirdPersonCamera _camera;
         private DebugModifierToggles _toggles;
         private readonly AnnouncementQueue _announcements = new AnnouncementQueue();
+        private float _counterShownAt = float.NegativeInfinity;
+        private const float CounterSeconds = 1.2f;
         private bool _cursorWasCapturedBeforeMenu;
         private GUIStyle _label, _title, _toastTitle, _toastBody, _button, _skillName;
         private Texture2D _white;
@@ -69,6 +71,13 @@ namespace HunterSystem.Game
                     case PlayerLeveledUp levelUp when levelUp.Player == PlayerId:
                         _announcements.Enqueue("LEVEL UP",
                             $"You have reached level {levelUp.NewLevel}.  +{levelUp.StatPointsGranted} stat points.  Health restored.", Time.time);
+                        break;
+                    case SkillChargeUnlocked charge when charge.Player == PlayerId:
+                        _announcements.Enqueue("CHARGE UNLOCKED",
+                            $"Hold the key to charge  {charge.Skill.Name}  for {ChargeDescription(charge.Skill)}.", Time.time);
+                        break;
+                    case SkillUsed used when used.Player == PlayerId && used.IsCounter:
+                        _counterShownAt = Time.time;
                         break;
                     case SkillUnlocked unlocked when unlocked.Player == PlayerId:
                         _announcements.Enqueue("NEW SKILL ACQUIRED", unlocked.Slot.HasValue
@@ -108,6 +117,8 @@ namespace HunterSystem.Game
             DrawStatus(state);
             DrawModifiers(state);
             DrawSkillBar(state);
+            DrawChargeMeter(state);
+            DrawCounterBanner();
             var announcement = CurrentAnnouncement;
             if (announcement.HasValue) DrawAnnouncement(announcement.Value);
             if (StatScreenOpen) DrawStatScreen(state);
@@ -192,6 +203,34 @@ namespace HunterSystem.Game
             }
         }
 
+        private static string ChargeDescription(SkillDefinition skill)
+        {
+            if (skill.ChargedSizePercent > 0 && skill.ChargedDamagePercent > 0)
+                return $"up to +{skill.ChargedSizePercent}% size and +{skill.ChargedDamagePercent}% damage";
+            return skill.ChargedSizePercent > 0 ? $"up to +{skill.ChargedSizePercent}% size" : $"up to +{skill.ChargedDamagePercent}% damage";
+        }
+
+        /// <summary>A meter above the skill bar while a skill is charging.</summary>
+        private void DrawChargeMeter(PlayerState state)
+        {
+            if (!state.ChargingSlot.HasValue) return;
+            var skill = state.SkillSlots[state.ChargingSlot.Value].Skill;
+            var full = state.ChargeFraction >= 1f;
+            var rect = new Rect((Screen.width - 300) / 2f, Screen.height - 140, 300, 18);
+            Bar(rect, Mathf.RoundToInt(state.ChargeFraction * 100), 100, full ? Color.white : SystemBlue,
+                full ? $"{skill?.Name}  FULL CHARGE" : $"Charging {skill?.Name}");
+        }
+
+        /// <summary>A brief flash when a perfect dodge launches the charge.</summary>
+        private void DrawCounterBanner()
+        {
+            if (Time.time - _counterShownAt < CounterSeconds)
+            {
+                _toastTitle.normal.textColor = Color.white;
+                GUI.Label(new Rect(0, Screen.height * 0.35f, Screen.width, 40), "PERFECT DODGE  —  COUNTER!", _toastTitle);
+            }
+        }
+
         /// <summary>Six slots along the bottom: key, skill name, and a darkened sweep with seconds left while cooling down.</summary>
         private void DrawSkillBar(PlayerState state)
         {
@@ -222,6 +261,11 @@ namespace HunterSystem.Game
 
                 _skillName.normal.textColor = remaining > 0f ? Color.gray : Color.white;
                 GUI.Label(new Rect(box.x + 4, box.y + 22, box.width - 8, 34), slot.Skill.Name, _skillName);
+                if (slot.ChargeUnlocked)
+                {
+                    _label.normal.textColor = SystemBlue;
+                    GUI.Label(new Rect(box.xMax - 40, box.yMax - 22, 38, 20), "HOLD", _label); // bottom right, clear of the name
+                }
                 if (remaining > 0f)
                 {
                     _label.normal.textColor = Color.white;

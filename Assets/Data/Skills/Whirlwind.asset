@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 636b85facfdade0438af0441a68d0f68, type: 3}
+  m_Name: Whirlwind
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.SkillDefinitionAsset
+  id: whirlwind
+  displayName: Whirlwind
+  cooldownSeconds: 7
+  unlockLevel: 10
+  tags:
+  - melee
+  - area
+  - physical
+  scalingStat: 0
+  effect: 1
+  damage: 30
+  range: 3
+  arcDegrees: 120
+  radius: 3.2
+  projectileSpeed: 15
+  chargeSeconds: 1.2
+  chargedSizePercent: 80
+  chargedDamagePercent: 0
+  chargeUnlockLevel: 12

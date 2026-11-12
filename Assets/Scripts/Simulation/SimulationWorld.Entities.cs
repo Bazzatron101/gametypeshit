@@ -31,6 +31,21 @@ namespace HunterSystem.Simulation
 
             public readonly List<ModifierDefinition> Modifiers = new List<ModifierDefinition>();
 
+            /// <summary>The skill being charged, or null. Cleared when it fires, on defeat, and on revive.</summary>
+            public ActiveCharge Charge;
+
+            public bool IsCharging => Charge != null;
+
+            public void ClearCharge() => Charge = null;
+
+            /// <summary>Returns the charge and clears it, ready to fire.</summary>
+            public ActiveCharge TakeCharge()
+            {
+                var charge = Charge;
+                Charge = null;
+                return charge;
+            }
+
             /// <summary>Indexed by <see cref="AttackKind"/>: each attack has its own cooldown.</summary>
             public readonly int[] AttackReadyAtTick = new int[AttackKindCount];
 
@@ -58,7 +73,11 @@ namespace HunterSystem.Simulation
                 var amount = Math.Min(Math.Max(0, damage), Health);
                 Health -= amount;
                 defeated = amount > 0 && Health == 0;
-                if (defeated) LifeState = PlayerLifeState.Defeated;
+                if (defeated)
+                {
+                    LifeState = PlayerLifeState.Defeated;
+                    ClearCharge();
+                }
                 return amount;
             }
         }
@@ -76,6 +95,14 @@ namespace HunterSystem.Simulation
             /// <summary>0 when not winding up.</summary>
             public int AttackLandsAtTick;
             public Player AttackTarget;
+        }
+
+        /// <summary>A skill being charged: which one, from which slot, and since which tick.</summary>
+        private sealed class ActiveCharge
+        {
+            public SkillDefinition Skill;
+            public int Slot;
+            public int StartTick;
         }
 
         private sealed class Projectile

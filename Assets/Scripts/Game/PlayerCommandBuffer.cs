@@ -12,6 +12,7 @@ namespace HunterSystem.Game
     public sealed class PlayerCommandBuffer
     {
         private float _moveX, _moveZ;
+        private int _heldSkillSlots;
         private bool _lightAttackPending;
         private bool _heavyAttackPending;
         private bool _dodgePending;
@@ -24,6 +25,7 @@ namespace HunterSystem.Game
         {
             _moveX = sampled.MoveX;
             _moveZ = sampled.MoveZ;
+            _heldSkillSlots = sampled.HeldSkillSlots; // held keys, like movement, are the latest state
             _lightAttackPending |= sampled.LightAttack;
             _heavyAttackPending |= sampled.HeavyAttack;
             _dodgePending |= sampled.Dodge;
@@ -43,7 +45,7 @@ namespace HunterSystem.Game
             SkillAssignment? assign = _skillAssignments.Count > 0 ? _skillAssignments.Dequeue() : (SkillAssignment?)null;
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
-                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign);
+                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots);
             _lightAttackPending = false;
             _heavyAttackPending = false;
             _dodgePending = false;

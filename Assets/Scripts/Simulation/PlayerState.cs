@@ -55,11 +55,17 @@ namespace HunterSystem.Simulation
         /// <summary>Modifiers in effect, in the order they were granted.</summary>
         public readonly IReadOnlyList<ModifierDefinition> ActiveModifiers;
 
+        /// <summary>The bar slot being charged, or null.</summary>
+        public readonly int? ChargingSlot;
+
+        /// <summary>How full the current charge is, 0 to 1 (0 when not charging).</summary>
+        public readonly float ChargeFraction;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
-            IReadOnlyList<ModifierDefinition> activeModifiers)
+            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f)
         {
             Id = id;
             Position = position;
@@ -79,6 +85,8 @@ namespace HunterSystem.Simulation
             SkillSlots = skillSlots;
             KnownSkills = knownSkills;
             ActiveModifiers = activeModifiers;
+            ChargingSlot = chargingSlot;
+            ChargeFraction = chargeFraction;
         }
 
 

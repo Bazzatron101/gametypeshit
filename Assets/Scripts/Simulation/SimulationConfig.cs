@@ -14,6 +14,15 @@ namespace HunterSystem.Simulation
 
         public int PlayerMaxHealth { get; set; } = 100;
 
+        /// <summary>Move speed while charging a skill, as a percentage of normal.</summary>
+        public int ChargeMoveSpeedPercent { get; set; } = 40;
+
+        /// <summary>
+        /// Holding a key shorter than this still counts as a tap: the charge only starts building
+        /// once the grace has passed, so a quick press fires the normal skill.
+        /// </summary>
+        public float ChargeTapGraceSeconds { get; set; } = 0.15f;
+
         public AttackDefinition LightAttack { get; set; } = new AttackDefinition();
 
         public AttackDefinition HeavyAttack { get; set; } = new AttackDefinition

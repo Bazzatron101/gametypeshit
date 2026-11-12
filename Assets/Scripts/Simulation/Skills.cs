@@ -54,6 +54,32 @@ namespace HunterSystem.Simulation
         /// <summary>Projectile speed in metres per second.</summary>
         public float ProjectileSpeed { get; set; } = 15f;
 
+        /// <summary>
+        /// Seconds of holding the key for a full charge, or 0 if the skill cannot be charged. A tap
+        /// always fires the normal skill; holding charges it and releasing fires the charged version.
+        /// </summary>
+        public float ChargeSeconds { get; set; }
+
+        /// <summary>At full charge: +100 doubles the area radius, cone reach or projectile hit radius. Scales with the charge.</summary>
+        public int ChargedSizePercent { get; set; }
+
+        /// <summary>At full charge: +100 doubles the base damage. Scales with the charge.</summary>
+        public int ChargedDamagePercent { get; set; }
+
+        /// <summary>
+        /// The level at which the charge becomes available. Below <see cref="UnlockLevel"/> it simply
+        /// comes with the skill.
+        /// </summary>
+        public int ChargeUnlockLevel { get; set; } = 1;
+
+        public bool CanCharge => ChargeSeconds > 0f;
+
+        /// <summary>The level at which this skill's charge is usable: never before the skill itself.</summary>
+        public int EffectiveChargeLevel => Math.Max(UnlockLevel, ChargeUnlockLevel);
+
+        /// <summary>True if the charge arrives on its own at <paramref name="level"/>, after the skill was learned (worth announcing).</summary>
+        public bool ChargeUnlocksSeparatelyAt(int level) => CanCharge && ChargeUnlockLevel > UnlockLevel && ChargeUnlockLevel == level;
+
         public bool HasTag(string tag) => Tags != null && Tags.Contains(tag, StringComparer.OrdinalIgnoreCase);
 
         public override string ToString() => Id;
@@ -86,11 +112,15 @@ namespace HunterSystem.Simulation
         /// <summary>Length of the cooldown last started, in ticks, after modifiers (for drawing progress).</summary>
         public readonly int CooldownTicks;
 
-        public SkillSlotState(SkillDefinition skill, int readyAtTick, int cooldownTicks)
+        /// <summary>True when the skill can be charged and its charge is unlocked at the player's level.</summary>
+        public readonly bool ChargeUnlocked;
+
+        public SkillSlotState(SkillDefinition skill, int readyAtTick, int cooldownTicks, bool chargeUnlocked = false)
         {
             Skill = skill;
             ReadyAtTick = readyAtTick;
             CooldownTicks = cooldownTicks;
+            ChargeUnlocked = chargeUnlocked;
         }
 
         public bool IsEmpty => Skill == null;

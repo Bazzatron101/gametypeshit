@@ -41,10 +41,15 @@ namespace HunterSystem.Game
             var camera = Camera.main;
             var move = camera != null ? CameraMath.CameraRelativeMove(stick, camera.transform.eulerAngles.y) : stick;
             int? skillSlot = null;
-            for (var i = 0; i < _skills.Length && skillSlot == null; i++)
-                if (Pressed(_skills[i])) skillSlot = i;
+            var held = 0;
+            for (var i = 0; i < _skills.Length; i++)
+            {
+                if (skillSlot == null && Pressed(_skills[i])) skillSlot = i;
+                if (_skills[i] != null && _skills[i].IsPressed()) held |= 1 << i;
+            }
             return new PlayerCommand(move.x, move.y,
-                lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack), useSkillSlot: skillSlot);
+                lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack),
+                useSkillSlot: skillSlot, heldSkillSlots: held);
         }
 
         private static bool Pressed(InputAction action) => action != null && action.WasPressedThisFrame();

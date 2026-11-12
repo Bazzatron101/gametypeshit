@@ -59,18 +59,23 @@ namespace HunterSystem.Editor
             },
         };
 
-        /// <summary>The first skills, as created on a fresh project. After that the assets are the source of truth.</summary>
-        private static readonly SkillDefinition[] StarterSkillData =
+        /// <summary>
+        /// Every skill as created on a fresh project, in bar order (starters first, then by unlock level).
+        /// After that the assets are the source of truth: rebuilding never overwrites them.
+        /// </summary>
+        private static readonly SkillDefinition[] SkillData =
         {
             new SkillDefinition
             {
                 Id = "rending-slash", Name = "Rending Slash", Effect = SkillEffectKind.Cone, Damage = 30, Range = 3f, ArcDegrees = 160f,
                 CooldownSeconds = 4f, UnlockLevel = 1, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical" },
+                ChargeSeconds = 0.8f, ChargedDamagePercent = 100, ChargeUnlockLevel = 4,
             },
             new SkillDefinition
             {
                 Id = "ground-slam", Name = "Ground Slam", Effect = SkillEffectKind.Area, Damage = 20, Radius = 3.5f,
                 CooldownSeconds = 6f, UnlockLevel = 1, ScalingStat = Stat.Strength, Tags = new[] { "melee", "area", "physical" },
+                ChargeSeconds = 1f, ChargedSizePercent = 100, ChargeUnlockLevel = 6,
             },
             new SkillDefinition
             {
@@ -82,6 +87,32 @@ namespace HunterSystem.Editor
             {
                 Id = "flame-burst", Name = "Flame Burst", Effect = SkillEffectKind.Area, Damage = 35, Radius = 4f,
                 CooldownSeconds = 8f, UnlockLevel = 3, ScalingStat = Stat.Intelligence, Tags = new[] { "fire", "area", "magic" },
+                ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 7,
+            },
+            new SkillDefinition
+            {
+                Id = "hunters-javelin", Name = "Hunter's Javelin", Effect = SkillEffectKind.Projectile, Damage = 40, Range = 16f, Radius = 0.6f,
+                ProjectileSpeed = 22f, CooldownSeconds = 5f, UnlockLevel = 5, ScalingStat = Stat.Strength,
+                Tags = new[] { "projectile", "physical" },
+                ChargeSeconds = 1f, ChargedDamagePercent = 100, ChargeUnlockLevel = 8,
+            },
+            new SkillDefinition
+            {
+                Id = "whirlwind", Name = "Whirlwind", Effect = SkillEffectKind.Area, Damage = 30, Radius = 3.2f,
+                CooldownSeconds = 7f, UnlockLevel = 10, ScalingStat = Stat.Strength, Tags = new[] { "melee", "area", "physical" },
+                ChargeSeconds = 1.2f, ChargedSizePercent = 80, ChargeUnlockLevel = 12,
+            },
+            new SkillDefinition
+            {
+                Id = "inferno-wave", Name = "Inferno Wave", Effect = SkillEffectKind.Cone, Damage = 45, Range = 6f, ArcDegrees = 70f,
+                CooldownSeconds = 10f, UnlockLevel = 15, ScalingStat = Stat.Intelligence, Tags = new[] { "fire", "magic" },
+                ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 18,
+            },
+            new SkillDefinition
+            {
+                // The capstone: no charge, it is already enormous.
+                Id = "monarchs-decree", Name = "Monarch's Decree", Effect = SkillEffectKind.Area, Damage = 80, Radius = 6f,
+                CooldownSeconds = 20f, UnlockLevel = 20, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "area" },
             },
         };
 
@@ -195,7 +226,7 @@ namespace HunterSystem.Editor
         {
             var tuning = GetOrCreateSingle<PlayerTuningAsset>(PlayerTuningPath);
             var progression = GetOrCreateSingle<ProgressionAsset>(ProgressionPath); // its defaults hold the default curve
-            var starters = StarterSkillData.Select(GetOrCreateSkill).ToArray();
+            var skills = SkillData.Select(GetOrCreateSkill).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
 
@@ -207,7 +238,7 @@ namespace HunterSystem.Editor
             }
 
             content.ReplaceContent(tuning, progression,
-                WithEveryProjectAsset(content.Skills, starters),
+                WithEveryProjectAsset(content.Skills, skills),
                 WithEveryProjectAsset(content.Modifiers, modifiers),
                 WithEveryProjectAsset(content.Enemies, enemies));
             EditorUtility.SetDirty(content);
@@ -269,7 +300,9 @@ namespace HunterSystem.Editor
         {
             EnsureFolder("Assets", "Data");
             EnsureFolder(DataFolder, subfolder);
-            var path = $"{DataFolder}/{subfolder}/{displayName.Replace(" ", "")}.asset";
+            // File names keep letters and digits only ("Hunter's Javelin" -> HuntersJavelin.asset).
+            var fileName = new string(displayName.Where(char.IsLetterOrDigit).ToArray());
+            var path = $"{DataFolder}/{subfolder}/{fileName}.asset";
             var asset = AssetDatabase.LoadAssetAtPath<T>(path);
             if (asset != null) return asset; // keep any tuning done in the Inspector
 

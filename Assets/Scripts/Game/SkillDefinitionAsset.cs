@@ -22,6 +22,12 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Area radius, or projectile hit radius, in metres")] private float radius = 3f;
         [SerializeField, Min(0f), Tooltip("Metres per second")] private float projectileSpeed = 15f;
 
+        [Header("Charge (hold the key)")]
+        [SerializeField, Min(0f), Tooltip("Seconds of holding for a full charge; 0 = this skill cannot be charged")] private float chargeSeconds;
+        [SerializeField, Min(0), Tooltip("At full charge: +100 doubles the radius, cone reach or projectile hit radius")] private int chargedSizePercent;
+        [SerializeField, Min(0), Tooltip("At full charge: +100 doubles the damage")] private int chargedDamagePercent;
+        [SerializeField, Min(1), Tooltip("Level at which the charge unlocks (never before the skill itself)")] private int chargeUnlockLevel = 1;
+
         public string Id => id;
         public string DisplayName => displayName;
 
@@ -39,6 +45,10 @@ namespace HunterSystem.Game
             ArcDegrees = arcDegrees,
             Radius = radius,
             ProjectileSpeed = projectileSpeed,
+            ChargeSeconds = chargeSeconds,
+            ChargedSizePercent = chargedSizePercent,
+            ChargedDamagePercent = chargedDamagePercent,
+            ChargeUnlockLevel = chargeUnlockLevel,
         };
 
         /// <summary>For editor tooling that creates skills in code.</summary>
@@ -56,6 +66,10 @@ namespace HunterSystem.Game
             arcDegrees = d.ArcDegrees;
             radius = d.Radius;
             projectileSpeed = d.ProjectileSpeed;
+            chargeSeconds = d.ChargeSeconds;
+            chargedSizePercent = d.ChargedSizePercent;
+            chargedDamagePercent = d.ChargedDamagePercent;
+            chargeUnlockLevel = d.ChargeUnlockLevel;
         }
     }
 }

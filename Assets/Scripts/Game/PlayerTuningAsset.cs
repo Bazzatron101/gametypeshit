@@ -14,6 +14,8 @@ namespace HunterSystem.Game
         [SerializeField, Min(1)] private int tickRate = 60;
         [SerializeField, Min(0f)] private float playerMoveSpeed = 5f;
         [SerializeField, Min(1)] private int playerMaxHealth = 100;
+        [SerializeField, Range(0, 100), Tooltip("Move speed while charging a skill, as a percentage of normal")] private int chargeMoveSpeedPercent = 40;
+        [SerializeField, Min(0f), Tooltip("A hold shorter than this is a tap: the charge only builds after it")] private float chargeTapGraceSeconds = 0.15f;
 
         [Header("Light attack")]
         [SerializeField, Min(0)] private int lightAttackDamage = 10;
@@ -46,6 +48,8 @@ namespace HunterSystem.Game
             config.TickRate = tickRate;
             config.PlayerMoveSpeed = playerMoveSpeed;
             config.PlayerMaxHealth = playerMaxHealth;
+            config.ChargeMoveSpeedPercent = chargeMoveSpeedPercent;
+            config.ChargeTapGraceSeconds = chargeTapGraceSeconds;
             config.LightAttack = new AttackDefinition
             {
                 Damage = lightAttackDamage, Range = lightAttackRange, ArcDegrees = lightAttackArcDegrees, CooldownSeconds = lightAttackCooldownSeconds,
