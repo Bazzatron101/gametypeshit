@@ -7,7 +7,7 @@
 **Status:** ready-for-agent
 
 - [ ] Character stats, level, skills, and gear save and load correctly
-- [ ] Steam Cloud backup is optional and restorable
+- [x] Steam Cloud backup is optional and restorable
 - [x] A guest joins a host's session with their own character and keeps XP and progress earned there
 - [x] Host-world progress is stored separately from guest characters
 
@@ -55,3 +55,6 @@ Boxes left open:
 - **Known limits:**
   - Saves made outside the co-op scene are not copied to Steam Cloud, because Steam only starts there.
   - Two characters with the same level and XP but different stat choices count as the same on rejoin.
+
+**2026-11-13 (developer test, recorded by agent):** Steam Cloud tried against real Steam (test app 480): the cloud save worked, and the level and stat points came back correctly. Box 2 is ticked on that report. Box 1 stays open only for gear, which does not exist yet.
+
