@@ -42,3 +42,7 @@ Follows from this, to settle with the premise:
 - **Words:** the spec and code say "gate" for a run; the developer said "dungeon". Decide whether a gate is the entrance to a dungeon or whether "dungeon" replaces "gate" in the player-facing text. No code needs to change either way.
 - **Promotions** (spec story 9, "authored story events") become the guild granting a higher licence.
 
+**2026-11-13 (developer, recorded by agent):**
+- **Words settled:** a gate is the entrance to a dungeon. Hunters go through a gate to clear the dungeon behind it. The spec's and code's "gate" (a run, the gate board, gate ranks) stays as it is; player-facing text can say "dungeon" for the place inside.
+- **The hook:** the developer is still thinking about it. This ticket stays open for the hook and the System's voice.
+
