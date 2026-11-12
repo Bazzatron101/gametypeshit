@@ -106,7 +106,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 54. As a solo player, I want to respawn at the most recent checkpoint a limited number of times per gate, so that one mistake does not cost me a long run.
 55. As a solo player, I want to restart at the gate entrance after using my three revives, so that stakes remain.
-56. As a co-op player who dies, I want the choice to wait for a teammate revive at the next checkpoint or respawn at the entrance, so that I am never stuck waiting.
+56. As a co-op player who dies, I want the choice to wait for a teammate revive at the next checkpoint or respawn at the closest checkpoint, so that I am never stuck waiting. (Changed 2026-11-13 from "the entrance".)
 57. As a co-op player, I want a wipe to cost progress inside the gate but never the character, so that failure never destroys what I have built.
 
 ### Story and presentation
@@ -197,7 +197,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 ### Deaths, scaling, and rewards
 
 - Solo: three checkpoint revives per gate, then restart at the entrance.
-- Co-op: a dead player chooses between waiting for a checkpoint revive or respawning at the entrance. A wipe costs progress inside the gate only.
+- Co-op: a dead player chooses between waiting for a checkpoint revive or respawning at the closest checkpoint (the activated checkpoint nearest the living party; decided 2026-11-13). A wipe costs progress inside the gate only.
 - No player-power scaling. Rewards are not reduced for over-leveled players.
 - Enemy scaling in tiers (solo, 2 to 4, 5 to 10) through health and damage multipliers plus spawn counts. Every normal gate stays solo-completable. Raid gates (10 players) use split objectives and phases. A "roles by build" idea for raids is optional, if a good design emerges.
 

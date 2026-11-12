@@ -52,9 +52,9 @@ too much netcode for one developer.
   checkpoint revives stops applying, and the co-op rule (wait for a checkpoint revive or
   respawn at the entrance) takes over. Revives already used do not come back.
 - A late joiner starts with no revives used.
-- Respawning "at the entrance" in co-op can mean a long walk back in a long gate. The death
-  rules ticket should decide whether the respawn point is the entrance or the latest checkpoint;
-  this decision makes the latest checkpoint the natural choice.
+- Co-op respawning was "at the entrance", a long walk back in a long gate. Settled on
+  2026-11-13: a fallen player who chooses to respawn comes back at the activated checkpoint
+  nearest the living party (ticket 17), the same placement a joiner or rejoiner gets.
 
 **Rewards**
 - A joiner earns XP and personal loot for everything after they arrive, in full (the spec's
