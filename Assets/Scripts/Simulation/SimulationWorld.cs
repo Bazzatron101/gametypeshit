@@ -135,8 +135,8 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>
-        /// Advances one tick: queued modifier grants and revokes apply first, then stat points are
-        /// spent (so a point spent this tick already counts),
+        /// Advances one tick: queued world operations (modifier grants, granted XP, taught skills...)
+        /// apply first, then loadout changes and stat points (so a point spent this tick already counts),
         /// then players dodge, move and attack or use a skill, then projectiles fly, then enemies act. Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
         /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
@@ -151,11 +151,14 @@ namespace HunterSystem.Simulation
             _events.Clear();
             var tick = Tick + 1;
 
-            ApplyPendingModifierChanges(tick);
+            ApplyPendingOperations(tick);
 
             foreach (var player in _players)
-                if (commands.TryGetValue(player.Id, out var cmd) && cmd.AllocateStat.HasValue)
-                    TryAllocateStat(player, cmd.AllocateStat.Value, tick);
+            {
+                if (!commands.TryGetValue(player.Id, out var cmd)) continue;
+                if (cmd.AssignSkill.HasValue) TryAssignSkill(player, cmd.AssignSkill.Value, tick);
+                if (cmd.AllocateStat.HasValue) TryAllocateStat(player, cmd.AllocateStat.Value, tick);
+            }
 
             foreach (var player in _players)
             {

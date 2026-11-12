@@ -140,9 +140,11 @@ namespace HunterSystem.Simulation
     {
         public PlayerId Player { get; }
         public int Amount { get; }
-        public EnemyId Source { get; }
 
-        public XpGained(int tick, PlayerId player, int amount, EnemyId source) : base(tick)
+        /// <summary>The defeated enemy it came from, or null for XP granted directly (quests, the test arena).</summary>
+        public EnemyId? Source { get; }
+
+        public XpGained(int tick, PlayerId player, int amount, EnemyId? source) : base(tick)
         {
             Player = player;
             Amount = amount;
@@ -198,6 +200,24 @@ namespace HunterSystem.Simulation
             Slot = slot;
             Range = range;
             Radius = radius;
+        }
+    }
+
+    /// <summary>
+    /// A bar slot's contents changed: <see cref="Skill"/> is what it holds now, or null if empty.
+    /// A move or swap emits one of these for each slot it touched.
+    /// </summary>
+    public sealed class SkillSlotChanged : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public int Slot { get; }
+        public SkillDefinition Skill { get; }
+
+        public SkillSlotChanged(int tick, PlayerId player, int slot, SkillDefinition skill) : base(tick)
+        {
+            Player = player;
+            Slot = slot;
+            Skill = skill;
         }
     }
 

@@ -59,6 +59,21 @@ namespace HunterSystem.Simulation
         public override string ToString() => Id;
     }
 
+    /// <summary>A request to put a known skill in a bar slot (or clear it, with a null id).</summary>
+    public readonly struct SkillAssignment
+    {
+        public readonly int Slot;
+
+        /// <summary>The skill to place, or null to empty the slot.</summary>
+        public readonly string SkillId;
+
+        public SkillAssignment(int slot, string skillId)
+        {
+            Slot = slot;
+            SkillId = skillId;
+        }
+    }
+
     /// <summary>One slot of a player's six-slot skill bar.</summary>
     public readonly struct SkillSlotState
     {

@@ -7,8 +7,10 @@ using UnityEditor;
 namespace HunterSystem.Tests
 {
     /// <summary>
-    /// Content validation: every data asset in the project loads into a simulation without being
-    /// rejected. A bad asset fails here, in CI, before anyone meets it in a fight.
+    /// Content validation. The game's single content list (GameContent) loads into a simulation
+    /// through the same path the runner uses, every entry passes the simulation's checks, and no
+    /// skill, modifier or enemy asset exists outside the list. A bad asset fails here, before
+    /// anyone meets it in a fight.
     /// </summary>
     public class ContentValidationTest
     {
@@ -17,48 +19,80 @@ namespace HunterSystem.Tests
                 .Select(guid => AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid)))
                 .ToArray();
 
-        private static SimulationConfig ProjectConfig()
+        private static GameContentAsset Content()
         {
-            var progression = All<ProgressionAsset>().SingleOrDefault();
-            return new SimulationConfig
-            {
-                Progression = progression != null ? progression.ToProgression() : new ProgressionDefinition(),
-                StatEffects = progression != null ? progression.ToStatEffects() : new StatEffectsDefinition(),
-                Skills = All<SkillDefinitionAsset>().Select(s => s.ToDefinition()).ToArray(),
-            };
+            var all = All<GameContentAsset>();
+            Assert.That(all.Length, Is.EqualTo(1), "exactly one GameContent asset");
+            return all[0];
+        }
+
+        private static SimulationWorld WorldFromContent(GameContentAsset content)
+        {
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+            return new SimulationWorld(config);
         }
 
         [Test]
-        public void EverySkillAssetPassesValidation()
+        public void ContentHasNoEmptyEntriesAndOneOfEachSettingsAsset()
         {
-            Assert.That(All<SkillDefinitionAsset>(), Is.Not.Empty, "the project has skills to check");
-            Assert.DoesNotThrow(() => new SimulationWorld(ProjectConfig()));
+            var content = Content();
+
+            Assert.That(All<ProgressionAsset>(), Is.EqualTo(new[] { content.Progression }), "one progression asset, the listed one");
+            Assert.That(All<PlayerTuningAsset>(), Is.EqualTo(new[] { content.PlayerTuning }), "one tuning asset, the listed one");
+            Assert.That(content.Skills, Is.Not.Empty.And.All.Not.Null);
+            Assert.That(content.Modifiers, Is.All.Not.Null);
+            Assert.That(content.Enemies, Is.Not.Empty.And.All.Not.Null);
         }
 
         [Test]
-        public void EveryModifierAssetPassesValidation()
+        public void EveryAssetIsInTheContentListSoNothingIsDefinedTwiceOrForgotten()
         {
-            var world = new SimulationWorld(ProjectConfig());
+            var content = Content();
+
+            Assert.That(All<SkillDefinitionAsset>(), Is.SubsetOf(content.Skills));
+            Assert.That(All<ModifierDefinitionAsset>(), Is.SubsetOf(content.Modifiers));
+            Assert.That(All<EnemyDefinitionAsset>(), Is.SubsetOf(content.Enemies));
+            Assert.That(content.Skills, Is.Unique);
+            Assert.That(content.Modifiers, Is.Unique);
+            Assert.That(content.Enemies, Is.Unique);
+        }
+
+        [Test]
+        public void EverySkillPassesValidation()
+        {
+            Assert.DoesNotThrow(() => WorldFromContent(Content()));
+        }
+
+        [Test]
+        public void EveryModifierPassesValidation()
+        {
+            var content = Content();
+            var world = WorldFromContent(content);
             var player = new PlayerId(1);
             world.AddPlayer(player, Vec3.Zero);
 
-            foreach (var asset in All<ModifierDefinitionAsset>())
+            foreach (var asset in content.Modifiers)
                 Assert.DoesNotThrow(() => world.GrantModifier(player, asset.ToDefinition()), asset.name);
         }
 
         [Test]
-        public void EveryEnemyAssetLoads()
+        public void EveryEnemyLoads()
         {
-            var world = new SimulationWorld(ProjectConfig());
-            foreach (var asset in All<EnemyDefinitionAsset>())
+            var content = Content();
+            var world = WorldFromContent(content);
+
+            foreach (var asset in content.Enemies)
                 Assert.DoesNotThrow(() => world.SpawnEnemy(asset.ToDefinition(), Vec3.Zero), asset.name);
         }
 
         [Test]
-        public void SkillAndModifierIdsAreUniqueAcrossAssets()
+        public void SkillAndModifierIdsAreUnique()
         {
-            Assert.That(All<SkillDefinitionAsset>().Select(s => s.Id), Is.Unique);
-            Assert.That(All<ModifierDefinitionAsset>().Select(m => m.Id), Is.Unique);
+            var content = Content();
+
+            Assert.That(content.Skills.Select(s => s.Id), Is.Unique);
+            Assert.That(content.Modifiers.Select(m => m.Id), Is.Unique);
         }
     }
 }

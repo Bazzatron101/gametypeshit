@@ -17,6 +17,7 @@ namespace HunterSystem.Game
         private bool _dodgePending;
         private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
+        private readonly Queue<SkillAssignment> _skillAssignments = new Queue<SkillAssignment>();
 
         /// <summary>Call once per frame with that frame's sampled input.</summary>
         public void Add(PlayerCommand sampled)
@@ -32,13 +33,17 @@ namespace HunterSystem.Game
         /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>
         public void QueueStatAllocation(Stat stat) => _statAllocations.Enqueue(stat);
 
+        /// <summary>Queues one loadout change (from a UI). Commands carry one per tick, in order.</summary>
+        public void QueueSkillAssignment(SkillAssignment assignment) => _skillAssignments.Enqueue(assignment);
+
         /// <summary>Call once per simulation tick.</summary>
         public PlayerCommand TakeForTick()
         {
             Stat? allocate = _statAllocations.Count > 0 ? _statAllocations.Dequeue() : (Stat?)null;
+            SkillAssignment? assign = _skillAssignments.Count > 0 ? _skillAssignments.Dequeue() : (SkillAssignment?)null;
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
-                allocateStat: allocate, useSkillSlot: _skillSlotPending);
+                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign);
             _lightAttackPending = false;
             _heavyAttackPending = false;
             _dodgePending = false;

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24e1b63c0ba6b33499381764ec6c12f9, type: 3}
+  m_Name: GameContent
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GameContentAsset
+  playerTuning: {fileID: 11400000, guid: 58eca55e8835aa5498d4a7aaefc90716, type: 2}
+  progression: {fileID: 11400000, guid: 38303f249260ae54fb68407969e7954c, type: 2}
+  skills:
+  - {fileID: 11400000, guid: 47de00f911805d84dbaa8b7cad2ae17a, type: 2}
+  - {fileID: 11400000, guid: 195f10a5bd313964ea2f9a3050f616ba, type: 2}
+  - {fileID: 11400000, guid: e00038cf80b7bbe40b897f355387e810, type: 2}
+  - {fileID: 11400000, guid: d0c48604bdfa4bb4a8b7f01dcfaba254, type: 2}
+  modifiers:
+  - {fileID: 11400000, guid: 00261d8cc31b452459507cdd56036305, type: 2}
+  - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}
+  - {fileID: 11400000, guid: c27b3a3b1a9038b4589fb03218ff0cc0, type: 2}
+  - {fileID: 11400000, guid: 8d7f52e4a7a38da4195ded7bbc7bbe54, type: 2}
+  enemies:
+  - {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
+  - {fileID: 11400000, guid: b8213ddf57ac7634ab101d13adabee64, type: 2}

@@ -39,36 +39,27 @@ namespace HunterSystem.Simulation
         {
             var player = FindPlayer(id);
             ValidateModifier(modifier);
-            player.PendingModifierChanges.Add((modifier, null));
+            Enqueue(tick =>
+            {
+                if (player.Modifiers.Any(m => m.Id == modifier.Id)) return;
+                player.Modifiers.Add(modifier);
+                _events.Add(new ModifierGranted(tick, player.Id, modifier));
+            });
         }
 
         /// <summary>Removes a modifier by id at the start of the next tick, with a <see cref="ModifierRevoked"/> event if the player had it.</summary>
         public void RevokeModifier(PlayerId id, string modifierId)
         {
             var player = FindPlayer(id);
-            player.PendingModifierChanges.Add((null, modifierId));
+            Enqueue(tick =>
+            {
+                if (player.Modifiers.RemoveAll(m => m.Id == modifierId) > 0)
+                    _events.Add(new ModifierRevoked(tick, player.Id, modifierId));
+            });
         }
 
-        private void ApplyPendingModifierChanges(int tick)
-        {
-            foreach (var player in _players)
-            {
-                foreach (var (grant, revokeId) in player.PendingModifierChanges)
-                {
-                    if (grant != null)
-                    {
-                        if (player.Modifiers.Any(m => m.Id == grant.Id)) continue;
-                        player.Modifiers.Add(grant);
-                        _events.Add(new ModifierGranted(tick, player.Id, grant));
-                    }
-                    else if (player.Modifiers.RemoveAll(m => m.Id == revokeId) > 0)
-                    {
-                        _events.Add(new ModifierRevoked(tick, player.Id, revokeId));
-                    }
-                }
-                player.PendingModifierChanges.Clear();
-            }
-        }
+        /// <summary>Whether the modifier is in effect on the player now (queued grants count from the next tick).</summary>
+        public bool HasModifier(PlayerId id, string modifierId) => FindPlayer(id).Modifiers.Any(m => m.Id == modifierId);
 
         private void ValidateModifier(ModifierDefinition m)
         {

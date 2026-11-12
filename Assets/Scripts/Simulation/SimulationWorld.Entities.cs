@@ -31,10 +31,6 @@ namespace HunterSystem.Simulation
 
             public readonly List<ModifierDefinition> Modifiers = new List<ModifierDefinition>();
 
-            /// <summary>Grants (modifier set) and revokes (id set) waiting for the start of the next tick.</summary>
-            public readonly List<(ModifierDefinition grant, string revokeId)> PendingModifierChanges =
-                new List<(ModifierDefinition, string)>();
-
             /// <summary>Indexed by <see cref="AttackKind"/>: each attack has its own cooldown.</summary>
             public readonly int[] AttackReadyAtTick = new int[AttackKindCount];
 

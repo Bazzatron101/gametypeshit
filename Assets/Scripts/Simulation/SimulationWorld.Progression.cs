@@ -36,7 +36,7 @@ namespace HunterSystem.Simulation
             foreach (var player in _players) GainXp(player, reward, enemy.Id, tick);
         }
 
-        private void GainXp(Player player, int amount, EnemyId source, int tick)
+        private void GainXp(Player player, int amount, EnemyId? source, int tick)
         {
             var gained = 0;
             var levelsGained = 0;

@@ -34,6 +34,16 @@ namespace HunterSystem.Game
             XpReward = xpReward,
         };
 
+        /// <summary>For editor tooling that creates definitions in code.</summary>
+        public void SetAttackAndReward(int damage, float range, float windupSeconds, float cooldownSeconds, int xpReward)
+        {
+            attackDamage = damage;
+            attackRange = range;
+            attackWindupSeconds = windupSeconds;
+            attackCooldownSeconds = cooldownSeconds;
+            this.xpReward = xpReward;
+        }
+
         /// <summary>For editor tooling that creates definitions in code. Attack values keep their defaults unless set.</summary>
         public void SetStats(string name, int maxHealth, float moveSpeed, float stopDistance)
         {

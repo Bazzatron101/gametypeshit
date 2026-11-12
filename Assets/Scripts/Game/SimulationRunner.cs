@@ -13,35 +13,8 @@ namespace HunterSystem.Game
     [DefaultExecutionOrder(-100)]
     public sealed class SimulationRunner : MonoBehaviour
     {
-        [SerializeField, Min(1)] private int tickRate = 60;
-        [SerializeField, Min(0f)] private float playerMoveSpeed = 5f;
-        [SerializeField, Min(1)] private int playerMaxHealth = 100;
-        [SerializeField, Tooltip("XP curve, level cap and stat effects. Defaults apply if empty.")] private ProgressionAsset progression;
-        [SerializeField, Tooltip("Every skill in the game. Starters (unlock level 1) fill the bar in this order.")] private SkillDefinitionAsset[] skills = new SkillDefinitionAsset[0];
-
-        [Header("Light attack")]
-        [SerializeField, Min(0)] private int lightAttackDamage = 10;
-        [SerializeField, Min(0f)] private float lightAttackRange = 2f;
-        [SerializeField, Range(1f, 360f)] private float lightAttackArcDegrees = 120f;
-        [SerializeField, Min(0f)] private float lightAttackCooldownSeconds = 0.4f;
-
-        [Header("Heavy attack")]
-        [SerializeField, Min(0)] private int heavyAttackDamage = 25;
-        [SerializeField, Min(0f)] private float heavyAttackRange = 2.5f;
-        [SerializeField, Range(1f, 360f)] private float heavyAttackArcDegrees = 90f;
-        [SerializeField, Min(0f)] private float heavyAttackWindupSeconds = 0.35f;
-        [SerializeField, Min(0f)] private float heavyAttackCooldownSeconds = 1f;
-
-        [Header("Soft lock-on")]
-        [SerializeField] private bool softLockOnEnabled = true;
-        [SerializeField, Min(0f)] private float softLockOnRange = 4f;
-        [SerializeField, Range(1f, 360f)] private float softLockOnConeDegrees = 90f;
-
-        [Header("Dodge")]
-        [SerializeField, Min(0f)] private float dodgeDistance = 3f;
-        [SerializeField, Min(0f)] private float dodgeDurationSeconds = 0.25f;
-        [SerializeField, Min(0f)] private float dodgeInvulnerabilitySeconds = 0.3f;
-        [SerializeField, Min(0f)] private float dodgeCooldownSeconds = 0.8f;
+        [SerializeField, Tooltip("The game's content and tuning. Every scene points at the same asset.")]
+        private GameContentAsset content;
 
         private readonly Dictionary<PlayerId, IPlayerCommandSource> _sources = new Dictionary<PlayerId, IPlayerCommandSource>();
         private readonly Dictionary<PlayerId, PlayerCommandBuffer> _buffers = new Dictionary<PlayerId, PlayerCommandBuffer>();
@@ -53,49 +26,18 @@ namespace HunterSystem.Game
 
         public SimulationWorld World { get; private set; }
 
+        /// <summary>The game's content list (may be null in a bare test scene).</summary>
+        public GameContentAsset Content => content;
+
         /// <summary>Events from every tick run this frame, in order. Read them in LateUpdate.</summary>
         public IReadOnlyList<SimulationEvent> FrameEvents => _frameEvents;
 
         private void Awake()
         {
-            World = new SimulationWorld(new SimulationConfig
-            {
-                TickRate = tickRate,
-                PlayerMoveSpeed = playerMoveSpeed,
-                PlayerMaxHealth = playerMaxHealth,
-                Progression = progression != null ? progression.ToProgression() : new ProgressionDefinition(),
-                StatEffects = progression != null ? progression.ToStatEffects() : new StatEffectsDefinition(),
-                Skills = SkillDefinitions(),
-                Dodge = new DodgeDefinition
-                {
-                    Distance = dodgeDistance,
-                    DurationSeconds = dodgeDurationSeconds,
-                    InvulnerabilitySeconds = dodgeInvulnerabilitySeconds,
-                    CooldownSeconds = dodgeCooldownSeconds,
-                },
-                LightAttack = new AttackDefinition
-                {
-                    Damage = lightAttackDamage,
-                    Range = lightAttackRange,
-                    ArcDegrees = lightAttackArcDegrees,
-                    CooldownSeconds = lightAttackCooldownSeconds,
-                },
-                HeavyAttack = new AttackDefinition
-                {
-                    Damage = heavyAttackDamage,
-                    Range = heavyAttackRange,
-                    ArcDegrees = heavyAttackArcDegrees,
-                    WindupSeconds = heavyAttackWindupSeconds,
-                    CooldownSeconds = heavyAttackCooldownSeconds,
-                },
-                SoftLockOn = new SoftLockOnDefinition
-                {
-                    Enabled = softLockOnEnabled,
-                    Range = softLockOnRange,
-                    ConeDegrees = softLockOnConeDegrees,
-                },
-            });
-            _clock = new FixedTimestepClock(tickRate);
+            var config = new SimulationConfig(); // defaults apply when a bare test scene has no content
+            if (content != null) content.ApplyTo(config);
+            World = new SimulationWorld(config);
+            _clock = new FixedTimestepClock(config.TickRate);
 
             foreach (var view in FindObjectsByType<PlayerView>(FindObjectsSortMode.None))
             {
@@ -116,16 +58,32 @@ namespace HunterSystem.Game
             }
         }
 
-        /// <summary>The skill assets as simulation data. Empty entries in the list are skipped with a warning.</summary>
-        private SkillDefinition[] SkillDefinitions()
+        /// <summary>Spawns an enemy mid-run with its greybox visual (the test arena; later, gate spawners).</summary>
+        public EnemyView SpawnEnemy(EnemyDefinitionAsset definition, Vector3 position, Material bodyMaterial)
         {
-            var list = new List<SkillDefinition>();
-            foreach (var asset in skills ?? new SkillDefinitionAsset[0])
-            {
-                if (asset == null) { Debug.LogWarning($"{name}: an empty entry in the skills list was skipped.", this); continue; }
-                list.Add(asset.ToDefinition());
-            }
-            return list.ToArray();
+            var view = GreyboxVisuals.CreateEnemy(definition != null ? definition.name : "Enemy", position, definition, bodyMaterial);
+            var spawn = ToVec3(position);
+            var id = World.SpawnEnemy(view.CreateDefinition(), spawn);
+            _previousEnemyPositions[id] = spawn;
+            view.Bind(id);
+            return view;
+        }
+
+        /// <summary>Removes an enemy and its visual outright (no defeat, no XP).</summary>
+        public void DespawnEnemy(EnemyView view)
+        {
+            if (view == null) return;
+            if (World.HasEnemy(view.Id)) World.DespawnEnemy(view.Id);
+            _previousEnemyPositions.Remove(view.Id);
+            Destroy(view.gameObject);
+        }
+
+        /// <summary>A loadout change for the player, sent to the simulation as a command on the next tick.</summary>
+        public void RequestSkillAssignment(PlayerId id, SkillAssignment assignment)
+        {
+            if (!_buffers.TryGetValue(id, out var buffer))
+                throw new System.ArgumentException($"{id} has no input buffer; only players spawned from a PlayerView have a loadout.", nameof(id));
+            buffer.QueueSkillAssignment(assignment);
         }
 
         /// <summary>Replaces where a player's commands come from (tests, bots, network).</summary>

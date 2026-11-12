@@ -73,6 +73,18 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void QueuedSkillAssignmentsGoOutOnePerTickInOrder()
+        {
+            var buffer = new PlayerCommandBuffer();
+            buffer.QueueSkillAssignment(new SkillAssignment(3, "a"));
+            buffer.QueueSkillAssignment(new SkillAssignment(4, "b"));
+
+            Assert.That(buffer.TakeForTick().AssignSkill?.SkillId, Is.EqualTo("a"));
+            Assert.That(buffer.TakeForTick().AssignSkill?.SkillId, Is.EqualTo("b"));
+            Assert.That(buffer.TakeForTick().AssignSkill, Is.Null);
+        }
+
+        [Test]
         public void MovementIsTheLatestSampleAndHoldsForEveryTick()
         {
             var buffer = new PlayerCommandBuffer();

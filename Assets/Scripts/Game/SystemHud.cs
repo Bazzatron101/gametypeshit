@@ -90,12 +90,12 @@ namespace HunterSystem.Game
             if (_camera == null) return;
             if (open)
             {
-                _cursorWasCapturedBeforeMenu = Cursor.lockState == CursorLockMode.Locked;
-                _camera.ReleaseCursorForMenu();
+                _cursorWasCapturedBeforeMenu = Cursor.lockState == CursorLockMode.Locked || _camera.InMenu;
+                _camera.ReleaseCursorForMenu(this);
             }
             else
             {
-                _camera.EndMenu(recapture: _cursorWasCapturedBeforeMenu);
+                _camera.EndMenu(this, recapture: _cursorWasCapturedBeforeMenu);
             }
         }
 

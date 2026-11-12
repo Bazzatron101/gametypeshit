@@ -30,6 +30,13 @@ namespace HunterSystem.Game
         public EnemyDefinition CreateDefinition() =>
             definition != null ? definition.ToDefinition() : new EnemyDefinition();
 
+        /// <summary>Sets what the view shows and spawns as, for views built in code (the test arena).</summary>
+        public void Configure(EnemyDefinitionAsset definitionAsset, Renderer bodyRenderer)
+        {
+            definition = definitionAsset;
+            body = bodyRenderer;
+        }
+
         public void Bind(EnemyId id)
         {
             Id = id;
@@ -40,7 +47,7 @@ namespace HunterSystem.Game
 
         private void LateUpdate()
         {
-            if (!_bound || _runner == null || _runner.World == null) return;
+            if (!_bound || _runner == null || _runner.World == null || !_runner.World.HasEnemy(Id)) return;
 
             foreach (var e in _runner.FrameEvents)
             {

@@ -34,28 +34,33 @@ namespace HunterSystem.Game
         public float Distance => distance;
         public float TargetHeight => targetHeight;
 
-        /// <summary>False while a menu is open: clicks do not re-capture the cursor and the mouse does not orbit.</summary>
-        public bool InMenu { get; private set; }
+        private readonly System.Collections.Generic.HashSet<object> _openMenus = new System.Collections.Generic.HashSet<object>();
 
-        /// <summary>Frees the cursor for a menu.</summary>
-        public void ReleaseCursorForMenu()
+        /// <summary>True while any menu is open: clicks do not re-capture the cursor and the mouse does not orbit.</summary>
+        public bool InMenu => _openMenus.Count > 0;
+
+        /// <summary>Frees the cursor for <paramref name="menu"/>. Several menus can be open at once.</summary>
+        public void ReleaseCursorForMenu(object menu)
         {
-            InMenu = true;
+            _openMenus.Add(menu);
             LockCursor(false);
         }
 
-        /// <summary>Leaves the menu; re-captures the cursor only when asked (it was captured before the menu).</summary>
-        public void EndMenu(bool recapture)
+        /// <summary>
+        /// Closes <paramref name="menu"/>. The cursor is re-captured only when this was the last open
+        /// menu and <paramref name="recapture"/> asks for it.
+        /// </summary>
+        public void EndMenu(object menu, bool recapture)
         {
-            InMenu = false;
-            if (recapture && Application.isFocused) LockCursor(true);
+            _openMenus.Remove(menu);
+            if (!InMenu && recapture && Application.isFocused) LockCursor(true);
         }
 
         private void Start()
         {
             _look = InputSystem.actions != null ? InputSystem.actions.FindAction("Player/Look") : null;
             _look?.Enable();
-            if (Application.isFocused) LockCursor(true);
+            if (Application.isFocused && !InMenu) LockCursor(true); // a menu opened first keeps the cursor free
         }
 
         private void LateUpdate()

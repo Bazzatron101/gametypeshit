@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HunterSystem.Simulation
 {
@@ -99,6 +100,33 @@ namespace HunterSystem.Simulation
                 return i;
             }
             return null;
+        }
+
+        /// <summary>
+        /// A player rearranging their bar. Puts a known skill in a slot, swapping with whatever was
+        /// there if the skill sat in another slot; a null skill clears the slot. Invalid requests are
+        /// ignored: this is player input.
+        /// </summary>
+        private void TryAssignSkill(Player player, SkillAssignment assignment, int tick)
+        {
+            var slot = assignment.Slot;
+            if (slot < 0 || slot >= SkillSlotCount) return;
+
+            SkillDefinition skill = null;
+            if (assignment.SkillId != null)
+            {
+                skill = player.KnownSkills.FirstOrDefault(s => s.Id == assignment.SkillId);
+                if (skill == null) return;
+            }
+            if (player.SkillSlots[slot] == skill) return;
+
+            var from = skill == null ? -1 : Array.IndexOf(player.SkillSlots, skill);
+            var displaced = player.SkillSlots[slot];
+            player.SkillSlots[slot] = skill;
+            _events.Add(new SkillSlotChanged(tick, player.Id, slot, skill));
+            if (from < 0) return;
+            player.SkillSlots[from] = displaced; // swap, or leave it empty if the target was
+            _events.Add(new SkillSlotChanged(tick, player.Id, from, displaced));
         }
 
         /// <summary>Uses the skill in <paramref name="slot"/> if there is one and it is off cooldown. Returns whether it fired.</summary>

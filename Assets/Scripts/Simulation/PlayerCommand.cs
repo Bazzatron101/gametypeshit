@@ -23,8 +23,11 @@ namespace HunterSystem.Simulation
         /// <summary>Use the skill in this bar slot (0 to 5, keys 1 to 6), or null for none.</summary>
         public readonly int? UseSkillSlot;
 
+        /// <summary>Rearrange the skill bar (a loadout change), or null for none. One per tick.</summary>
+        public readonly SkillAssignment? AssignSkill;
+
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
-            Stat? allocateStat = null, int? useSkillSlot = null)
+            Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null)
         {
             var length = MathF.Sqrt(moveX * moveX + moveZ * moveZ);
             if (length > 1f) { moveX /= length; moveZ /= length; }
@@ -35,6 +38,7 @@ namespace HunterSystem.Simulation
             Dodge = dodge;
             AllocateStat = allocateStat;
             UseSkillSlot = useSkillSlot;
+            AssignSkill = assignSkill;
         }
     }
 }
