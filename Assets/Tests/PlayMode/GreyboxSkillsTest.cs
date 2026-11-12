@@ -22,6 +22,7 @@ namespace HunterSystem.Tests
         [UnitySetUp]
         public IEnumerator LoadGreybox()
         {
+            TestSaves.UseFreshFolder();
             yield return SceneManager.LoadSceneAsync("Greybox", LoadSceneMode.Single);
             _runner = Object.FindAnyObjectByType<SimulationRunner>();
         }

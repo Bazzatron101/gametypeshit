@@ -23,6 +23,7 @@ namespace HunterSystem.Tests
         [UnitySetUp]
         public IEnumerator LoadArena()
         {
+            TestSaves.UseFreshFolder();
             yield return SceneManager.LoadSceneAsync("Arena", LoadSceneMode.Single);
             _runner = Object.FindAnyObjectByType<SimulationRunner>();
             _panel = Object.FindAnyObjectByType<ArenaPanel>();

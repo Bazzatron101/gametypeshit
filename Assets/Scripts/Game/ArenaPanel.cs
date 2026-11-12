@@ -37,6 +37,8 @@ namespace HunterSystem.Game
         private void Start()
         {
             _runner = FindAnyObjectByType<SimulationRunner>();
+            // The arena hands out XP, levels and modifiers freely: your character comes in, but nothing done here is kept.
+            if (_runner != null) _runner.Autosave.Enabled = false;
             _camera = FindAnyObjectByType<ThirdPersonCamera>();
             if (openOnStart && Application.isFocused) SetOpen(true);
         }

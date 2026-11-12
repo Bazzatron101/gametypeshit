@@ -28,13 +28,13 @@ Get-ChildItem $out -Filter '*.json' | Remove-Item
 function Q([string]$path) { '"' + $path + '"' }   # Start-Process does not quote arguments; the path has a space
 $hostJson = Join-Path $out 'host.json'
 $hostDisplay = if ($HeadlessHost) { @('-batchmode', '-nographics') } else { @('-screen-fullscreen', '0', '-screen-width', '1280', '-screen-height', '720') }
-$hostArgs = $hostDisplay + @('-transport', 'local', '-coop', 'host', '-bot', '1', '-bot-expect', $Clients, '-autotest', $Seconds, (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
+$hostArgs = $hostDisplay + @('-no-save', '-transport', 'local', '-coop', 'host', '-bot', '1', '-bot-expect', $Clients, '-autotest', $Seconds, (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
 $processes = @(Start-Process -FilePath $exe -ArgumentList $hostArgs -PassThru)
 Start-Sleep -Seconds 4
 
 for ($i = 1; $i -le $Clients; $i++) {
     $json = Join-Path $out "bot-$i.json"
-    $clientArgs = @('-batchmode', '-nographics', '-transport', 'local', '-coop', 'join', '-address', '127.0.0.1', '-player-key', "bot-$i",
+    $clientArgs = @('-batchmode', '-nographics', '-no-save', '-transport', 'local', '-coop', 'join', '-address', '127.0.0.1', '-player-key', "bot-$i",
         '-bot', ($i + 1), '-autotest', ($Seconds + 15), (Q $json), '-logFile', (Q (Join-Path $out "bot-$i.log")))
     $processes += Start-Process -FilePath $exe -ArgumentList $clientArgs -PassThru
     Start-Sleep -Milliseconds 300

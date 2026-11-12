@@ -21,6 +21,7 @@ namespace HunterSystem.Tests
         [UnityTest]
         public IEnumerator SplitShotTurnsOneFireBoltIntoThree()
         {
+            TestSaves.UseFreshFolder();
             yield return SceneManager.LoadSceneAsync("Greybox", LoadSceneMode.Single);
             var runner = Object.FindAnyObjectByType<SimulationRunner>();
             var toggles = Object.FindAnyObjectByType<DebugModifierToggles>();

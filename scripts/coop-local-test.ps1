@@ -6,6 +6,10 @@ client joined, both see two players and the same target, both players' damage re
 copies, the client was shown its own damage exactly as the host counted it (once each), and the
 client's own position matches the host's record of it.
 
+The host also gives the guest XP (ticket 15): the guest must end a level higher in its own save
+file, and the host's world must be saved separately, on the host only. Each copy uses its own save
+folder under TestResults/coop, never the real one.
+
   powershell -File scripts/coop-local-test.ps1            # uses Builds/Coop/HunterSystem.exe
   powershell -File scripts/coop-local-test.ps1 -Seconds 20
 
@@ -26,8 +30,11 @@ Remove-Item $hostJson, $clientJson -ErrorAction SilentlyContinue
 # Windows PowerShell's Start-Process does not quote array arguments, and the project path has a space.
 function Q([string]$path) { '"' + $path + '"' }
 $common = @('-batchmode', '-nographics', '-transport', 'local')
-$hostArgs = $common + @('-coop', 'host', '-autotest', ($Seconds + 4), (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
-$clientArgs = $common + @('-coop', 'join', '-address', '127.0.0.1', '-player-key', 'local-test', '-autotest', $Seconds, (Q $clientJson), '-logFile', (Q (Join-Path $out 'client.log')))
+# Each copy gets its own, empty save folder: two copies must not share one, and neither may touch the real save.
+$hostSaves = Join-Path $out 'saves-host'; $clientSaves = Join-Path $out 'saves-client'
+Remove-Item $hostSaves, $clientSaves -Recurse -Force -ErrorAction SilentlyContinue
+$hostArgs = $common + @('-save-dir', (Q $hostSaves), '-coop', 'host', '-autotest', ($Seconds + 4), (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
+$clientArgs = $common + @('-save-dir', (Q $clientSaves), '-coop', 'join', '-address', '127.0.0.1', '-player-key', 'local-test', '-autotest', $Seconds, (Q $clientJson), '-logFile', (Q (Join-Path $out 'client.log')))
 
 $hostProcess = Start-Process -FilePath $exe -ArgumentList $hostArgs -PassThru
 Start-Sleep -Seconds 2
@@ -63,7 +70,11 @@ $checks = [ordered]@{
     'client shown the host player hitting it'   = (Damage $c $hostId) -gt 0
     'client shown its own hits once each'       = (Damage $c $clientId) -eq (Damage $h $clientId)
     'prediction matches the host'               = $dx -lt 0.05 -and $dz -lt 0.05
+    'guest earned a level and it is in their save' = $c.localLevel -eq 2 -and $c.savedLevel -eq 2
+    'guest character saved on the guest PC only' = (Test-Path (Join-Path $clientSaves 'characters/hunter.hsc')) -and -not (Test-Path (Join-Path $clientSaves 'worlds'))
+    'host saved its character and its world apart' = (Test-Path (Join-Path $hostSaves 'characters/hunter.hsc')) -and (Test-Path (Join-Path $hostSaves 'worlds/world.hsw'))
 }
+Write-Host "Guest level in the session: $($c.localLevel). In its save file: $($c.savedLevel)." 
 $failed = @($checks.Keys | Where-Object { -not $checks[$_] })
 foreach ($k in $checks.Keys) { Write-Host ("  [{0}] {1}" -f ($(if ($checks[$k]) { 'ok' } else { 'FAIL' })), $k) }
 if ($failed.Count -eq 0) { Write-Host "PASS: two copies fought one enemy together; the host's damage and the client's prediction agree."; exit 0 }

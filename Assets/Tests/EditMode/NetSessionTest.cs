@@ -45,9 +45,9 @@ namespace HunterSystem.Tests
                 Host.AddLocalPlayer();
             }
 
-            public ClientSession Join(string key, SimulationConfig clientConfig = null)
+            public ClientSession Join(string key, SimulationConfig clientConfig = null, CharacterRecord character = null)
             {
-                var client = new ClientSession(clientConfig ?? Config(), Network.Connect(), key);
+                var client = new ClientSession(clientConfig ?? Config(), Network.Connect(), key, character);
                 Clients.Add(client);
                 Input[client] = PlayerCommand.None;
                 return client;
@@ -552,6 +552,133 @@ namespace HunterSystem.Tests
 
             Assert.That(again.PlayerId, Is.EqualTo(alice.PlayerId));
             Assert.That(rig.HostView(again).Position, Is.EqualTo(before), "a takeover, not a return: stays put");
+        }
+        // --- Ticket 15: guests bring their own character -----------------------------------------
+
+        private static CharacterRecord Veteran => new CharacterRecord { Level = 4, Xp = 20, UnspentStatPoints = 2, Stats = new[] { 12, 10, 10, 15, 10, 10 } };
+
+        [Test]
+        public void AGuestBringsTheirOwnCharacterIntoTheHostsSession()
+        {
+            var rig = new Rig();
+            var guest = rig.Join("alice", character: Veteran);
+
+            rig.Tick(Latency * 2 + 2);
+
+            var onHost = rig.HostView(guest);
+            Assert.That((onHost.Level, onHost.Xp, onHost.UnspentStatPoints), Is.EqualTo((4, 20, 2)));
+            Assert.That(onHost.Stats[Stat.Strength], Is.EqualTo(12));
+            Assert.That(guest.World.GetPlayer(guest.PlayerId.Value).Level, Is.EqualTo(4), "and the guest sees themselves as they are");
+            Assert.That(rig.Host.World.GetPlayer(rig.Host.LocalPlayerId).Level, Is.EqualTo(1), "the host's own character is its own");
+        }
+
+        [Test]
+        public void WhatAGuestEarnsInTheSessionIsInTheCharacterTheyTakeHome()
+        {
+            var rig = new Rig();
+            var guest = rig.Join("alice", character: Veteran);
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(0f, 0f, 1f));
+            rig.Tick(Latency * 2);
+
+            rig.Input[guest] = new PlayerCommand(0f, 0f, lightAttack: true);
+            rig.Tick();
+            rig.Input[guest] = PlayerCommand.None;
+            rig.Tick(Latency * 3);
+
+            // The guest's own machine saves this: its character as the host last confirmed it.
+            var takenHome = guest.ConfirmedCharacter();
+            Assert.That(takenHome.Level, Is.EqualTo(4));
+            Assert.That(takenHome.Xp, Is.EqualTo(20 + 60), "the kill's XP came home");
+        }
+
+        [Test]
+        public void ARejoinerKeepsTheCharacterFromTheSessionNotTheOneTheySend()
+        {
+            var rig = new Rig();
+            var alice = rig.Join("alice", character: Veteran);
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.GrantXp(alice.PlayerId.Value, 500); // progress made in the session
+            rig.Tick(2);
+            var earned = rig.HostView(alice).Level;
+            alice.Disconnect();
+            rig.Clients.Remove(alice);
+            rig.Tick(Latency + 2);
+
+            var again = rig.Join("alice", character: Veteran); // their save from before the session
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(earned, Is.GreaterThan(4));
+            Assert.That(rig.HostView(again).Level, Is.EqualTo(earned), "the session's character, with what it earned");
+        }
+
+        [Test]
+        public void ARejoinerWhoseOwnSaveHasMovedOnBringsThatInstead()
+        {
+            // They left, played elsewhere (or restored a backup), and came back to the same session.
+            var rig = new Rig();
+            var alice = rig.Join("alice", character: Veteran);
+            rig.Tick(Latency * 2 + 2);
+            alice.Disconnect();
+            rig.Clients.Remove(alice);
+            rig.Tick(Latency + 2);
+
+            var further = new CharacterRecord { Level = 6, Xp = 5, Stats = new[] { 20, 10, 10, 15, 10, 10 } };
+            var again = rig.Join("alice", character: further);
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(again.PlayerId, Is.EqualTo(alice.PlayerId), "the same player in the session");
+            Assert.That(rig.HostView(again).Level, Is.EqualTo(6), "with the character that is further along");
+            Assert.That(rig.HostView(again).Stats[Stat.Strength], Is.EqualTo(20));
+        }
+
+        [Test]
+        public void TheCharacterAGuestSavesIsTheHostsViewNotItsOwnGuess()
+        {
+            var rig = new Rig();
+            var guest = rig.Join("alice", character: Veteran);
+            Assert.That(guest.ConfirmedCharacter(), Is.Null, "nothing to save before the host has welcomed it");
+            rig.Tick(Latency * 2 + 2);
+
+            // The guest asks to spend a point; its own world shows it at once, the host has not heard yet.
+            rig.Input[guest] = new PlayerCommand(0f, 0f, allocateStat: Stat.Agility);
+            rig.Tick();
+            rig.Input[guest] = PlayerCommand.None;
+
+            var me = guest.PlayerId.Value;
+            Assert.That(guest.World.GetPlayer(me).UnspentStatPoints, Is.EqualTo(1), "predicted");
+            Assert.That(guest.ConfirmedCharacter().UnspentStatPoints, Is.EqualTo(2), "not yet confirmed, so not yet saved");
+
+            rig.Tick(Latency * 3);
+            Assert.That(guest.ConfirmedCharacter().UnspentStatPoints, Is.EqualTo(1), "confirmed by the host");
+        }
+
+        [Test]
+        public void ACharacterTheHostCannotReadIsTurnedAwayRatherThanReplaced()
+        {
+            // For example a guest on a newer version. Letting them in as a fresh level 1 would risk their save.
+            var rig = new Rig();
+            var raw = rig.Network.Connect();
+            raw.Send(Wire.Hello("mallory", new byte[] { 1, 2, 3, 4, 5 }));
+            var before = rig.Host.World.PlayerIds.Count;
+
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(rig.Host.World.PlayerIds.Count, Is.EqualTo(before));
+            Assert.That(raw.TryReceive(out var reply), Is.True);
+            Assert.That(Wire.TypeOf(reply), Is.EqualTo(MessageType.Refused));
+            Assert.That(Wire.ReadRefused(reply), Does.Contain("character"));
+        }
+
+        [Test]
+        public void TheHostBringsItsOwnCharacterToo()
+        {
+            var network = new SimulatedNetwork(Latency);
+            var host = new HostSession(Config(), network.HostEndpoint, _ => Vec3.Zero);
+
+            var id = host.AddLocalPlayer(Veteran);
+
+            Assert.That(host.World.GetPlayer(id).Level, Is.EqualTo(4));
         }
     }
 }

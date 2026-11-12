@@ -7,7 +7,7 @@ namespace HunterSystem.Netcode
 {
     public enum MessageType : byte
     {
-        /// <summary>Client to host, once, on connecting: a stable key (a Steam id in the game) for rejoining.</summary>
+        /// <summary>Client to host, once, on connecting: a stable key (a Steam id in the game) for rejoining, and the character the player brings.</summary>
         Hello = 1,
 
         /// <summary>Host to one client: your player id and the whole world. Serves joining and rejoining.</summary>
@@ -43,9 +43,26 @@ namespace HunterSystem.Netcode
         public static MessageType TypeOf(byte[] message) =>
             message != null && message.Length > 0 ? (MessageType)message[0] : throw new ArgumentException("Empty message.", nameof(message));
 
-        public static byte[] Hello(string clientKey) => Write(MessageType.Hello, w => w.Write(clientKey));
+        /// <summary>The most a character may weigh on the wire; a real one is a few hundred bytes.</summary>
+        public const int MaxCharacterBytes = 64 * 1024;
 
-        public static string ReadHello(byte[] message) => Read(message, r => r.ReadString());
+        /// <param name="character">The player's character as <see cref="CharacterCodec"/> bytes; empty or null for a new one.</param>
+        public static byte[] Hello(string clientKey, byte[] character = null) => Write(MessageType.Hello, w =>
+        {
+            w.Write(clientKey);
+            w.Write(character?.Length ?? 0);
+            if (character != null) w.Write(character);
+        });
+
+        public static (string clientKey, byte[] character) ReadHello(byte[] message) => Read(message, r =>
+        {
+            var key = r.ReadString();
+            var length = r.ReadInt32();
+            if (length < 0 || length > MaxCharacterBytes) throw new FormatException("Impossible character size.");
+            var character = r.ReadBytes(length);
+            if (character.Length != length) throw new FormatException("The character was cut short.");
+            return (key, character);
+        });
 
         public static byte[] Welcome(PlayerId you, SnapshotMessage snapshot) => Write(MessageType.Welcome, w =>
         {

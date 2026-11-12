@@ -27,6 +27,7 @@ namespace HunterSystem.Netcode
         private readonly List<(int sequence, PlayerCommand command)> _unconfirmed = new List<(int, PlayerCommand)>();
         private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
         private int _sequence;
+        private byte[] _confirmedWorld; // the host's latest snapshot, as received
 
         private readonly List<SimulationEvent> _events = new List<SimulationEvent>();
         private int _lastHostEventTick;   // host events up to here have been shown (or happened before we joined)
@@ -47,11 +48,12 @@ namespace HunterSystem.Netcode
         private int _lastSnapshotTick;
         private int _snapshotInterval = 1;
 
-        public ClientSession(SimulationConfig config, IClientTransport transport, string clientKey)
+        /// <param name="character">The character this player brings from their own save; null for a new one.</param>
+        public ClientSession(SimulationConfig config, IClientTransport transport, string clientKey, CharacterRecord character = null)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
-            _transport.Send(Wire.Hello(clientKey));
+            _transport.Send(Wire.Hello(clientKey, character != null ? CharacterCodec.Encode(character) : null));
         }
 
         /// <summary>The predicted world, or null until the host's welcome arrives.</summary>
@@ -87,6 +89,18 @@ namespace HunterSystem.Netcode
             return glide.At(_snapshotInterval);
         }
 
+        /// <summary>
+        /// This player's character as the host last confirmed it: what the player's own game should
+        /// save. Unlike <see cref="World"/> it includes nothing predicted, so it stays right after a
+        /// disconnect. Null until the host's welcome arrives.
+        /// </summary>
+        public CharacterRecord ConfirmedCharacter()
+        {
+            if (!IsJoined || _confirmedWorld == null) return null;
+            var confirmed = SimulationWorld.FromSnapshot(_config, _confirmedWorld);
+            return confirmed.HasPlayer(PlayerId.Value) ? confirmed.CaptureCharacter(PlayerId.Value) : null;
+        }
+
         /// <summary>One client tick: apply what arrived, then predict and send this tick's command.</summary>
         public void Tick(PlayerCommand command)
         {
@@ -116,6 +130,7 @@ namespace HunterSystem.Netcode
                         var (you, snapshot) = Wire.ReadWelcome(payload);
                         PlayerId = you;
                         World = SimulationWorld.FromSnapshot(_config, snapshot.World);
+                        _confirmedWorld = snapshot.World;
                         _unconfirmed.Clear();
                         _sequence = 0;
                         latest = null;
@@ -141,6 +156,7 @@ namespace HunterSystem.Netcode
             var before = World.GetPlayer(me).Position;
 
             World.RestoreSnapshot(snapshot.World);
+            _confirmedWorld = snapshot.World;
             snapshot.LastProcessedSequence.TryGetValue(me.Value, out var processed);
             _unconfirmed.RemoveAll(c => c.sequence <= processed);
             foreach (var (_, command) in _unconfirmed) Predict(command);

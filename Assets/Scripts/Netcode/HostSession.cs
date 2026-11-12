@@ -83,10 +83,11 @@ namespace HunterSystem.Netcode
         /// <summary>Messages from clients that could not be read and were ignored.</summary>
         public int MalformedMessages { get; private set; }
 
-        public PlayerId AddLocalPlayer()
+        /// <param name="character">The host's own character from their save; null for a new one.</param>
+        public PlayerId AddLocalPlayer(CharacterRecord character = null)
         {
             LocalPlayerId = new PlayerId(_nextPlayerId++);
-            World.AddPlayer(LocalPlayerId, _spawnPoint(LocalPlayerId));
+            World.AddPlayer(LocalPlayerId, _spawnPoint(LocalPlayerId), character ?? CharacterRecord.New());
             return LocalPlayerId;
         }
 
@@ -175,7 +176,8 @@ namespace HunterSystem.Netcode
             switch (Wire.TypeOf(payload))
             {
                 case MessageType.Hello when _awaitingHello.Remove(connection):
-                    Welcome(connection, Wire.ReadHello(payload));
+                    var (claimedKey, character) = Wire.ReadHello(payload);
+                    Welcome(connection, claimedKey, character);
                     break;
                 case MessageType.Command when _byConnection.TryGetValue(connection, out var remote):
                     var (sequence, command) = Wire.ReadCommand(payload);
@@ -206,7 +208,13 @@ namespace HunterSystem.Netcode
         private static bool IsMovementOnly(PlayerCommand c) =>
             !c.LightAttack && !c.HeavyAttack && !c.Dodge && !c.UseSkillSlot.HasValue && !c.AllocateStat.HasValue && !c.AssignSkill.HasValue;
 
-        private void Welcome(int connection, string claimedKey)
+        /// <summary>
+        /// A new player arrives with the character they sent. A returning one gets back the character
+        /// the session kept for them, with what it earned here, unless the one they send is further
+        /// along (they played elsewhere or restored a backup in between): then that one replaces it,
+        /// so their next save cannot take them backwards.
+        /// </summary>
+        private void Welcome(int connection, string claimedKey, byte[] characterBytes)
         {
             // An identity the transport vouches for (a SteamID) beats whatever the client claims.
             var key = _transport.IdentityOf(connection) ?? claimedKey;
@@ -218,9 +226,20 @@ namespace HunterSystem.Netcode
                     Send(connection, Wire.Refused($"The session is full ({MaxPlayers} players)."));
                     return;
                 }
+                CharacterRecord character;
+                try
+                {
+                    character = characterBytes.Length > 0 ? CharacterCodec.Decode(characterBytes) : CharacterRecord.New();
+                }
+                catch (ArgumentException e)
+                {
+                    // Not let in as a fresh character: the guest's game would then save that over their real one.
+                    Send(connection, Wire.Refused("The host could not read your character (are both games the same version?): " + e.Message));
+                    return;
+                }
                 remote = new Remote { Id = new PlayerId(_nextPlayerId++), Key = key };
                 _remotes.Add(remote);
-                World.AddPlayer(remote.Id, _spawnPoint(remote.Id));
+                World.AddPlayer(remote.Id, _spawnPoint(remote.Id), character);
             }
             else if (remote.Connection >= 0)
             {
@@ -229,11 +248,26 @@ namespace HunterSystem.Netcode
             else
             {
                 World.PlacePlayer(remote.Id, _spawnPoint(remote.Id)); // a returning player: where the party is, not where they left (ADR 0003)
+                BringNewerCharacter(remote.Id, characterBytes);
             }
 
             remote.ResetConnection(connection);
             _byConnection[connection] = remote;
             Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
+        }
+
+        private void BringNewerCharacter(PlayerId id, byte[] characterBytes)
+        {
+            if (characterBytes.Length == 0) return;
+            try
+            {
+                var sent = CharacterCodec.Decode(characterBytes);
+                if (sent.IsFurtherAlongThan(World.CaptureCharacter(id))) World.ReplaceCharacter(id, sent);
+            }
+            catch (ArgumentException)
+            {
+                MalformedMessages++; // unreadable: the session's copy stands
+            }
         }
 
         private void Send(int connection, byte[] message)

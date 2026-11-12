@@ -19,6 +19,7 @@ namespace HunterSystem.Tests
         [UnityTest]
         public IEnumerator GoblinChasesInAndIsDefeatedByLightAttacks()
         {
+            TestSaves.UseFreshFolder();
             yield return SceneManager.LoadSceneAsync("Greybox", LoadSceneMode.Single);
             var runner = Object.FindAnyObjectByType<SimulationRunner>();
             var goblin = Object.FindAnyObjectByType<EnemyView>();

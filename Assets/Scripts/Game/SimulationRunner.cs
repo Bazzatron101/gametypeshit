@@ -26,6 +26,10 @@ namespace HunterSystem.Game
         [SerializeField, Min(1), Tooltip("Online: the host sends a full snapshot every this many ticks")]
         private int snapshotEveryTicks = 3;
 
+        // The local player's character: loaded from its save at the start, saved as it progresses.
+        private PlayerId? _offlineLocalId;
+        private bool _savedOnExit;
+
         private readonly Dictionary<PlayerId, IPlayerCommandSource> _sources = new Dictionary<PlayerId, IPlayerCommandSource>();
         private readonly Dictionary<PlayerId, PlayerCommandBuffer> _buffers = new Dictionary<PlayerId, PlayerCommandBuffer>();
         private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
@@ -50,6 +54,18 @@ namespace HunterSystem.Game
         /// <summary>The player on this machine: the host's own, the client's once welcomed, or null offline.</summary>
         public PlayerId? LocalPlayerId => Host != null ? Host.LocalPlayerId : Client?.PlayerId;
 
+        /// <summary>The player's save on this PC (and its optional Steam Cloud backup).</summary>
+        public CharacterSaves Saves { get; private set; }
+
+        /// <summary>Saves the local player's character as it progresses. Switch it off for a throwaway session (the test arena, bots).</summary>
+        public CharacterAutosave Autosave { get; private set; }
+
+        /// <summary>The character the local player brings into the next session: from the save, or new.</summary>
+        public CharacterRecord Character { get; private set; }
+
+        /// <summary>Hosting: the host's world progress, saved apart from any character.</summary>
+        public WorldRecord HostWorld { get; private set; }
+
         /// <summary>The game's content list (may be null in a bare test scene).</summary>
         public GameContentAsset Content => content;
 
@@ -66,11 +82,24 @@ namespace HunterSystem.Game
             _offlineWorld = new SimulationWorld(_config);
             _clock = new FixedTimestepClock(_config.TickRate);
 
+            Saves = new CharacterSaves(GameSaves.Root, GameSaves.Cloud);
+            Autosave = new CharacterAutosave(Saves) { Enabled = !GameSaves.Disabled };
+            Character = GameSaves.Disabled ? CharacterRecord.New() : Saves.LoadOrNew();
+            if (Saves.LastProblemOnLoad != null) Debug.LogWarning(Saves.LastProblemOnLoad);
+
             foreach (var view in FindObjectsByType<PlayerView>(FindObjectsSortMode.None))
             {
                 var id = view.PlayerId;
                 var spawn = ToVec3(view.transform.position);
-                _offlineWorld.AddPlayer(id, spawn);
+                if (view.IsLocal && !_offlineLocalId.HasValue)
+                {
+                    _offlineLocalId = id;
+                    _offlineWorld.AddPlayer(id, spawn, Character);
+                }
+                else
+                {
+                    _offlineWorld.AddPlayer(id, spawn);
+                }
                 _previousPlayerPositions[id] = spawn;
                 _buffers[id] = new PlayerCommandBuffer();
                 _sources[id] = view.IsLocal ? new LocalInputCommandSource() : new ConstantCommandSource(PlayerCommand.None);
@@ -92,7 +121,8 @@ namespace HunterSystem.Game
         {
             if (IsOnline) throw new InvalidOperationException("Already online.");
             Host = new HostSession(_config, transport, spawnPoint, snapshotEveryTicks);
-            Host.AddLocalPlayer();
+            Host.AddLocalPlayer(Character);
+            HostWorld = GameSaves.Disabled ? new WorldRecord() : new WorldSaves(GameSaves.Root).LoadOrNew();
             StartLocalInput();
         }
 
@@ -100,15 +130,91 @@ namespace HunterSystem.Game
         public void StartClient(IClientTransport transport, string clientKey)
         {
             if (IsOnline) throw new InvalidOperationException("Already online.");
-            Client = new ClientSession(_config, transport, clientKey);
+            Client = new ClientSession(_config, transport, clientKey, Character);
             StartLocalInput();
         }
 
+        /// <summary>
+        /// Leaves the session. The local player's character is saved first, with what it earned
+        /// there, and becomes the character brought to the next session; a host's world is saved too.
+        /// </summary>
         public void StopOnline()
         {
+            SaveProgress();
             Client?.Disconnect();
             Host = null;
             Client = null;
+            HostWorld = null;
+        }
+
+        /// <summary>
+        /// Loads the character from its save again (after restoring it from Steam Cloud). Only where
+        /// no character is in play: between sessions, in a scene without a local player of its own.
+        /// </summary>
+        public void ReloadCharacter()
+        {
+            if (IsOnline || _offlineLocalId.HasValue) throw new InvalidOperationException("A character is in play; change it from the menu, between sessions.");
+            Character = Saves.LoadOrNew();
+        }
+
+        /// <summary>The player on this machine whose character is saved: the online one, or the scene's local player offline.</summary>
+        private PlayerId? SavedPlayerId => IsOnline ? LocalPlayerId : _offlineLocalId;
+
+        /// <summary>
+        /// The local character as it should be saved now, or null if there is none. A guest saves
+        /// what the host last confirmed, never its own prediction (ADR 0005).
+        /// </summary>
+        private CharacterRecord CharacterToSave()
+        {
+            if (Client != null) return Client.ConfirmedCharacter();
+            var me = SavedPlayerId;
+            return me.HasValue && World != null && World.HasPlayer(me.Value) ? World.CaptureCharacter(me.Value) : null;
+        }
+
+        /// <summary>
+        /// Writes the local character now, and a host's world. Each is tried on its own, and a
+        /// failure is reported, never thrown: it must not stop a quit or the other save.
+        /// </summary>
+        private void SaveProgress()
+        {
+            try
+            {
+                var character = CharacterToSave();
+                if (character != null)
+                {
+                    if (Autosave.Enabled) Character = character; // kept for the next session even if the write below fails
+                    Autosave.SaveNow(character);
+                    if (Saves.LastProblem != null) Debug.LogWarning(Saves.LastProblem);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Could not save the character: " + e.Message);
+            }
+
+            try
+            {
+                if (Host != null && HostWorld != null && !GameSaves.Disabled) new WorldSaves(GameSaves.Root).Save(HostWorld);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Could not save the world: " + e.Message);
+            }
+        }
+
+        private void OnApplicationQuit() => SaveBeforeExit();
+
+        private void OnDestroy() => SaveBeforeExit();
+
+        /// <summary>
+        /// The last save of this runner's life; later calls do nothing. Public so that whatever shuts
+        /// services down on quit (Steam, for the cloud copy) can have the save happen first.
+        /// </summary>
+        public void SaveBeforeExit()
+        {
+            if (_savedOnExit) return;
+            _savedOnExit = true;
+            SaveProgress();
         }
 
         private void StartLocalInput()
@@ -182,6 +288,22 @@ namespace HunterSystem.Game
             _frameEvents.Clear();
             if (IsOnline) UpdateOnline();
             else UpdateOffline();
+            AutosaveCharacter();
+        }
+
+        private void AutosaveCharacter()
+        {
+            var me = SavedPlayerId;
+            if (!me.HasValue || World == null || !World.HasPlayer(me.Value)) return;
+            Autosave.Observe(_frameEvents, me.Value);
+            try
+            {
+                Autosave.SaveIfDue(CharacterToSave, Time.unscaledTime);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Could not save the character: " + e.Message);
+            }
         }
 
         private void UpdateOffline()

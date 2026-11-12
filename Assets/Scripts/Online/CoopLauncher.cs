@@ -73,6 +73,8 @@ namespace HunterSystem.Online
                 }
                 _steamReady = true;
                 SteamFriends.OnGameRichPresenceJoinRequested += OnSteamJoinRequested;
+                GameSaves.Cloud = new SteamCloudStorage(); // optional save backups (ticket 15)
+                if (_runner != null) _runner.Saves.Cloud = GameSaves.Cloud;
             }
             catch (Exception e)
             {
@@ -113,6 +115,8 @@ namespace HunterSystem.Online
 
         private void OnApplicationQuit()
         {
+            // Unity does not order quit callbacks: save first, while Steam can still take the cloud copy.
+            if (_runner != null) _runner.SaveBeforeExit();
             if (_weStartedSteam && SteamClient.IsValid) SteamClient.Shutdown();
         }
 
@@ -268,9 +272,12 @@ namespace HunterSystem.Online
             public int targetId;
             /// <summary>Damage to the shared target this copy was shown, per attacker: "playerId:total".</summary>
             public List<string> damageByPlayer = new List<string>();
+            /// <summary>This copy's own player's level in the session, and the level in its save file on disk (0: no file).</summary>
+            public int localLevel, savedLevel;
         }
 
         private const string TargetName = "Target";
+        private const int GuestRewardXp = 60;
 
         /// <summary>
         /// A scripted fight: the host puts one tough, harmless target beside itself; both players walk
@@ -282,6 +289,7 @@ namespace HunterSystem.Online
             var start = Time.time;
             var defeated = 0;
             var damage = new SortedDictionary<int, int>();
+            var rewarded = false;
             if (_role == Role.Host)
             {
                 foreach (var id in _runner.World.EnemyIds.ToList()) _runner.World.DespawnEnemy(id);
@@ -294,6 +302,12 @@ namespace HunterSystem.Online
 
             while (Time.time - start < seconds)
             {
+                if (_role == Role.Host && !rewarded && _runner.Host.ConnectedClients > 0)
+                {
+                    // Something for each guest to take home: enough XP for level 2 (the save check, ticket 15).
+                    rewarded = true;
+                    foreach (var id in _runner.World.PlayerIds) if (id != _runner.Host.LocalPlayerId) _runner.World.GrantXp(id, GuestRewardXp);
+                }
                 foreach (var e in _runner.FrameEvents)
                 {
                     if (e is EnemyDefeated) defeated++;
@@ -319,6 +333,8 @@ namespace HunterSystem.Online
                 connectedClients = _runner.Host?.ConnectedClients ?? 0,
                 targetId = FindTarget()?.Value ?? 0,
                 damageByPlayer = damage.Select(pair => $"{pair.Key}:{pair.Value}").ToList(),
+                localLevel = world != null && _runner.LocalPlayerId.HasValue ? world.GetPlayer(_runner.LocalPlayerId.Value).Level : 0,
+                savedLevel = SavedLevelOnDisk(),
             };
             if (world != null)
             {
@@ -375,11 +391,12 @@ namespace HunterSystem.Online
         private void OnGUI()
         {
             EnsureStyles();
-            GUILayout.BeginArea(new Rect(16, Screen.height - 230, 420, 214), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(16, Screen.height - 356, 420, 340), GUI.skin.box);
             GUILayout.Label("CO-OP (netcode spike)", _header);
 
             if (_network == null)
             {
+                DrawCharacterAndSaves();
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Host locally")) Host(steam: false);
                 if (GUILayout.Button("Join locally")) Join(steam: false, "localhost");
@@ -424,6 +441,95 @@ namespace HunterSystem.Online
                 }
             }
             GUILayout.EndArea();
+        }
+
+        /// <summary>The level in the save file as it is on disk, read without touching it; 0 if there is none or it cannot be read.</summary>
+        private int SavedLevelOnDisk()
+        {
+            try
+            {
+                return File.Exists(_runner.Saves.FilePath) ? CharacterCodec.Decode(File.ReadAllBytes(_runner.Saves.FilePath)).Level : 0;
+            }
+            catch (Exception e) when (e is ArgumentException || e is IOException || e is UnauthorizedAccessException)
+            {
+                return 0;
+            }
+        }
+
+        private const float ConfirmSeconds = 6f;
+        private float _confirmRestoreUntil, _confirmReplaceUntil;
+        private string _restoreOffer;
+        private bool _cloudConflict;
+
+        /// <summary>At the menu: who you will play, and the Steam Cloud backup options.</summary>
+        private void DrawCharacterAndSaves()
+        {
+            var saves = _runner.Saves;
+            var character = _runner.Character;
+            GUILayout.Label(character.IsNew ? "Your hunter: new (level 1)" : $"Your hunter: level {character.Level}", _label);
+            if (saves.LastProblemOnLoad != null) GUILayout.Label(saves.LastProblemOnLoad, _label);
+
+            GUI.enabled = saves.CloudAvailable;
+            GUILayout.BeginHorizontal();
+            var backUp = GUILayout.Toggle(saves.CloudBackup, saves.CloudAvailable ? " Back up to Steam Cloud" : " Back up to Steam Cloud (Steam Cloud unavailable)");
+            if (backUp != saves.CloudBackup)
+            {
+                var done = saves.SetCloudBackup(backUp);
+                _cloudConflict = !done && backUp && saves.CloudHasBackup;
+                _status = saves.LastProblem ?? (backUp ? "Steam Cloud backup is on." : "Steam Cloud backup is off.");
+            }
+
+            // Restoring replaces this PC's save, so it takes two clicks within a few seconds, and says what you would get.
+            var confirmingRestore = Time.unscaledTime < _confirmRestoreUntil;
+            if (GUILayout.Button(confirmingRestore ? _restoreOffer : "Restore from Steam Cloud"))
+            {
+                if (!confirmingRestore)
+                {
+                    var inCloud = saves.PeekCloud();
+                    if (inCloud == null)
+                    {
+                        _status = "There is no readable backup in Steam Cloud.";
+                    }
+                    else
+                    {
+                        _restoreOffer = $"Replace this PC's save with the level {inCloud.Level} one?";
+                        _confirmRestoreUntil = Time.unscaledTime + ConfirmSeconds;
+                    }
+                }
+                else
+                {
+                    _confirmRestoreUntil = 0f;
+                    var restored = saves.RestoreFromCloud();
+                    if (restored != null)
+                    {
+                        _runner.ReloadCharacter();
+                        _cloudConflict = false;
+                    }
+                    _status = restored != null ? $"Restored your level {restored.Level} hunter from Steam Cloud." : saves.LastProblem;
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            // The cloud holds a different hunter: backup stays off until the player picks one. Replacing takes two clicks too.
+            if (_cloudConflict)
+            {
+                var confirmingReplace = Time.unscaledTime < _confirmReplaceUntil;
+                if (GUILayout.Button(confirmingReplace ? "Really overwrite the Steam Cloud backup?" : "Replace the Steam Cloud backup with this PC's save"))
+                {
+                    if (!confirmingReplace)
+                    {
+                        _confirmReplaceUntil = Time.unscaledTime + ConfirmSeconds;
+                    }
+                    else
+                    {
+                        _confirmReplaceUntil = 0f;
+                        _cloudConflict = !saves.ReplaceCloudBackup();
+                        _status = saves.LastProblem ?? "Steam Cloud backup is on, holding this PC's hunter.";
+                    }
+                }
+            }
+            GUI.enabled = true;
+            if (_status != null && _status != "Not connected.") GUILayout.Label(_status, _label);
         }
 
         private string CurrentStatus()
