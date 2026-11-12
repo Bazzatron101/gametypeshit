@@ -32,3 +32,13 @@ To close this ticket before M3 (19, 20):
 2. Write the premise in a few sentences, with its hook.
 3. Note the System's voice, for example with three or four sample lines.
 
+**2026-11-13 (developer, recorded by agent):** Setting decided: fantasy.
+- **Hunters** are an adventuring guild whose purpose is to go into dungeons and clear them out.
+- **Everyone has a System.** It is an ordinary part of life in this world, not something that singles out the player.
+- **Rank is a licence** issued for guild work. At the higher ranks it can also be used as a title.
+
+Follows from this, to settle with the premise:
+- **The hook is still open.** With a System everyone has, the mystery cannot simply be "why do I have one". It has to be something about the dungeons, the guild, or what the System is.
+- **Words:** the spec and code say "gate" for a run; the developer said "dungeon". Decide whether a gate is the entrance to a dungeon or whether "dungeon" replaces "gate" in the player-facing text. No code needs to change either way.
+- **Promotions** (spec story 9, "authored story events") become the guild granting a higher licence.
+
