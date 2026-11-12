@@ -1,0 +1,178 @@
+using System;
+using System.Collections.Generic;
+using HunterSystem.Simulation;
+
+namespace HunterSystem.Netcode
+{
+    /// <summary>
+    /// The host: runs the one authoritative <see cref="SimulationWorld"/>. Each tick it takes one
+    /// command per player (its own player's directly, remote players' from their queues), steps the
+    /// world, and every few ticks sends every client a snapshot with each player's last processed
+    /// command number. A client that connects (or reconnects with a known key) is welcomed with its
+    /// player id and the whole world: joining and rejoining are the same path (ADR 0003).
+    /// </summary>
+    public sealed class HostSession
+    {
+        /// <summary>The spec's party limit.</summary>
+        public const int MaxPlayers = 10;
+
+        private sealed class Remote
+        {
+            public PlayerId Id;
+            public string Key;
+            public int Connection = -1;
+            public readonly Queue<(int sequence, PlayerCommand command)> Queue = new Queue<(int, PlayerCommand)>();
+            public int LastReceived;
+            public int LastProcessed;
+            public PlayerCommand LastCommand;
+        }
+
+        private readonly IHostTransport _transport;
+        private readonly Func<PlayerId, Vec3> _spawnPoint;
+        private readonly int _snapshotEveryTicks;
+        private readonly List<Remote> _remotes = new List<Remote>();
+        private readonly Dictionary<int, Remote> _byConnection = new Dictionary<int, Remote>();
+        private readonly HashSet<int> _awaitingHello = new HashSet<int>();
+        private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
+        private int _nextPlayerId = 1;
+        private int _ticksSinceSnapshot;
+
+        /// <param name="spawnPoint">Where a newly joining player appears (the latest checkpoint, once gates exist).</param>
+        public HostSession(SimulationConfig config, IHostTransport transport, Func<PlayerId, Vec3> spawnPoint, int snapshotEveryTicks = 3)
+        {
+            World = new SimulationWorld(config);
+            _transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            _spawnPoint = spawnPoint ?? throw new ArgumentNullException(nameof(spawnPoint));
+            _snapshotEveryTicks = Math.Max(1, snapshotEveryTicks);
+        }
+
+        public SimulationWorld World { get; }
+
+        /// <summary>The host's own player, once added.</summary>
+        public PlayerId LocalPlayerId { get; private set; }
+
+        /// <summary>Bytes of the most recent snapshot, for bandwidth measurements.</summary>
+        public int LastSnapshotSize { get; private set; }
+
+        public int ConnectedClients => _byConnection.Count;
+
+        public PlayerId AddLocalPlayer()
+        {
+            LocalPlayerId = new PlayerId(_nextPlayerId++);
+            World.AddPlayer(LocalPlayerId, _spawnPoint(LocalPlayerId));
+            return LocalPlayerId;
+        }
+
+        /// <summary>One host tick: handle arrivals, step the world, and maybe send a snapshot.</summary>
+        public void Tick(PlayerCommand localCommand)
+        {
+            ReceiveAll();
+
+            _commands.Clear();
+            if (World.HasPlayer(LocalPlayerId)) _commands[LocalPlayerId] = localCommand;
+            foreach (var remote in _remotes) _commands[remote.Id] = NextCommand(remote);
+            World.Step(_commands);
+
+            if (++_ticksSinceSnapshot >= _snapshotEveryTicks)
+            {
+                _ticksSinceSnapshot = 0;
+                var message = Wire.Snapshot(CurrentSnapshot());
+                LastSnapshotSize = message.Length;
+                foreach (var connection in _byConnection.Keys) _transport.Send(connection, message);
+            }
+        }
+
+        /// <summary>
+        /// The next queued command, or, if none has arrived (loss or a hiccup), the last one's
+        /// movement and held keys without any presses: a late packet keeps you walking but never
+        /// repeats an attack.
+        /// </summary>
+        private static PlayerCommand NextCommand(Remote remote)
+        {
+            if (remote.Queue.Count > 0)
+            {
+                var (sequence, command) = remote.Queue.Dequeue();
+                remote.LastProcessed = sequence;
+                remote.LastCommand = command;
+                return command;
+            }
+            var last = remote.LastCommand;
+            return new PlayerCommand(last.MoveX, last.MoveZ, heldSkillSlots: last.HeldSkillSlots);
+        }
+
+        private void ReceiveAll()
+        {
+            while (_transport.TryReceive(out var connection, out var kind, out var payload))
+            {
+                switch (kind)
+                {
+                    case NetEventKind.Connected:
+                        _awaitingHello.Add(connection);
+                        break;
+                    case NetEventKind.Disconnected:
+                        _awaitingHello.Remove(connection);
+                        if (_byConnection.TryGetValue(connection, out var gone))
+                        {
+                            // The character stays in the run, standing still, until its owner rejoins.
+                            _byConnection.Remove(connection);
+                            gone.Connection = -1;
+                            gone.Queue.Clear();
+                            gone.LastCommand = PlayerCommand.None;
+                        }
+                        break;
+                    case NetEventKind.Data:
+                        HandleData(connection, payload);
+                        break;
+                }
+            }
+        }
+
+        private void HandleData(int connection, byte[] payload)
+        {
+            switch (Wire.TypeOf(payload))
+            {
+                case MessageType.Hello when _awaitingHello.Remove(connection):
+                    Welcome(connection, Wire.ReadHello(payload));
+                    break;
+                case MessageType.Command when _byConnection.TryGetValue(connection, out var remote):
+                    var (sequence, command) = Wire.ReadCommand(payload);
+                    if (sequence <= remote.LastReceived) return; // stale or duplicate
+                    remote.LastReceived = sequence;
+                    remote.Queue.Enqueue((sequence, command));
+                    break;
+            }
+        }
+
+        private void Welcome(int connection, string key)
+        {
+            var remote = _remotes.Find(r => r.Key == key);
+            if (remote == null)
+            {
+                if (World.PlayerIds.Count >= MaxPlayers) return; // full: the client is never welcomed
+                remote = new Remote { Id = new PlayerId(_nextPlayerId++), Key = key };
+                _remotes.Add(remote);
+                World.AddPlayer(remote.Id, _spawnPoint(remote.Id));
+            }
+            else if (remote.Connection >= 0)
+            {
+                _byConnection.Remove(remote.Connection); // the same key from a new connection replaces the old one
+            }
+
+            // A fresh connection numbers its commands from 1 again.
+            remote.Connection = connection;
+            remote.Queue.Clear();
+            remote.LastReceived = 0;
+            remote.LastProcessed = 0;
+            remote.LastCommand = PlayerCommand.None;
+            _byConnection[connection] = remote;
+            _transport.Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
+        }
+
+        private SnapshotMessage CurrentSnapshot()
+        {
+            var snapshot = new SnapshotMessage { Tick = World.Tick, World = World.CaptureSnapshot() };
+            foreach (var remote in _remotes) snapshot.LastProcessedSequence[remote.Id.Value] = remote.LastProcessed;
+            return snapshot;
+        }
+    }
+}

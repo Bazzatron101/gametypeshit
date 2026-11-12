@@ -1,0 +1,16 @@
+{
+    "name": "HunterSystem.Netcode",
+    "rootNamespace": "HunterSystem.Netcode",
+    "references": [
+        "HunterSystem.Simulation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": true
+}

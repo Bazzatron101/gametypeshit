@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "HunterSystem.Editor",
         "HunterSystem.Simulation",
-        "HunterSystem.Game"
+        "HunterSystem.Game",
+        "HunterSystem.Netcode"
     ],
     "includePlatforms": [
         "Editor"
