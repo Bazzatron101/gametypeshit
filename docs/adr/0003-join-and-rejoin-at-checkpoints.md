@@ -50,7 +50,7 @@ too much netcode for one developer.
   disconnect and rejoin.
 - A solo run that a friend joins becomes a co-op run from that moment: the solo limit of three
   checkpoint revives stops applying, and the co-op rule (wait for a checkpoint revive or
-  respawn at the entrance) takes over. Revives already used do not come back.
+  respawn at the closest checkpoint) takes over. Revives already used do not come back.
 - A late joiner starts with no revives used.
 - Co-op respawning was "at the entrance", a long walk back in a long gate. Settled on
   2026-11-13: a fallen player who chooses to respawn comes back at the activated checkpoint
