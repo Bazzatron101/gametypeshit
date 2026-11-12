@@ -12,3 +12,11 @@
 - [ ] Co-op: a dead player can choose a checkpoint revive or an entrance respawn
 - [ ] A wipe costs progress inside the gate only, never the character
 - [ ] Headless tests cover the revive counting and respawn choices
+
+## Comments
+
+**2026-11-13 (agent):** From ticket 11 / ADR 0003:
+- The gate runtime must track the latest activated checkpoint and place a joining or rejoining player there on request.
+- Revives are per player, by player id, on the host's world, and survive a disconnect and rejoin. A late joiner starts with none used.
+- A solo run that a friend joins switches to the co-op death rule from that moment; revives already used do not come back.
+- Decide here whether co-op "respawn at the entrance" becomes "respawn at the latest checkpoint" (the ADR recommends the checkpoint).

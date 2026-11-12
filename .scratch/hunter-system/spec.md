@@ -135,7 +135,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 76. As a group of friends, I want raid mechanics that stay readable at ten players, so that screen clutter does not ruin them.
 77. As a player, I want a high-level friend to be able to carry me through a gate, so that playing with friends of different power remains fun. Rewards are not reduced.
 78. As a developer, I want player movement and combat to feel instant for guests, so that co-op does not feel laggy.
-79. As a developer, I want mid-gate joining decided before co-op work starts. **[parked]**
+79. As a developer, I want mid-gate joining decided before co-op work starts. **Decided 2026-11-13: join and rejoin at the latest checkpoint (docs/adr/0003).**
 
 ### Developer experience and project health
 
@@ -229,7 +229,7 @@ After M3, if friends ask to play again without being prompted, start spending th
 | Decision | Decide by |
 |---|---|
 | Story premise: drama about the people, or about the world and why it is the way it is. Candidate framing: the System itself as the mystery. | Before M3 |
-| Mid-gate joining: gates lock, or join at checkpoints | Before M2 |
+| Mid-gate joining: gates lock, or join at checkpoints | Decided 2026-11-13: join and rejoin at checkpoints (ADR 0003) |
 | Blacksmith class and crafting | M4 or later |
 | Hidden class details | After the main game exists |
 | SS-rank DLC | After the main game exists |

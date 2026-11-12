@@ -10,3 +10,7 @@
 - [ ] Both players see and damage the same enemy, with the host authoritative
 - [ ] Own-character movement and attacks feel immediate for the guest
 - [ ] The mid-gate joining decision is honored
+
+## Comments
+
+**2026-11-13 (agent):** From ticket 11 / ADR 0003: a friend may join a session already in a gate (appearing at the latest checkpoint), and a disconnected friend may rejoin the same run. Build the join path as a full-state snapshot from the host plus a host-side "player arrives at checkpoint" operation, so join and rejoin share one mechanism.
