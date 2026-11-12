@@ -51,6 +51,7 @@ namespace HunterSystem.Netcode
         private readonly Dictionary<int, Remote> _byConnection = new Dictionary<int, Remote>();
         private readonly HashSet<int> _awaitingHello = new HashSet<int>();
         private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
+        private readonly List<SimulationEvent> _eventsSinceSnapshot = new List<SimulationEvent>();
         private int _nextPlayerId = 1;
         private int _ticksSinceSnapshot;
 
@@ -92,11 +93,15 @@ namespace HunterSystem.Netcode
             if (World.HasPlayer(LocalPlayerId)) _commands[LocalPlayerId] = localCommand;
             foreach (var remote in _remotes) _commands[remote.Id] = NextCommand(remote);
             World.Step(_commands);
+            _eventsSinceSnapshot.AddRange(World.Events);
 
             if (++_ticksSinceSnapshot >= _snapshotEveryTicks)
             {
                 _ticksSinceSnapshot = 0;
-                var message = Wire.Snapshot(CurrentSnapshot());
+                var snapshot = CurrentSnapshot();
+                snapshot.Events = SimulationEventCodec.Encode(_eventsSinceSnapshot);
+                _eventsSinceSnapshot.Clear();
+                var message = Wire.Snapshot(snapshot);
                 LastSnapshotSize = message.Length;
                 foreach (var connection in _byConnection.Keys) _transport.Send(connection, message);
             }
@@ -212,7 +217,11 @@ namespace HunterSystem.Netcode
             }
             else if (remote.Connection >= 0)
             {
-                _byConnection.Remove(remote.Connection); // the same key from a new connection replaces the old one
+                _byConnection.Remove(remote.Connection); // the same key from a new connection replaces the old one, in place
+            }
+            else
+            {
+                World.PlacePlayer(remote.Id, _spawnPoint(remote.Id)); // a returning player: where the party is, not where they left (ADR 0003)
             }
 
             remote.ResetConnection(connection);

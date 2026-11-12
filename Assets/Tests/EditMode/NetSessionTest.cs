@@ -520,5 +520,24 @@ namespace HunterSystem.Tests
             Assert.That(rig.HostView(again).Position, Is.EqualTo(joinAt));
             Assert.That(again.World.GetPlayer(again.PlayerId.Value).Position, Is.EqualTo(joinAt), "and the welcome shows it");
         }
+
+        [Test]
+        public void ASecondConnectionWithTheSameKeyTakesOverWithoutMovingThePlayer()
+        {
+            var rig = new Rig(spawnPoint: _ => new Vec3(0f, 0f, 50f));
+            var alice = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+            rig.Input[alice] = East;
+            rig.Tick(30);
+            rig.Input[alice] = PlayerCommand.None;
+            rig.Tick(Latency * 2);
+            var before = rig.HostView(alice).Position;
+
+            var again = rig.Join("alice"); // the old connection is still live
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(again.PlayerId, Is.EqualTo(alice.PlayerId));
+            Assert.That(rig.HostView(again).Position, Is.EqualTo(before), "a takeover, not a return: stays put");
+        }
     }
 }

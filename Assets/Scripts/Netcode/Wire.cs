@@ -23,12 +23,17 @@ namespace HunterSystem.Netcode
         Refused = 5,
     }
 
-    /// <summary>A world snapshot plus, for each remote player, the number of their last command it includes.</summary>
+    /// <summary>
+    /// A world snapshot plus, for each remote player, the number of their last command it includes,
+    /// and the host's events since the previous snapshot (encoded by <see cref="SimulationEventCodec"/>)
+    /// for clients to show.
+    /// </summary>
     public sealed class SnapshotMessage
     {
         public int Tick;
         public readonly Dictionary<int, int> LastProcessedSequence = new Dictionary<int, int>();
         public byte[] World;
+        public byte[] Events = Array.Empty<byte>();
     }
 
     /// <summary>Message encoding. Compact binary, little-endian, no reflection.</summary>
@@ -116,6 +121,8 @@ namespace HunterSystem.Netcode
             }
             w.Write(s.World.Length);
             w.Write(s.World);
+            w.Write(s.Events.Length);
+            w.Write(s.Events);
         }
 
         private static SnapshotMessage ReadSnapshot(BinaryReader r)
@@ -123,6 +130,7 @@ namespace HunterSystem.Netcode
             var s = new SnapshotMessage { Tick = r.ReadInt32() };
             for (int i = 0, n = r.ReadInt32(); i < n; i++) s.LastProcessedSequence[r.ReadInt32()] = r.ReadInt32();
             s.World = r.ReadBytes(r.ReadInt32());
+            s.Events = r.ReadBytes(r.ReadInt32());
             return s;
         }
 

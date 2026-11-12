@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using HunterSystem.Simulation;
 
 namespace HunterSystem.Netcode
@@ -21,11 +20,15 @@ namespace HunterSystem.Netcode
         public static Vec3 BesideParty(SimulationWorld world, PlayerId joiner, Vec3 fallback)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
-            var anchor = world.PlayerIds.Where(id => id != joiner).Select(world.GetPlayer).FirstOrDefault(p => !p.IsDefeated);
-            if (anchor == null) return fallback;
-
-            var angle = joiner.Value * GoldenAngleRadians;
-            return anchor.Position + new Vec3((float)Math.Cos(angle) * Distance, 0f, (float)Math.Sin(angle) * Distance);
+            foreach (var id in world.PlayerIds)
+            {
+                if (id == joiner) continue;
+                var anchor = world.GetPlayer(id);
+                if (anchor.IsDefeated) continue;
+                var angle = joiner.Value * GoldenAngleRadians;
+                return anchor.Position + new Vec3((float)Math.Cos(angle) * Distance, 0f, (float)Math.Sin(angle) * Distance);
+            }
+            return fallback;
         }
     }
 }

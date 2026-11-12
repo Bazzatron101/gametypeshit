@@ -87,17 +87,22 @@ reasons it was the front-runner; interest management becomes ours to build (see 
 - **Bandwidth:** full snapshots every 3 ticks cost about 15 KB/s per client now. They grow with players,
   enemies and projectiles; the 10-bot stress test (14) must measure this, and delta snapshots or our own
   area-of-interest culling (Fish-Net's is not used) are the likely next step.
-- **Spawn point:** joiners appear on a fixed line for now; ADR 0003's "latest activated checkpoint"
-  arrives with the gate runtime (17).
-- **Steam "Join Game"** works by launching the game with `+connect <SteamID>` (the rich presence value).
-  A copy already running at the menu does not yet listen for join requests.
-- **Disconnection:** a client notices a closed connection and says so; rejoining means restarting the game
-  for now. Characters of disconnected players count towards the 10.
-- **Events on clients are lost, not duplicated:** a world keeps only its last step's events, and
-  restoring a snapshot clears them, so events from replayed ticks and from the host's own ticks (a kill
-  by another player) never reach a client's presentation. Ticket 13 should send the host's events with
-  each snapshot for presentation.
-- **Remote players** are not predicted; they jump between snapshots. Ticket 13 should interpolate them.
+- **Spawn point (ticket 13):** joiners and rejoiners appear beside the party (`JoinPoint.BesideParty`:
+  beside the first standing player, each at its own angle); a rejoiner is moved there, not left where
+  they dropped. ADR 0003's "latest activated checkpoint" replaces this with the gate runtime (17).
+- **Steam invites (ticket 13):** the game starts Steam at the menu, so a friend's invite or "Join Game"
+  reaches a running copy (`OnGameRichPresenceJoinRequested`) as well as a newly launched one (`+connect`).
+- **Disconnection (ticket 13):** a client notices a closed connection and offers Rejoin, which reconnects
+  without restarting; the host hands back the same character. Characters of disconnected players count
+  towards the 10.
+- **Events on clients (ticket 13):** a world keeps only its last step's events and restoring a snapshot
+  clears them, so each snapshot carries the host's events since the previous one
+  (`SimulationEventCodec`). A client shows its own swings, dodges and skills as predicted (instant) and
+  everything else as the host reports it (hits, kills, level-ups, other players' actions), each once;
+  events from before it joined are not shown. Hit numbers on your own attacks therefore arrive a round
+  trip after the swing.
+- **Remote players (ticket 13)** are not predicted; clients glide them from where they are shown to each
+  new snapshot's position over one snapshot interval, and jump straight there beyond 5 m (a rejoin).
 - All messages use the reliable channel for now; commands could move to unreliable with redundancy
   if loss makes reliable delivery stall.
 - Replacing Fish-Net later means rewriting two small adapter classes (`FishNetHostTransport`,

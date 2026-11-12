@@ -7,7 +7,7 @@ namespace HunterSystem.Game
     /// <summary>
     /// Online, players and enemies come and go (joins, rejoins, spawns, snapshots), so their views
     /// are made in code to match whatever the world holds: one per player id and one per enemy id.
-    /// The local player's view gets the camera.
+    /// The local player's view gets the camera. A new world (a rejoin) starts the views afresh.
     /// </summary>
     public sealed class OnlineViews : MonoBehaviour
     {
@@ -18,6 +18,7 @@ namespace HunterSystem.Game
 
         private SimulationRunner _runner;
         private ThirdPersonCamera _camera;
+        private SimulationWorld _builtFor;
         private readonly Dictionary<PlayerId, PlayerView> _players = new Dictionary<PlayerId, PlayerView>();
         private readonly Dictionary<EnemyId, EnemyView> _enemies = new Dictionary<EnemyId, EnemyView>();
         private readonly List<PlayerId> _gonePlayers = new List<PlayerId>();
@@ -37,6 +38,11 @@ namespace HunterSystem.Game
         {
             if (_runner == null || !_runner.IsOnline || _runner.World == null) return;
             var world = _runner.World;
+            if (world != _builtFor)
+            {
+                Clear();
+                _builtFor = world;
+            }
 
             foreach (var id in world.PlayerIds)
             {
@@ -72,6 +78,14 @@ namespace HunterSystem.Game
                 Destroy(_enemies[id].gameObject);
                 _enemies.Remove(id);
             }
+        }
+
+        private void Clear()
+        {
+            foreach (var view in _players.Values) Destroy(view.gameObject);
+            foreach (var view in _enemies.Values) Destroy(view.gameObject);
+            _players.Clear();
+            _enemies.Clear();
         }
     }
 }

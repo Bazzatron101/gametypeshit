@@ -83,6 +83,10 @@ namespace HunterSystem.Online
         private readonly Queue<byte[]> _inbox = new Queue<byte[]>();
         private readonly Queue<byte[]> _waiting = new Queue<byte[]>();
 
+        // Made just before the connection is started, so it begins as connecting rather than closed.
+        private LocalConnectionState _state = LocalConnectionState.Starting;
+        private bool _sawOwnStart;
+
         public FishNetClientTransport(NetworkManager manager)
         {
             _manager = manager;
@@ -90,7 +94,8 @@ namespace HunterSystem.Online
             _manager.ClientManager.OnClientConnectionState += OnClientConnectionState;
         }
 
-        public bool IsConnected => _manager.ClientManager.Started;
+        /// <summary>True while connecting or connected; false once the connection has closed.</summary>
+        public bool IsConnected => _state == LocalConnectionState.Starting || _state == LocalConnectionState.Started;
 
         public bool TryReceive(out byte[] payload)
         {
@@ -105,7 +110,7 @@ namespace HunterSystem.Online
 
         public void Send(byte[] payload)
         {
-            if (!IsConnected)
+            if (_state != LocalConnectionState.Started)
             {
                 _waiting.Enqueue(payload);
                 return;
@@ -113,12 +118,23 @@ namespace HunterSystem.Online
             _manager.ClientManager.Broadcast(new NetPacket { Data = payload }, Channel.Reliable);
         }
 
-        public void Disconnect() => _manager.ClientManager.StopConnection();
+        /// <summary>Closes the connection and lets go of Fish-Net, so a later transport (a rejoin) is the only one listening.</summary>
+        public void Disconnect()
+        {
+            _manager.ClientManager.StopConnection();
+            _manager.ClientManager.UnregisterBroadcast<NetPacket>(OnPacket);
+            _manager.ClientManager.OnClientConnectionState -= OnClientConnectionState;
+            _state = LocalConnectionState.Stopped;
+        }
 
         private void OnPacket(NetPacket packet, Channel channel) => _inbox.Enqueue(packet.Data);
 
         private void OnClientConnectionState(ClientConnectionStateArgs args)
         {
+            // Until our own connection has started, a "stopping/stopped" is the previous one's (a rejoin).
+            if (!_sawOwnStart && (args.ConnectionState == LocalConnectionState.Stopping || args.ConnectionState == LocalConnectionState.Stopped)) return;
+            if (args.ConnectionState == LocalConnectionState.Starting || args.ConnectionState == LocalConnectionState.Started) _sawOwnStart = true;
+            _state = args.ConnectionState;
             if (args.ConnectionState != LocalConnectionState.Started) return;
             while (_waiting.Count > 0) _manager.ClientManager.Broadcast(new NetPacket { Data = _waiting.Dequeue() }, Channel.Reliable);
         }

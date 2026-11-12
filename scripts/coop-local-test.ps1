@@ -1,8 +1,10 @@
 <#
 End-to-end co-op check on one PC: runs the built co-op player twice, headless, as a host and
-a client over local UDP (Fish-Net Tugboat). The client walks and attacks for a while, then
-stands still; each copy writes what it saw. Passes when the client joined, both see two
-players, and the client's own position matches the host's record of it.
+a client over local UDP (Fish-Net Tugboat). The host puts out one tough target; both players
+walk up to it and attack it, then stand still; each copy writes what it saw. Passes when the
+client joined, both see two players and the same target, both players' damage reached both
+copies, the client was shown its own damage exactly as the host counted it (once each), and the
+client's own position matches the host's record of it.
 
   powershell -File scripts/coop-local-test.ps1            # uses Builds/Coop/HunterSystem.exe
   powershell -File scripts/coop-local-test.ps1 -Seconds 20
@@ -46,6 +48,23 @@ $xy = ($hostView -split ':')[1] -split ','
 $dx = [math]::Abs([double]$xy[0] - $c.localX); $dz = [math]::Abs([double]$xy[1] - $c.localZ)
 Write-Host "Client at ($([math]::Round($c.localX,3)), $([math]::Round($c.localZ,3))); host has it at ($($xy[0]), $($xy[1]))"
 
-$ok = $c.joined -and $h.players -eq 2 -and $c.players -eq 2 -and $dx -lt 0.05 -and $dz -lt 0.05 -and [math]::Abs($c.localX) -gt 1
-if ($ok) { Write-Host "PASS: two copies played one session; the client's prediction matches the host." ; exit 0 }
+function Damage($result, [int]$player) {
+    $entry = $result.damageByPlayer | Where-Object { $_ -like "${player}:*" } | Select-Object -First 1
+    if ($entry) { [int](($entry -split ':')[1]) } else { 0 }
+}
+$hostId = 1; $clientId = $c.localPlayerId
+Write-Host "Damage to target $($h.targetId) as the host saw it: host player $(Damage $h $hostId), client player $(Damage $h $clientId)"
+Write-Host "Damage to target $($c.targetId) as the client saw it: host player $(Damage $c $hostId), client player $(Damage $c $clientId)"
+
+$checks = [ordered]@{
+    'client joined, two players each side'      = $c.joined -and $h.players -eq 2 -and $c.players -eq 2
+    'one shared target'                         = $h.targetId -gt 0 -and $h.targetId -eq $c.targetId
+    'both players damaged it (host)'            = (Damage $h $hostId) -gt 0 -and (Damage $h $clientId) -gt 0
+    'client shown the host player hitting it'   = (Damage $c $hostId) -gt 0
+    'client shown its own hits once each'       = (Damage $c $clientId) -eq (Damage $h $clientId)
+    'prediction matches the host'               = $dx -lt 0.05 -and $dz -lt 0.05
+}
+$failed = @($checks.Keys | Where-Object { -not $checks[$_] })
+foreach ($k in $checks.Keys) { Write-Host ("  [{0}] {1}" -f ($(if ($checks[$k]) { 'ok' } else { 'FAIL' })), $k) }
+if ($failed.Count -eq 0) { Write-Host "PASS: two copies fought one enemy together; the host's damage and the client's prediction agree."; exit 0 }
 Write-Host "FAIL"; exit 1

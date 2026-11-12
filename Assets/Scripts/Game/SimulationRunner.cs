@@ -53,7 +53,10 @@ namespace HunterSystem.Game
         /// <summary>The game's content list (may be null in a bare test scene).</summary>
         public GameContentAsset Content => content;
 
-        /// <summary>Events from every tick run this frame, in order. Read them in LateUpdate.</summary>
+        /// <summary>
+        /// Events from every tick run this frame, in order. Read them in LateUpdate. On a client these
+        /// are its own predicted actions plus everything the host reported (see <see cref="ClientSession.Events"/>).
+        /// </summary>
         public IReadOnlyList<SimulationEvent> FrameEvents => _frameEvents;
 
         private void Awake()
@@ -205,9 +208,16 @@ namespace HunterSystem.Game
             {
                 RememberPositions();
                 var command = _localBuffer.TakeForTick();
-                if (Host != null) Host.Tick(command);
-                else Client.Tick(command);
-                if (World != null) _frameEvents.AddRange(World.Events);
+                if (Host != null)
+                {
+                    Host.Tick(command);
+                    _frameEvents.AddRange(Host.World.Events);
+                }
+                else
+                {
+                    Client.Tick(command);
+                    _frameEvents.AddRange(Client.Events);
+                }
             }
         }
 
@@ -215,14 +225,14 @@ namespace HunterSystem.Game
         {
             var world = World;
             if (world == null) return;
-            foreach (var id in world.PlayerIds) _previousPlayerPositions[id] = world.GetPlayer(id).Position;
+            foreach (var id in world.PlayerIds) _previousPlayerPositions[id] = CurrentPosition(id);
             foreach (var id in world.EnemyIds) _previousEnemyPositions[id] = world.GetEnemy(id).Position;
         }
 
         /// <summary>Position to draw this frame, interpolated between the last two ticks.</summary>
         public Vector3 GetRenderPosition(PlayerId id)
         {
-            var current = World.GetPlayer(id).Position;
+            var current = CurrentPosition(id);
             return Interpolate(_previousPlayerPositions.TryGetValue(id, out var previous) ? previous : current, current);
         }
 
@@ -232,6 +242,10 @@ namespace HunterSystem.Game
             var current = World.GetEnemy(id).Position;
             return Interpolate(_previousEnemyPositions.TryGetValue(id, out var previous) ? previous : current, current);
         }
+
+        /// <summary>On a client, other players glide between snapshots; everyone else is where the world has them.</summary>
+        private Vec3 CurrentPosition(PlayerId id) =>
+            Client != null && Client.IsJoined ? Client.DisplayPosition(id) : World.GetPlayer(id).Position;
 
         private Vector3 Interpolate(Vec3 previous, Vec3 current) =>
             Vector3.Lerp(ToVector3(previous), ToVector3(current), _clock.Alpha);
