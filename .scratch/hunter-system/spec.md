@@ -162,7 +162,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 - **Host-run sessions** with up to 10 players, invited through Steam. One player is the host.
 - **Fully server-authoritative with client-side prediction and reconciliation.** This is the most expensive option and was chosen deliberately. It makes the simulation-core rules above mandatory.
-- **Library:** Fish-Net is the front-runner on the strength of built-in prediction and area-of-interest culling. Unity's first-party Netcode for GameObjects is not preferred because it lacks built-in prediction. **The choice is confirmed or changed in a spike at M2, not decided now.** Steam transport and relay are to be used. **[assumption: library research was from web sources and is unverified for current versions]**
+- **Library (decided 2026-11-13, ADR 0004):** Fish-Net 4.7.4 for connections and the Steam relay (FishyFacepunch); prediction and reconciliation are done in the game's own simulation via snapshots, not Fish-Net's per-object prediction. Original note: Fish-Net is the front-runner on the strength of built-in prediction and area-of-interest culling. Unity's first-party Netcode for GameObjects is not preferred because it lacks built-in prediction. **The choice is confirmed or changed in a spike at M2, not decided now.** Steam transport and relay are to be used. **[assumption: library research was from web sources and is unverified for current versions]**
 - **Area-of-interest culling and effect culling rules** must be defined before the first raid is built, because ten players' effects can flood the screen.
 - **Characters live in each player's own save,** with Steam Cloud as an optional backup. Story and map progress live in the host's world.
 

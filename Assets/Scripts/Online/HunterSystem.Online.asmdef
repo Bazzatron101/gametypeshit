@@ -1,0 +1,20 @@
+{
+    "name": "HunterSystem.Online",
+    "rootNamespace": "HunterSystem.Online",
+    "references": [
+        "HunterSystem.Simulation",
+        "HunterSystem.Netcode",
+        "HunterSystem.Game",
+        "FishNet.Runtime",
+        "FishyFacepunch"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

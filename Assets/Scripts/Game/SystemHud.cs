@@ -40,7 +40,8 @@ namespace HunterSystem.Game
         private GUIStyle _label, _title, _toastTitle, _toastBody, _button, _skillName;
         private Texture2D _white;
 
-        public PlayerId PlayerId => new PlayerId(playerId);
+        /// <summary>Online, the HUD shows whoever is playing on this machine; offline, the configured player.</summary>
+        public PlayerId PlayerId => _runner != null && _runner.LocalPlayerId.HasValue ? _runner.LocalPlayerId.Value : new PlayerId(playerId);
         public bool StatScreenOpen { get; private set; }
 
         /// <summary>The announcement on screen now, if any.</summary>

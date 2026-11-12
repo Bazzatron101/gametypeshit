@@ -31,6 +31,9 @@ namespace HunterSystem.Game
         private InputAction _look;
 
         public Transform Target => target;
+
+        /// <summary>Follows <paramref name="newTarget"/> from now on (online, the local player's view appears after joining).</summary>
+        public void SetTarget(Transform newTarget) => target = newTarget;
         public float Distance => distance;
         public float TargetHeight => targetHeight;
 

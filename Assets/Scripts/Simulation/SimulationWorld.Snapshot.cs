@@ -107,7 +107,8 @@ namespace HunterSystem.Simulation
             {
                 parsed = Parse(snapshot);
             }
-            catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException || e is ArgumentOutOfRangeException)
+            catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException ||
+                                      e is ArgumentException || e is KeyNotFoundException)
             {
                 throw new ArgumentException("Not a valid world snapshot.", nameof(snapshot), e);
             }
@@ -348,6 +349,7 @@ namespace HunterSystem.Simulation
                 UnspentStatPoints = r.ReadInt32(),
                 Stats = ReadInts(r),
             };
+            if (p.Stats.Length != PlayerStats.Count) throw new FormatException("Stat table has the wrong size.");
 
             for (var slot = 0; slot < SkillSlotCount; slot++)
             {

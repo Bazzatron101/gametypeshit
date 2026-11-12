@@ -1,3 +1,4 @@
+using HunterSystem.Simulation;
 using UnityEngine;
 
 namespace HunterSystem.Game
@@ -26,6 +27,17 @@ namespace HunterSystem.Game
             var renderer = visual.GetComponent<Renderer>();
             if (material != null) renderer.sharedMaterial = material;
             return renderer;
+        }
+
+        /// <summary>A player at their feet: a capsule body above, and a flat swing marker in front shown on attacks.</summary>
+        public static PlayerView CreatePlayer(string name, PlayerId id, bool isLocal, Material bodyMaterial, Material swingMaterial)
+        {
+            var root = new GameObject(name);
+            var view = root.AddComponent<PlayerView>();
+            var body = CreateVisual(root, PrimitiveType.Capsule, "Capsule", new Vector3(0f, 1f, 0f), Vector3.one, bodyMaterial);
+            var swing = CreateVisual(root, PrimitiveType.Cube, "Swing Marker", new Vector3(0f, 1f, 1.1f), new Vector3(1.6f, 0.1f, 0.9f), swingMaterial);
+            view.Configure(id, isLocal, body, swing.gameObject);
+            return view;
         }
 
         /// <summary>An enemy at its feet with a capsule body above, configured from its definition.</summary>

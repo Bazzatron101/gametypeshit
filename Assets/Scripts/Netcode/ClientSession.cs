@@ -36,6 +36,12 @@ namespace HunterSystem.Netcode
 
         public bool IsJoined => World != null && PlayerId.HasValue;
 
+        /// <summary>False once the connection to the host has closed.</summary>
+        public bool IsConnected => _transport.IsConnected;
+
+        /// <summary>Why the host turned this client away (the session is full), or null.</summary>
+        public string RefusalReason { get; private set; }
+
         /// <summary>How far the host's corrections have moved the local player, at most (metres): a measure of misprediction.</summary>
         public float LargestCorrection { get; private set; }
 
@@ -73,6 +79,9 @@ namespace HunterSystem.Netcode
                         break;
                     case MessageType.Snapshot when IsJoined:
                         latest = Wire.ReadSnapshot(payload); // only the newest matters
+                        break;
+                    case MessageType.Refused:
+                        RefusalReason = Wire.ReadRefused(payload);
                         break;
                 }
             }

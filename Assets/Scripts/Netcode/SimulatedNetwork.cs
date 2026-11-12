@@ -28,10 +28,13 @@ namespace HunterSystem.Netcode
 
         public void Advance() => _now++;
 
-        /// <summary>Opens a connection; the host hears about it after the latency.</summary>
-        public IClientTransport Connect()
+        /// <summary>
+        /// Opens a connection; the host hears about it after the latency. <paramref name="identity"/>
+        /// plays the part of an identity the transport can vouch for, like a SteamID.
+        /// </summary>
+        public IClientTransport Connect(string identity = null)
         {
-            var client = new ClientEnd(this, _nextConnection++);
+            var client = new ClientEnd(this, _nextConnection++) { Identity = identity };
             _clients.Add(client.Connection, client);
             _toHost.Add((_now + _latencyTicks, client.Connection, NetEventKind.Connected, null));
             return client;
@@ -62,6 +65,8 @@ namespace HunterSystem.Netcode
                 if (_net._clients.TryGetValue(connection, out var client) && client.Open)
                     client.Inbox.Add((_net._now + _net._latencyTicks, payload));
             }
+
+            public string IdentityOf(int connection) => _net._clients.TryGetValue(connection, out var client) ? client.Identity : null;
         }
 
         private sealed class ClientEnd : IClientTransport
@@ -70,6 +75,9 @@ namespace HunterSystem.Netcode
             public readonly int Connection;
             public readonly List<(int at, byte[] payload)> Inbox = new List<(int, byte[])>();
             public bool Open = true;
+            public string Identity;
+
+            public bool IsConnected => Open;
 
             public ClientEnd(SimulatedNetwork net, int connection)
             {

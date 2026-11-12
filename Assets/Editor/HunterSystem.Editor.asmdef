@@ -3,7 +3,11 @@
     "rootNamespace": "HunterSystem.Editor",
     "references": [
         "HunterSystem.Game",
-        "HunterSystem.Simulation"
+        "HunterSystem.Simulation",
+        "HunterSystem.Online",
+        "FishNet.Runtime",
+        "FishyFacepunch",
+        "HunterSystem.Netcode"
     ],
     "includePlatforms": [
         "Editor"

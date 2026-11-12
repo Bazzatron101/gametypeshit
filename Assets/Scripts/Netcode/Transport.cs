@@ -15,6 +15,13 @@ namespace HunterSystem.Netcode
     {
         bool TryReceive(out int connection, out NetEventKind kind, out byte[] payload);
         void Send(int connection, byte[] payload);
+
+        /// <summary>
+        /// Who is on the other end, as the transport itself knows it (a SteamID verified by Steam),
+        /// or null if it cannot tell (plain UDP). When known, it is used instead of the key a client
+        /// claims, so nobody can take over another player's character.
+        /// </summary>
+        string IdentityOf(int connection);
     }
 
     /// <summary>A client's side of the connection to the host.</summary>
@@ -23,5 +30,8 @@ namespace HunterSystem.Netcode
         bool TryReceive(out byte[] payload);
         void Send(byte[] payload);
         void Disconnect();
+
+        /// <summary>False once the connection has closed, from either end.</summary>
+        bool IsConnected { get; }
     }
 }

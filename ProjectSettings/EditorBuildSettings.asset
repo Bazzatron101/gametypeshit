@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Arena.unity
     guid: 67d99e83e918f6947bcb1ef04d1ebe0d
   - enabled: 1
+    path: Assets/Scenes/Coop.unity
+    guid: caddcd06ea090914b9300516146b2de4
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:

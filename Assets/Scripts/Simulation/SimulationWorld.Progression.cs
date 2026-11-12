@@ -71,7 +71,7 @@ namespace HunterSystem.Simulation
 
         private void TryAllocateStat(Player player, Stat stat, int tick)
         {
-            if (player.UnspentStatPoints <= 0) return;
+            if (player.UnspentStatPoints <= 0 || (int)stat < 0 || (int)stat >= player.Stats.Length) return;
             player.UnspentStatPoints--;
             player.Stats[(int)stat]++;
 

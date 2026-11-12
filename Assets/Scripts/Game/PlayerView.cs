@@ -33,6 +33,15 @@ namespace HunterSystem.Game
         public PlayerId PlayerId => new PlayerId(playerId);
         public bool IsLocal => isLocal;
 
+        /// <summary>Sets up a view built in code (online, players appear as they join).</summary>
+        public void Configure(PlayerId id, bool local, Renderer bodyRenderer, GameObject swing)
+        {
+            playerId = id.Value;
+            isLocal = local;
+            body = bodyRenderer;
+            swingMarker = swing;
+        }
+
         private void Start()
         {
             _runner = FindAnyObjectByType<SimulationRunner>();
@@ -50,7 +59,7 @@ namespace HunterSystem.Game
 
         private void LateUpdate()
         {
-            if (_runner == null || _runner.World == null) return;
+            if (_runner == null || _runner.World == null || !_runner.World.HasPlayer(PlayerId)) return;
 
             foreach (var e in _runner.FrameEvents)
             {

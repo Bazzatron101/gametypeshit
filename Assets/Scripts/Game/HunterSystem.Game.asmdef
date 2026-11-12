@@ -3,7 +3,8 @@
     "rootNamespace": "HunterSystem.Game",
     "references": [
         "HunterSystem.Simulation",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "HunterSystem.Netcode"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

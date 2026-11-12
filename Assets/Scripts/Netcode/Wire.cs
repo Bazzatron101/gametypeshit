@@ -18,6 +18,9 @@ namespace HunterSystem.Netcode
 
         /// <summary>Host to every client, every few ticks: the whole world and each player's last processed command.</summary>
         Snapshot = 4,
+
+        /// <summary>Host to one client: you cannot join, and why (the session is full).</summary>
+        Refused = 5,
     }
 
     /// <summary>A world snapshot plus, for each remote player, the number of their last command it includes.</summary>
@@ -31,6 +34,7 @@ namespace HunterSystem.Netcode
     /// <summary>Message encoding. Compact binary, little-endian, no reflection.</summary>
     public static class Wire
     {
+        private const byte LightAttackBit = 1, HeavyAttackBit = 2, DodgeBit = 4;
         public static MessageType TypeOf(byte[] message) =>
             message != null && message.Length > 0 ? (MessageType)message[0] : throw new ArgumentException("Empty message.", nameof(message));
 
@@ -56,7 +60,7 @@ namespace HunterSystem.Netcode
             w.Write(sequence);
             w.Write(command.MoveX);
             w.Write(command.MoveZ);
-            w.Write((byte)((command.LightAttack ? 1 : 0) | (command.HeavyAttack ? 2 : 0) | (command.Dodge ? 4 : 0)));
+            w.Write((byte)((command.LightAttack ? LightAttackBit : 0) | (command.HeavyAttack ? HeavyAttackBit : 0) | (command.Dodge ? DodgeBit : 0)));
             w.Write((sbyte)(command.UseSkillSlot ?? -1));
             w.Write(command.HeldSkillSlots);
             w.Write((sbyte)(command.AllocateStat.HasValue ? (int)command.AllocateStat.Value : -1));
@@ -69,11 +73,19 @@ namespace HunterSystem.Netcode
             }
         });
 
+        public static byte[] Refused(string reason) => Write(MessageType.Refused, w => w.Write(reason));
+
+        public static string ReadRefused(byte[] message) => Read(message, r => r.ReadString());
+
+        /// <summary>
+        /// Reads a command, neutralising values no honest client sends: non-finite movement becomes
+        /// none, and a stat outside the six becomes no allocation. (Out-of-range slots the simulation ignores itself.)
+        /// </summary>
         public static (int sequence, PlayerCommand command) ReadCommand(byte[] message) => Read(message, r =>
         {
             var sequence = r.ReadInt32();
-            var moveX = r.ReadSingle();
-            var moveZ = r.ReadSingle();
+            var moveX = Finite(r.ReadSingle());
+            var moveZ = Finite(r.ReadSingle());
             var buttons = r.ReadByte();
             var useSkill = r.ReadSByte();
             var held = r.ReadInt32();
@@ -85,11 +97,13 @@ namespace HunterSystem.Netcode
                 assign = new SkillAssignment(slot, r.ReadBoolean() ? r.ReadString() : null);
             }
             return (sequence, new PlayerCommand(moveX, moveZ,
-                lightAttack: (buttons & 1) != 0, dodge: (buttons & 4) != 0, heavyAttack: (buttons & 2) != 0,
-                allocateStat: stat >= 0 ? (Stat)stat : (Stat?)null,
+                lightAttack: (buttons & LightAttackBit) != 0, dodge: (buttons & DodgeBit) != 0, heavyAttack: (buttons & HeavyAttackBit) != 0,
+                allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
                 useSkillSlot: useSkill >= 0 ? useSkill : (int?)null,
                 assignSkill: assign, heldSkillSlots: held));
         });
+
+        private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;
 
         private static void WriteSnapshot(BinaryWriter w, SnapshotMessage s)
         {

@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
+using FishNet.Managing;
+using FishNet.Transporting.Tugboat;
 using HunterSystem.Game;
+using HunterSystem.Online;
 using HunterSystem.Simulation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -27,6 +30,7 @@ namespace HunterSystem.Editor
     {
         public const string ScenePath = "Assets/Scenes/Greybox.unity";
         public const string ArenaScenePath = "Assets/Scenes/Arena.unity";
+        public const string CoopScenePath = "Assets/Scenes/Coop.unity";
         private const string MaterialsFolder = "Assets/Art/Materials";
         private const string DataFolder = "Assets/Data";
         private const string ProgressionPath = "Assets/Data/Progression.asset";
@@ -124,6 +128,7 @@ namespace HunterSystem.Editor
         {
             Build();
             BuildArena();
+            BuildCoop();
         }
 
         [MenuItem("Hunter System/Rebuild Greybox Scene")]
@@ -140,15 +145,51 @@ namespace HunterSystem.Editor
         public static void BuildArena() => BuildScene(ArenaScenePath, simulation =>
             Wire(simulation.AddComponent<ArenaPanel>(), ("enemyMaterial", GetOrCreateMaterial("Greybox_Goblin", GoblinColour))));
 
+        /// <summary>
+        /// The co-op spike scene: no player placed (players appear as they join), the online views,
+        /// the launcher menu, and two inactive network managers: Tugboat for local play, FishyFacepunch for Steam.
+        /// </summary>
+        [MenuItem("Hunter System/Rebuild Co-op Scene")]
+        public static void BuildCoop() => BuildScene(CoopScenePath, simulation =>
+        {
+            Wire(simulation.AddComponent<OnlineViews>(),
+                ("localPlayerMaterial", GetOrCreateMaterial("Greybox_Player", new Color(0.2f, 0.45f, 0.85f))),
+                ("remotePlayerMaterial", GetOrCreateMaterial("Greybox_Ally", new Color(0.25f, 0.75f, 0.4f))),
+                ("swingMaterial", GetOrCreateMaterial("Greybox_Swing", new Color(1f, 0.85f, 0.3f))),
+                ("enemyMaterial", GetOrCreateMaterial("Greybox_Goblin", GoblinColour)));
+
+            var local = CreateNetwork<Tugboat>("Network (Local UDP)");
+            var steam = CreateNetwork<FishyFacepunch.FishyFacepunch>("Network (Steam)");
+            Wire(simulation.AddComponent<CoopLauncher>(), ("localNetwork", local), ("steamNetwork", steam));
+        }, includePlayer: false);
+
+        /// <summary>
+        /// An inactive Fish-Net network manager with the given transport; the launcher activates the
+        /// one it uses. Fish-Net sends on its own network tick (30 Hz by default), which would add up
+        /// to a tick of delay each way on top of ours, so it runs at the simulation's 60 Hz.
+        /// </summary>
+        private static GameObject CreateNetwork<TTransport>(string name) where TTransport : Component
+        {
+            var network = new GameObject(name);
+            network.SetActive(false);
+            network.AddComponent<TTransport>();
+            var time = network.AddComponent<FishNet.Managing.Timing.TimeManager>();
+            var so = new SerializedObject(time);
+            so.FindProperty("_tickRate").intValue = 60;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            network.AddComponent<NetworkManager>();
+            return network;
+        }
+
         /// <summary>A scene with the shared parts (light, camera, floor, simulation, player), plus <paramref name="addExtras"/>.</summary>
-        private static void BuildScene(string path, System.Action<GameObject> addExtras)
+        private static void BuildScene(string path, System.Action<GameObject> addExtras, bool includePlayer = true)
         {
             // New scene first: opening it unloads unused assets, which would orphan anything loaded before.
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             var content = GetOrCreateContent();
             var cameraRig = CreateLightCameraAndFloor();
             var simulation = CreateSimulation(content);
-            CreatePlayer(cameraRig);
+            if (includePlayer) CreatePlayer(cameraRig);
             addExtras(simulation);
 
             EditorSceneManager.SaveScene(scene, path);
@@ -208,7 +249,7 @@ namespace HunterSystem.Editor
         /// <summary>Greybox first (the default build scene), then the arena, then anything else.</summary>
         private static void RegisterScenes()
         {
-            var builtScenes = new[] { ScenePath, ArenaScenePath };
+            var builtScenes = new[] { ScenePath, ArenaScenePath, CoopScenePath };
             var existing = builtScenes.Where(p => AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null).Select(p => new EditorBuildSettingsScene(p, true));
             var others = EditorBuildSettings.scenes.Where(s => !builtScenes.Contains(s.path));
             EditorBuildSettings.scenes = existing.Concat(others).ToArray();

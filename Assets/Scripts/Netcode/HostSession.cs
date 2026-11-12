@@ -13,8 +13,15 @@ namespace HunterSystem.Netcode
     /// </summary>
     public sealed class HostSession
     {
-        /// <summary>The spec's party limit.</summary>
+        /// <summary>The spec's party limit. Characters of disconnected players still count: they can rejoin (ADR 0003).</summary>
         public const int MaxPlayers = 10;
+
+        /// <summary>
+        /// The most commands a player may have waiting. Beyond this (a stall, or a client whose clock
+        /// runs fast) the oldest movement-only commands are dropped, so lag cannot keep growing.
+        /// Commands with a press are never dropped.
+        /// </summary>
+        public const int MaxBacklog = 6;
 
         private sealed class Remote
         {
@@ -25,6 +32,16 @@ namespace HunterSystem.Netcode
             public int LastReceived;
             public int LastProcessed;
             public PlayerCommand LastCommand;
+
+            /// <summary>Forgets the old connection's commands: a fresh connection numbers its commands from 1 again.</summary>
+            public void ResetConnection(int connection)
+            {
+                Connection = connection;
+                Queue.Clear();
+                LastReceived = 0;
+                LastProcessed = 0;
+                LastCommand = PlayerCommand.None;
+            }
         }
 
         private readonly IHostTransport _transport;
@@ -55,6 +72,9 @@ namespace HunterSystem.Netcode
         public int LastSnapshotSize { get; private set; }
 
         public int ConnectedClients => _byConnection.Count;
+
+        /// <summary>Messages from clients that could not be read and were ignored.</summary>
+        public int MalformedMessages { get; private set; }
 
         public PlayerId AddLocalPlayer()
         {
@@ -115,9 +135,7 @@ namespace HunterSystem.Netcode
                         {
                             // The character stays in the run, standing still, until its owner rejoins.
                             _byConnection.Remove(connection);
-                            gone.Connection = -1;
-                            gone.Queue.Clear();
-                            gone.LastCommand = PlayerCommand.None;
+                            gone.ResetConnection(-1);
                         }
                         break;
                     case NetEventKind.Data:
@@ -127,7 +145,20 @@ namespace HunterSystem.Netcode
             }
         }
 
+        /// <summary>Anything a client sends is untrusted: a message that cannot be read is counted and ignored.</summary>
         private void HandleData(int connection, byte[] payload)
+        {
+            try
+            {
+                HandleMessage(connection, payload);
+            }
+            catch (Exception e) when (e is ArgumentException || e is System.IO.IOException || e is FormatException || e is InvalidCastException)
+            {
+                MalformedMessages++;
+            }
+        }
+
+        private void HandleMessage(int connection, byte[] payload)
         {
             switch (Wire.TypeOf(payload))
             {
@@ -139,16 +170,42 @@ namespace HunterSystem.Netcode
                     if (sequence <= remote.LastReceived) return; // stale or duplicate
                     remote.LastReceived = sequence;
                     remote.Queue.Enqueue((sequence, command));
+                    ShedBacklog(remote);
+                    break;
+                case MessageType.Command:
+                case MessageType.Hello:
+                    break; // a command before a welcome, or a second hello: ignored
+                default:
+                    MalformedMessages++;
                     break;
             }
         }
 
-        private void Welcome(int connection, string key)
+        private static void ShedBacklog(Remote remote)
         {
+            while (remote.Queue.Count > MaxBacklog && IsMovementOnly(remote.Queue.Peek().command))
+            {
+                var (sequence, command) = remote.Queue.Dequeue();
+                remote.LastProcessed = sequence; // the client stops replaying it
+                remote.LastCommand = command;
+            }
+        }
+
+        private static bool IsMovementOnly(PlayerCommand c) =>
+            !c.LightAttack && !c.HeavyAttack && !c.Dodge && !c.UseSkillSlot.HasValue && !c.AllocateStat.HasValue && !c.AssignSkill.HasValue;
+
+        private void Welcome(int connection, string claimedKey)
+        {
+            // An identity the transport vouches for (a SteamID) beats whatever the client claims.
+            var key = _transport.IdentityOf(connection) ?? claimedKey;
             var remote = _remotes.Find(r => r.Key == key);
             if (remote == null)
             {
-                if (World.PlayerIds.Count >= MaxPlayers) return; // full: the client is never welcomed
+                if (World.PlayerIds.Count >= MaxPlayers)
+                {
+                    _transport.Send(connection, Wire.Refused($"The session is full ({MaxPlayers} players)."));
+                    return;
+                }
                 remote = new Remote { Id = new PlayerId(_nextPlayerId++), Key = key };
                 _remotes.Add(remote);
                 World.AddPlayer(remote.Id, _spawnPoint(remote.Id));
@@ -158,12 +215,7 @@ namespace HunterSystem.Netcode
                 _byConnection.Remove(remote.Connection); // the same key from a new connection replaces the old one
             }
 
-            // A fresh connection numbers its commands from 1 again.
-            remote.Connection = connection;
-            remote.Queue.Clear();
-            remote.LastReceived = 0;
-            remote.LastProcessed = 0;
-            remote.LastCommand = PlayerCommand.None;
+            remote.ResetConnection(connection);
             _byConnection[connection] = remote;
             _transport.Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
         }

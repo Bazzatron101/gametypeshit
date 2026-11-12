@@ -14,3 +14,12 @@
 ## Comments
 
 **2026-11-13 (agent):** From ticket 11 / ADR 0003: a friend may join a session already in a gate (appearing at the latest checkpoint), and a disconnected friend may rejoin the same run. Build the join path as a full-state snapshot from the host plus a host-side "player arrives at checkpoint" operation, so join and rejoin share one mechanism.
+
+**2026-11-13 (agent):** From the netcode spike (ADR 0004), carry these into this ticket:
+- **Events:** send the host's events with each snapshot; clients' replayed and remote events are currently lost, so remote kills, hits and level-ups never show.
+- **Remote players:** interpolate them between snapshots (they jump now).
+- **Spawn:** joiners and rejoiners should appear at the latest activated checkpoint (17), not on a fixed line.
+- **Rejoin:** rejoin without restarting the game. Listen for Steam join requests while at the menu.
+- **Structure:** consider splitting `SimulationRunner` and `CoopLauncher` into offline and online parts.
+- **Steam app:** move off test app 480 before release.
+

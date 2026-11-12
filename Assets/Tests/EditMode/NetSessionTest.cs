@@ -237,5 +237,131 @@ namespace HunterSystem.Tests
 
             Assert.That(rig.Host.World.GetPlayer(rig.Host.LocalPlayerId).Position.X - start, Is.EqualTo(5f).Within(1e-3f));
         }
+
+        // --- Review fixes: hostile or broken input, identity, backlog, refusal ------------------
+
+        [Test]
+        public void GarbageFromAClientNeverStopsTheHost()
+        {
+            var rig = new Rig();
+            var alice = rig.Join("alice");
+            var raw = rig.Network.Connect();
+            rig.Tick(Latency * 2 + 2);
+            var before = rig.Host.World.Tick;
+
+            raw.Send(new byte[0]);
+            raw.Send(new byte[] { (byte)MessageType.Command });          // a command cut short
+            raw.Send(new byte[] { 99, 1, 2, 3 });                         // no such message type
+            raw.Send(Wire.Hello("mallory"));
+            raw.Send(new byte[] { (byte)MessageType.Command, 1, 0 });     // another truncated command, now as a player
+            rig.Input[alice] = East;
+            rig.Tick(Latency + 10);
+
+            Assert.That(rig.Host.World.Tick, Is.EqualTo(before + Latency + 10), "every tick still ran");
+            Assert.That(rig.Host.MalformedMessages, Is.GreaterThanOrEqualTo(3));
+            Assert.That(rig.HostView(alice).Position.X, Is.GreaterThan(0.1f), "and other players carried on");
+        }
+
+        [Test]
+        public void ImpossibleCommandValuesAreNeutralised()
+        {
+            var rig = new Rig();
+            var raw = rig.Network.Connect();
+            raw.Send(Wire.Hello("mallory"));
+            rig.Tick(Latency * 2 + 2);
+            var mallory = rig.Host.World.PlayerIds.Last();
+            var start = rig.Host.World.GetPlayer(mallory).Position;
+
+            raw.Send(Wire.Command(1, new PlayerCommand(float.NaN, float.PositiveInfinity, allocateStat: (Stat)99)));
+            rig.Tick(Latency + 2);
+
+            var position = rig.Host.World.GetPlayer(mallory).Position;
+            Assert.That(float.IsNaN(position.X) || float.IsInfinity(position.Z), Is.False);
+            Assert.That(position, Is.EqualTo(start), "not moved by a non-number");
+        }
+
+        [Test]
+        public void TheTransportsIdentityBeatsTheKeyAClientClaims()
+        {
+            var rig = new Rig();
+            var aliceTransport = rig.Network.Connect(identity: "steam:alice");
+            var alice = new ClientSession(Config(), aliceTransport, "steam:alice");
+            rig.Clients.Add(alice);
+            rig.Input[alice] = PlayerCommand.None;
+            rig.Tick(Latency * 2 + 2);
+
+            // Mallory connects as herself but claims Alice's key to take her character.
+            var mallory = new ClientSession(Config(), rig.Network.Connect(identity: "steam:mallory"), "steam:alice");
+            rig.Clients.Add(mallory);
+            rig.Input[mallory] = PlayerCommand.None;
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(mallory.PlayerId, Is.Not.EqualTo(alice.PlayerId), "a character of her own, not Alice's");
+            Assert.That(rig.Host.ConnectedClients, Is.EqualTo(2), "and Alice is still connected");
+        }
+
+        [Test]
+        public void ABacklogOfCommandsCannotGrowWithoutLimit()
+        {
+            var rig = new Rig();
+            var client = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+
+            int halfway = 0;
+            for (var frame = 0; frame < 300; frame++)
+            {
+                client.Tick(East); // a client whose clock runs fast: two commands per host tick
+                rig.Tick();
+                if (frame == 150) halfway = client.UnconfirmedCommands;
+            }
+
+            // Without shedding this grows by one a frame (to about 300). With it, it levels off at
+            // twice (both ways in flight + the cap + a snapshot interval), since commands come twice as fast.
+            // It ripples by a snapshot interval's worth (3 ticks, at double rate) as acknowledgements arrive.
+            Assert.That(client.UnconfirmedCommands, Is.LessThanOrEqualTo(halfway + 2 * 3 + 2), "no longer growing");
+            Assert.That(client.UnconfirmedCommands, Is.LessThan(2 * (Latency * 2 + HostSession.MaxBacklog + 3)));
+        }
+
+        [Test]
+        public void PressesAreNeverDroppedFromABacklog()
+        {
+            var rig = new Rig();
+            var client = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(0f, 0f, 1f));
+
+            for (var i = 0; i < 20; i++) client.Tick(PlayerCommand.None);           // a burst of movement-only commands
+            client.Tick(new PlayerCommand(0f, 0f, lightAttack: true));              // then an attack at the back of the queue
+            rig.Tick(Latency * 4);
+
+            Assert.That(rig.HostView(client).Level, Is.EqualTo(2), "the attack still landed and the kill counted");
+        }
+
+        [Test]
+        public void AFullSessionTurnsANewcomerAwayWithAReason()
+        {
+            var rig = new Rig();
+            for (var i = 0; i < HostSession.MaxPlayers - 1; i++) rig.Join($"player-{i}");
+            var late = rig.Join("one-too-many");
+
+            rig.Tick(Latency * 2 + 2);
+
+            Assert.That(rig.Host.World.PlayerIds.Count, Is.EqualTo(HostSession.MaxPlayers));
+            Assert.That(late.IsJoined, Is.False);
+            Assert.That(late.RefusalReason, Does.Contain("full"));
+        }
+
+        [Test]
+        public void AClientKnowsWhenItsConnectionIsGone()
+        {
+            var rig = new Rig();
+            var client = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+            Assert.That(client.IsConnected, Is.True);
+
+            client.Disconnect();
+
+            Assert.That(client.IsConnected, Is.False);
+        }
     }
 }
