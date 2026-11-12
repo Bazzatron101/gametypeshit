@@ -36,7 +36,7 @@ of scope. Ticket 15 had to decide who holds a character, who writes it, and what
   it is and nothing is saved for the rest of that run: losing one session's progress is better than
   overwriting a save that is probably fine.
 - **Steam Cloud is a backup the player controls.** Off by default (decided by the developer, while the
-  game uses test app 480; the default is a constant to revisit with the game's own app ID).
+  game uses test app 480). Revisit the default when the game has its own app ID.
   - When on, every save made while Steam is running is also copied to the cloud. Steam only starts in
     the co-op scene today, so saves made in other scenes are not copied until the next save there.
   - Neither side silently replaces the other. Restoring is an explicit, two-click action that shows the
