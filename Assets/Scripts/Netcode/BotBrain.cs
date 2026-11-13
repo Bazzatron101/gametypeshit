@@ -35,6 +35,7 @@ namespace HunterSystem.Netcode
         private int _nextSkillSlot;
         private int _decidedTick = -1;
         private PlayerCommand _decided;
+        private int _dodgedBossHitAt = -1;
 
         /// <param name="seed">Spreads bots' timing so ten of them do not all swing on the same tick. Any int.</param>
         /// <param name="reach">How close it walks before attacking; inside the light attack's range.</param>
@@ -77,6 +78,7 @@ namespace HunterSystem.Netcode
         private PlayerCommand Act(SimulationWorld world, PlayerId me, PlayerState self, int tick)
         {
             var target = NearestLivingEnemy(world, self.Position);
+            if (BossHitDueSoon(world, self.Position, tick, out var escape)) return new PlayerCommand(escape.X, escape.Z, dodge: true);
             if (TakeHitDueSoon(tick))
             {
                 // Dodge away from what is about to hit (or just back, with nothing in sight).
@@ -110,6 +112,40 @@ namespace HunterSystem.Netcode
             }
             _incomingHits.RemoveAll(landsAt => landsAt < tick);
         }
+
+        /// <summary>
+        /// A boss attack is about to land (or a charge is coming) and the bot is standing in its
+        /// marked area: dodge, sideways out of a charge's lane or away from anything else. Once per attack.
+        /// </summary>
+        private bool BossHitDueSoon(SimulationWorld world, Vec3 at, int tick, out Vec3 escape)
+        {
+            escape = Vec3.Zero;
+            foreach (var id in world.EnemyIds)
+            {
+                var boss = world.GetEnemy(id);
+                var attack = boss.CurrentBossAttack;
+                if (attack == null || boss.IsDefeated || boss.AttackLandsAtTick == _dodgedBossHitAt) continue; // each attack dodged once
+                if (!attack.Covers(boss.AttackOrigin, boss.AttackDirection, at)) continue;
+                // A charge is dodged as it comes close; anything else just before it lands.
+                if (boss.IsCharging ? Flat(boss.Position - at).Length > attack.Radius + 2.5f : boss.AttackLandsAtTick - tick > DodgeLeadTicks) continue;
+                _dodgedBossHitAt = boss.AttackLandsAtTick;
+
+                if (attack.Kind == BossAttackKind.Charge)
+                {
+                    var side = (at.X - boss.AttackOrigin.X) * boss.AttackDirection.Z - (at.Z - boss.AttackOrigin.Z) * boss.AttackDirection.X;
+                    escape = side >= 0f ? new Vec3(boss.AttackDirection.Z, 0f, -boss.AttackDirection.X) : new Vec3(-boss.AttackDirection.Z, 0f, boss.AttackDirection.X);
+                }
+                else
+                {
+                    escape = Direction(boss.AttackOrigin, at);
+                    if (escape.Length < 0.5f) escape = new Vec3(-boss.AttackDirection.X, 0f, -boss.AttackDirection.Z);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private static Vec3 Flat(Vec3 v) => new Vec3(v.X, 0f, v.Z);
 
         /// <summary>True, and forgets that hit, when one is due within <see cref="DodgeLeadTicks"/>.</summary>
         private bool TakeHitDueSoon(int tick)

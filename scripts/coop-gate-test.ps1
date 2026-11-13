@@ -13,7 +13,7 @@ checkpoints being reached. No copy saves anything (-no-save).
 
 Build first with: Unity -batchmode -quit -projectPath . -executeMethod HunterSystem.Editor.CoopPlayerBuild.Build
 #>
-param([int]$Seconds = 50, [int]$Clients = 1, [string]$Gate = 'goblin-warren')
+param([int]$Seconds = 80, [int]$Clients = 1, [string]$Gate = 'goblin-warren')
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $exe = Join-Path $project 'Builds/Coop/HunterSystem.exe'
@@ -53,6 +53,7 @@ function Line($who, $r) {
 }
 Write-Host (Line 'HOST  ' $h)
 foreach ($b in $bots) { Write-Host (Line "CLIENT" $b) }
+foreach ($r in @($h) + $bots) { Write-Host ("  {0} player {1}: boss attacks seen {2}, reward '{3}', holds [{4}]" -f $r.role, $r.localPlayerId, $r.bossAttacksSeen, $r.rewardSeen, ($r.localModifiers -join ', ')) }
 
 $agree = @($bots | Where-Object { $_.gateId -eq $h.gateId -and $_.gateCleared -eq $h.gateCleared -and $_.roomsCleared -eq $h.roomsCleared -and $_.latestCheckpoint -eq $h.latestCheckpoint }).Count
 $checks = [ordered]@{
@@ -60,6 +61,8 @@ $checks = [ordered]@{
     "the host is in gate '$Gate' and cleared it"      = $h.gateId -eq $Gate -and $h.gateCleared
     'every client agrees on the gate (cleared, rooms, checkpoint)' = $agree -eq $Clients
     'every client was shown the checkpoints'          = -not ($bots | Where-Object { $_.checkpointsSeen -lt ($h.latestCheckpoint + 1) })
+    'every client saw the boss attack'                = -not ($bots | Where-Object { $_.bossAttacksSeen -lt 1 })
+    'every player was rewarded and keeps it'          = -not (@($h) + $bots | Where-Object { -not $_.rewardSeen -or $_.localModifiers -notcontains $_.rewardSeen })
     'no unreadable events on clients'                 = -not ($bots | Where-Object { $_.unreadableEventLists -gt 0 })
 }
 foreach ($k in $checks.Keys) { Write-Host ("  [{0}] {1}" -f ($(if ($checks[$k]) { 'ok' } else { 'FAIL' })), $k) }

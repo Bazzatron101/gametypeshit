@@ -9,6 +9,12 @@ namespace HunterSystem.Simulation
         /// <summary>Winding up: hold still until the hit lands. Otherwise attack a target in reach, or chase the nearest one.</summary>
         private void UpdateEnemy(Enemy enemy, int tick)
         {
+            if (enemy.Definition.Boss != null)
+            {
+                UpdateBoss(enemy, tick);
+                return;
+            }
+
             if (enemy.AttackLandsAtTick != 0)
             {
                 if (tick < enemy.AttackLandsAtTick) return;

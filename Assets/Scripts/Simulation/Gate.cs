@@ -55,6 +55,21 @@ namespace HunterSystem.Simulation
 
         /// <summary>Co-op: how long after the whole party is down before everyone returns at the latest checkpoint.</summary>
         public float WipeDelaySeconds { get; set; } = 3f;
+
+        /// <summary>The clear reward: each player present draws one they do not have yet (spec: a fixed pool, random draw, no repeats until it is all owned).</summary>
+        public List<ModifierDefinition> RewardPool { get; } = new List<ModifierDefinition>();
+
+        /// <summary>True when some room holds a boss: then defeating the bosses is what clears the gate.</summary>
+        public bool HasBoss
+        {
+            get
+            {
+                foreach (var room in Rooms)
+                foreach (var spawn in room.Spawns)
+                    if (spawn.Enemy.Boss != null) return true;
+                return false;
+            }
+        }
     }
 
     public enum RoomState : byte
@@ -188,8 +203,14 @@ namespace HunterSystem.Simulation
         /// <summary>Where the latest checkpoint is; the entrance when none has been reached.</summary>
         public Vec3 LatestCheckpointPosition => LatestCheckpoint >= 0 ? Layout.Checkpoints[LatestCheckpoint].Position : Layout.Entrance;
 
-        /// <summary>Every room cleared.</summary>
+        /// <summary>
+        /// The gate is done: its boss is defeated, or, in a gate without a boss, every room is
+        /// cleared. Stays true for the rest of the attempt.
+        /// </summary>
         public bool IsCleared => _world.GateIsCleared();
+
+        /// <summary>True when the gate ends in a boss (see <see cref="GateDefinition.HasBoss"/>).</summary>
+        public bool HasBoss => Definition.HasBoss;
 
         /// <summary>1 for the first attempt; one more each time the gate starts again from the entrance.</summary>
         public int Attempt => _world.GateAttempt();

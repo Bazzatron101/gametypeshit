@@ -123,7 +123,92 @@ namespace HunterSystem.Simulation
         internal RoomState GateRoomState(int room) => _gate.Rooms[room];
         internal bool GateCheckpointActivated(int checkpoint) => _gate.CheckpointActivated[checkpoint];
         internal int GateLatestCheckpoint() => Array.LastIndexOf(_gate.CheckpointActivated, true);
-        internal bool GateIsCleared() => _gate.Rooms.All(r => r == RoomState.Cleared);
+        internal bool GateIsCleared() => _gate.ClearAnnounced;
+
+        /// <summary>Whether the gate's goal is met now: its bosses defeated, or every room cleared when it has none.</summary>
+        private bool GateGoalMet()
+        {
+            if (!_gate.Definition.HasBoss) return _gate.Rooms.All(r => r == RoomState.Cleared);
+            for (var room = 0; room < _gate.Rooms.Length; room++)
+            {
+                var spawns = _gate.Definition.Rooms[room].Spawns;
+                if (!spawns.Any(s => s.Enemy.Boss != null)) continue;
+                if (_gate.Rooms[room] == RoomState.NotEntered) return false;
+                foreach (var id in _gate.RoomEnemies[room])
+                    if (_enemiesById.TryGetValue(id, out var enemy) && enemy.Definition.Boss != null && enemy.Health > 0) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The bosses are down: whatever still fights in their rooms (their adds) goes with them,
+        /// and those rooms count as cleared, so nothing after the clear can bring a boss back.
+        /// </summary>
+        private void EndBossRooms(int tick)
+        {
+            for (var room = 0; room < _gate.Rooms.Length; room++)
+            {
+                if (!_gate.Definition.Rooms[room].Spawns.Any(s => s.Enemy.Boss != null)) continue;
+                foreach (var id in _gate.RoomEnemies[room])
+                    if (_enemiesById.TryGetValue(id, out var enemy) && enemy.Health > 0) DespawnEnemy(id);
+                _gate.RoomEnemies[room].RemoveAll(id => !_enemiesById.ContainsKey(id));
+                if (_gate.Rooms[room] != RoomState.Cleared)
+                {
+                    _gate.Rooms[room] = RoomState.Cleared;
+                    _gate.RoomTidyAtTick[room] = tick + SecondsToTicks(TidySeconds);
+                    _events.Add(new RoomCleared(tick, room));
+                }
+            }
+        }
+
+        /// <summary>A boss's add joins the boss's room, so the room is not cleared without it and a wipe takes it away.</summary>
+        private void JoinBossRoom(EnemyId boss, EnemyId add)
+        {
+            if (_gate == null) return;
+            foreach (var list in _gate.RoomEnemies)
+            {
+                if (!list.Contains(boss)) continue;
+                list.Add(add);
+                return;
+            }
+        }
+
+        /// <summary>
+        /// The clear reward: every player present draws a modifier from the gate's pool that they
+        /// do not have, kept on their character. The draw is a fixed function of the tick, the
+        /// player and the attempt, so every machine that steps this tick draws the same.
+        /// </summary>
+        private void GrantClearRewards(int tick)
+        {
+            var pool = _gate.Definition.RewardPool;
+            if (pool.Count == 0) return;
+            foreach (var player in _players)
+            {
+                if (player.Away) continue;
+                var candidates = pool.Where(m => player.Modifiers.All(owned => owned.Id != m.Id)).ToList();
+                ModifierDefinition reward = null;
+                if (candidates.Count > 0)
+                {
+                    reward = candidates[(int)(Mix((uint)tick, (uint)player.Id.Value, (uint)_gate.Attempt) % (uint)candidates.Count)];
+                    player.Modifiers.Add(reward);
+                    _events.Add(new ModifierGranted(tick, player.Id, reward));
+                }
+                _events.Add(new GateRewardGranted(tick, player.Id, reward));
+            }
+        }
+
+        /// <summary>A small, fixed integer hash: the same inputs give the same number on every machine.</summary>
+        private static uint Mix(uint a, uint b, uint c)
+        {
+            var h = 2166136261u;
+            foreach (var v in new[] { a, b, c })
+            {
+                h ^= v;
+                h *= 16777619u;
+                h ^= h >> 15;
+            }
+            return h;
+        }
         internal int GateAttempt() => _gate.Attempt;
         internal bool GateIsSolo() => PresentCount() == 1;
 
@@ -146,6 +231,14 @@ namespace HunterSystem.Simulation
         private void TryRespawn(Player player, int tick)
         {
             if (_gate == null || player.IsAlive || player.Away || PresentCount() != 1) return;
+
+            if (_gate.ClearAnnounced)
+            {
+                // The gate is done: getting up costs nothing and never starts it again.
+                StandUp(player, _gate.View.LatestCheckpointPosition);
+                _events.Add(new PlayerRevived(tick, player.Id, GateLatestCheckpoint(), PlayerRevived.NoLimit));
+                return;
+            }
 
             _gate.RevivesUsed.TryGetValue(player.Id, out var used);
             if (used >= _gate.Definition.SoloRevives)
@@ -243,10 +336,12 @@ namespace HunterSystem.Simulation
                 }
             }
 
-            if (!_gate.ClearAnnounced && GateIsCleared())
+            if (!_gate.ClearAnnounced && GateGoalMet())
             {
                 _gate.ClearAnnounced = true;
+                EndBossRooms(tick);
                 _events.Add(new GateCleared(tick));
+                GrantClearRewards(tick);
             }
 
             ReachCheckpoints(tick);

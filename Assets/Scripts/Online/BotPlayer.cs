@@ -31,7 +31,8 @@ namespace HunterSystem.Online
         private BotBrain _brain;
         private EnemyTopUp _topUp;
         private readonly List<SimulationEvent> _seen = new List<SimulationEvent>();
-        private int _checkpointsSeen, _revivesSeen;
+        private int _checkpointsSeen, _revivesSeen, _bossAttacksSeen;
+        private string _rewardSeen = "";
 
         /// <param name="expectClients">Host only: measure while this many clients are connected (0: from the warm-up on).</param>
         public void Begin(SimulationRunner runner, int seed, float seconds, string resultPath, int expectClients = 0)
@@ -53,6 +54,8 @@ namespace HunterSystem.Online
                 // Counted for this copy's whole life, not just the measured window: a checkpoint may fall before it.
                 if (e is CheckpointActivated) _checkpointsSeen++;
                 if (e is PlayerRevived) _revivesSeen++;
+                if (e is BossAttackStarted) _bossAttacksSeen++;
+                if (e is GateRewardGranted reward && reward.Player == _runner.LocalPlayerId) _rewardSeen = reward.Modifier?.Id ?? "(pool owned)";
             }
             // In a gate the gate supplies the enemies; outside one, keep a fight going.
             if (_runner.Host != null && !_runner.World.HasGate && Time.frameCount % 30 == 0) TopUpEnemies();
@@ -103,6 +106,10 @@ namespace HunterSystem.Online
             public bool gateCleared;
             public int roomsCleared, rooms, latestCheckpoint, gateAttempt;
             public int checkpointsSeen, revivesSeen;
+            // This copy's own player: shown a reward for the clear, and the modifiers its world says it holds.
+            public string rewardSeen = "";
+            public List<string> localModifiers = new List<string>();
+            public int bossAttacksSeen;
         }
 
         /// <summary>True once the session is in the state worth measuring: full (host) or joined (client), after a warm-up.</summary>
@@ -186,6 +193,10 @@ namespace HunterSystem.Online
                 result.gateAttempt = gate.Attempt;
             }
             result.checkpointsSeen = _checkpointsSeen;
+            result.rewardSeen = _rewardSeen;
+            result.bossAttacksSeen = _bossAttacksSeen;
+            if (world != null && _runner.LocalPlayerId.HasValue)
+                foreach (var m in world.GetPlayer(_runner.LocalPlayerId.Value).ActiveModifiers) result.localModifiers.Add(m.Id);
             result.revivesSeen = _revivesSeen;
             File.WriteAllText(resultPath, JsonUtility.ToJson(result, prettyPrint: true));
             Application.Quit();

@@ -18,12 +18,14 @@ namespace HunterSystem.Game
         [SerializeField, Min(0), Tooltip("Solo: revives at the latest checkpoint before the gate starts again")] private int soloRevives = 3;
         [SerializeField, Min(0.5f), Tooltip("How close a player must come to a checkpoint to reach it, in metres")] private float checkpointRadius = 2f;
         [SerializeField, Min(0f), Tooltip("Co-op: seconds after the whole party is down before everyone returns at the latest checkpoint")] private float wipeDelaySeconds = 3f;
+        [SerializeField, Tooltip("The clear reward: each player draws one they do not have yet")] private ModifierDefinitionAsset[] rewardPool = new ModifierDefinitionAsset[0];
 
         public string Id => id;
         public string DisplayName => displayName;
         public IReadOnlyList<RoomPieceAsset> Rooms => rooms;
+        public IReadOnlyList<ModifierDefinitionAsset> RewardPool => rewardPool;
 
-        public GateDefinition ToDefinition(Dictionary<EnemyDefinitionAsset, EnemyDefinition> enemies)
+        public GateDefinition ToDefinition(Dictionary<ScriptableObject, EnemyDefinition> enemies)
         {
             var gate = new GateDefinition
             {
@@ -34,12 +36,18 @@ namespace HunterSystem.Game
                 if (room == null) { Debug.LogWarning($"{name}: an empty entry in the rooms list was skipped.", this); continue; }
                 gate.Rooms.Add(room.ToDefinition(enemies));
             }
+            foreach (var modifier in rewardPool)
+            {
+                if (modifier == null) { Debug.LogWarning($"{name}: an empty entry in the reward pool was skipped.", this); continue; }
+                gate.RewardPool.Add(modifier.ToDefinition());
+            }
             return gate;
         }
 
         /// <summary>For editor tooling that creates gates in code.</summary>
-        public void Set(string gateId, string gateName, RoomPieceAsset[] gateRooms)
+        public void Set(string gateId, string gateName, RoomPieceAsset[] gateRooms, ModifierDefinitionAsset[] reward = null)
         {
+            rewardPool = reward ?? new ModifierDefinitionAsset[0];
             id = gateId;
             displayName = gateName;
             rooms = gateRooms ?? new RoomPieceAsset[0];

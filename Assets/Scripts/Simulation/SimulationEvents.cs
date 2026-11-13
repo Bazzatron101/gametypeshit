@@ -409,6 +409,49 @@ namespace HunterSystem.Simulation
         }
     }
 
+    /// <summary>A boss began an attack: the area it marks (see <see cref="BossAttackDefinition.Covers"/>) is hit on <see cref="LandsAtTick"/>.</summary>
+    public sealed class BossAttackStarted : SimulationEvent
+    {
+        public EnemyId Enemy { get; }
+        public BossAttackKind Kind { get; }
+        public Vec3 Origin { get; }
+        public Vec3 Direction { get; }
+        public int LandsAtTick { get; }
+
+        public BossAttackStarted(int tick, EnemyId enemy, BossAttackKind kind, Vec3 origin, Vec3 direction, int landsAtTick) : base(tick)
+        {
+            Enemy = enemy;
+            Kind = kind;
+            Origin = origin;
+            Direction = direction;
+            LandsAtTick = landsAtTick;
+        }
+    }
+
+    /// <summary>A boss reached its enrage threshold: it attacks faster from now on, and its adds have joined the fight.</summary>
+    public sealed class BossEnraged : SimulationEvent
+    {
+        public EnemyId Enemy { get; }
+
+        public BossEnraged(int tick, EnemyId enemy) : base(tick) => Enemy = enemy;
+    }
+
+    /// <summary>
+    /// A player's reward for clearing a gate: a modifier from the gate's pool, already added to their
+    /// character. Null when they already own the whole pool.
+    /// </summary>
+    public sealed class GateRewardGranted : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public ModifierDefinition Modifier { get; }
+
+        public GateRewardGranted(int tick, PlayerId player, ModifierDefinition modifier) : base(tick)
+        {
+            Player = player;
+            Modifier = modifier;
+        }
+    }
+
     public sealed class EnemyDefeated : SimulationEvent
     {
         public EnemyId Enemy { get; }

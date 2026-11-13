@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b67c322351ce0440b514cf85a87fcbc, type: 3}
+  m_Name: GoblinWarlord
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.BossDefinitionAsset
+  displayName: Goblin Warlord
+  maxHealth: 600
+  moveSpeed: 2.4
+  stopDistance: 1.8
+  xpReward: 300
+  turnDegreesPerSecond: 60
+  attacks:
+  - kind: 0
+    damage: 22
+    windupSeconds: 0.9
+    cooldownSeconds: 1.2
+    range: 4.5
+    arcDegrees: 130
+    radius: 0
+    speed: 0
+  - kind: 1
+    damage: 30
+    windupSeconds: 1.1
+    cooldownSeconds: 1.6
+    range: 0
+    arcDegrees: 120
+    radius: 3.5
+    speed: 0
+  - kind: 2
+    damage: 26
+    windupSeconds: 1
+    cooldownSeconds: 1.8
+    range: 12
+    arcDegrees: 120
+    radius: 1.2
+    speed: 11
+  enrageAtHealthPercent: 50
+  enragedTimePercent: 70
+  enrageAdds:
+  - enemy: {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
+    offset: {x: -4, y: 0, z: 0}
+  - enemy: {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
+    offset: {x: 4, y: 0, z: 0}
+  - enemy: {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
+    offset: {x: -2, y: 0, z: -3}
+  - enemy: {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
+    offset: {x: 2, y: 0, z: -3}

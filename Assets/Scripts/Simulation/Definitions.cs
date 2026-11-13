@@ -25,6 +25,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>XP every player in the world gains when this enemy is defeated.</summary>
         public int XpReward { get; set; } = 25;
+
+        /// <summary>Set for a boss: its telegraphed attacks and enrage replace the plain attack above. Null for ordinary enemies.</summary>
+        public BossDefinition Boss { get; set; }
     }
 
     public enum AttackKind

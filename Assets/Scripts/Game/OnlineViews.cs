@@ -15,6 +15,10 @@ namespace HunterSystem.Game
         [SerializeField] private Material remotePlayerMaterial;
         [SerializeField] private Material swingMaterial;
         [SerializeField] private Material enemyMaterial;
+        [SerializeField] private Material bossMaterial;
+
+        /// <summary>A boss is drawn this much larger than an ordinary enemy, so it reads as the fight's centre.</summary>
+        private const float BossScale = 2.2f;
 
         private SimulationRunner _runner;
         private ThirdPersonCamera _camera;
@@ -58,7 +62,10 @@ namespace HunterSystem.Game
             foreach (var id in world.EnemyIds)
             {
                 if (_enemies.ContainsKey(id)) continue;
-                var view = GreyboxVisuals.CreateEnemy(world.GetEnemy(id).Definition.Name, _runner.GetRenderPosition(id), null, enemyMaterial);
+                var state = world.GetEnemy(id);
+                var view = GreyboxVisuals.CreateEnemy(state.Definition.Name, _runner.GetRenderPosition(id), null,
+                    state.IsBoss && bossMaterial != null ? bossMaterial : enemyMaterial);
+                if (state.IsBoss) view.transform.localScale = Vector3.one * BossScale;
                 view.Bind(id);
                 _enemies.Add(id, view);
             }

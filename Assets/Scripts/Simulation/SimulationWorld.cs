@@ -124,6 +124,8 @@ namespace HunterSystem.Simulation
                 Position = position,
                 Health = definition.MaxHealth,
             };
+            var nearest = NearestLivePlayer(position, out _);
+            if (nearest != null) FaceTowards(enemy, Flat(nearest.Position - position));
             _enemies.Add(enemy);
             _enemiesById.Add(id, enemy);
             _enemyIds.Add(id);
@@ -133,7 +135,9 @@ namespace HunterSystem.Simulation
         public EnemyState GetEnemy(EnemyId id)
         {
             if (!_enemiesById.TryGetValue(id, out var e)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
-            return new EnemyState(e.Id, e.Definition, e.Position, e.Health);
+            return new EnemyState(e.Id, e.Definition, e.Position, e.Health, e.Facing,
+                e.BossAttack >= 0 ? e.Definition.Boss.Attacks[e.BossAttack] : null, e.AttackOrigin, e.AttackDirection,
+                e.AttackLandsAtTick, e.Charging, e.Enraged, e.ChargeReach);
         }
 
         /// <summary>
@@ -208,6 +212,7 @@ namespace HunterSystem.Simulation
 
             foreach (var enemy in _enemies)
                 if (enemy.Health > 0) UpdateEnemy(enemy, tick);
+            ApplyEnrages(tick);
 
             ConfineToGate();
             UpdateGate(tick);

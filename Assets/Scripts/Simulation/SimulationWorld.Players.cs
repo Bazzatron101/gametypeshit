@@ -114,8 +114,10 @@ namespace HunterSystem.Simulation
             if (amount == 0) return 0;
             enemy.Health -= amount;
             _events.Add(new DamageDealt(tick, attacker.Id, enemy.Id, amount, enemy.Health, skill, secondary));
+            CheckEnrage(enemy);
             if (enemy.Health == 0)
             {
+                if (enemy.Definition.Boss != null) StopBoss(enemy);
                 _events.Add(new EnemyDefeated(tick, enemy.Id, attacker.Id));
                 AwardXp(enemy, tick);
             }

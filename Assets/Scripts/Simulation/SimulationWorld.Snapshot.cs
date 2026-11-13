@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW2");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW3");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -38,14 +38,17 @@ namespace HunterSystem.Simulation
 
             // Definitions shared by several enemies, and per-use skill records shared by several
             // bolts, are written once and referred to by index, so the sharing survives a restore.
-            var enemyDefinitions = _enemies.Select(e => e.Definition).Distinct().ToList();
+            // A boss's adds are in the table too (and referred to by index), so they stay shared after a restore.
+            var enemyDefinitions = _enemies.Select(e => e.Definition)
+                .SelectMany(d => d.Boss == null ? new[] { d } : new[] { d }.Concat(d.Boss.EnrageAdds.Select(a => a.Enemy)))
+                .Distinct().ToList();
             var resolvedSkills = _projectiles.Select(p => p.Resolved).Distinct().ToList();
 
             w.Write(_players.Count);
             foreach (var p in _players) WritePlayer(w, p);
 
             w.Write(enemyDefinitions.Count);
-            foreach (var d in enemyDefinitions) WriteEnemyDefinition(w, d);
+            foreach (var d in enemyDefinitions) WriteEnemyDefinition(w, d, enemyDefinitions);
             w.Write(_enemies.Count);
             foreach (var e in _enemies)
             {
@@ -59,6 +62,16 @@ namespace HunterSystem.Simulation
                 w.Write(e.AttackLandsAtTick);
                 w.Write(e.AttackTarget != null);
                 if (e.AttackTarget != null) w.Write(e.AttackTarget.Id.Value);
+                WriteVec(w, e.Facing);
+                w.Write(e.BossAttack);
+                WriteVec(w, e.AttackOrigin);
+                WriteVec(w, e.AttackDirection);
+                w.Write(e.Charging);
+                w.Write(e.ChargeTravelled);
+                w.Write(e.ChargeReach);
+                WriteIds(w, e.ChargeHit);
+                w.Write(e.Enraged);
+                w.Write(e.EnragePending);
             }
 
             w.Write(resolvedSkills.Count);
@@ -184,7 +197,7 @@ namespace HunterSystem.Simulation
             w.Write(p.Away);
         }
 
-        private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d)
+        private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
         {
             WriteNullable(w, d.Name);
             w.Write(d.MaxHealth);
@@ -195,6 +208,30 @@ namespace HunterSystem.Simulation
             w.Write(d.AttackWindupSeconds);
             w.Write(d.AttackCooldownSeconds);
             w.Write(d.XpReward);
+            w.Write(d.Boss != null);
+            if (d.Boss == null) return;
+            w.Write(d.Boss.TurnDegreesPerSecond);
+            w.Write(d.Boss.EnrageAtHealthPercent);
+            w.Write(d.Boss.EnragedTimePercent);
+            w.Write(d.Boss.Attacks.Count);
+            foreach (var a in d.Boss.Attacks)
+            {
+                w.Write((byte)a.Kind);
+                w.Write(a.Damage);
+                w.Write(a.WindupSeconds);
+                w.Write(a.CooldownSeconds);
+                w.Write(a.Range);
+                w.Write(a.ArcDegrees);
+                w.Write(a.Radius);
+                w.Write(a.Speed);
+            }
+            w.Write(d.Boss.EnrageAdds.Count);
+            foreach (var add in d.Boss.EnrageAdds)
+            {
+                if (add.Enemy.Boss != null) throw new InvalidOperationException("A boss's adds cannot be bosses.");
+                w.Write(table.IndexOf(add.Enemy));
+                WriteVec(w, add.OffsetFromCentre);
+            }
         }
 
         internal static void WriteModifier(BinaryWriter w, ModifierDefinition m)
@@ -278,7 +315,13 @@ namespace HunterSystem.Simulation
             }
 
             var definitions = new List<EnemyDefinition>();
-            for (int i = 0, n = ReadCount(r); i < n; i++) definitions.Add(ReadEnemyDefinition(r));
+            var addsToResolve = new List<(BossDefinition boss, int index, Vec3 offset)>();
+            for (int i = 0, n = ReadCount(r); i < n; i++) definitions.Add(ReadEnemyDefinition(r, addsToResolve));
+            foreach (var (boss, index, offset) in addsToResolve)
+            {
+                if (index < 0 || index >= definitions.Count || definitions[index].Boss != null) throw new FormatException("A boss's add is not in the table.");
+                boss.EnrageAdds.Add(new RoomSpawn(definitions[index], offset));
+            }
             var enemiesById = new Dictionary<int, Enemy>();
             for (int i = 0, n = ReadCount(r); i < n; i++)
             {
@@ -294,6 +337,17 @@ namespace HunterSystem.Simulation
                     AttackLandsAtTick = r.ReadInt32(),
                 };
                 if (r.ReadBoolean()) e.AttackTarget = playersById[r.ReadInt32()];
+                e.Facing = ReadVec(r);
+                e.BossAttack = r.ReadInt32();
+                if (e.BossAttack >= 0 && (e.Definition.Boss == null || e.BossAttack >= e.Definition.Boss.Attacks.Count)) throw new FormatException("A boss attack that does not exist.");
+                e.AttackOrigin = ReadVec(r);
+                e.AttackDirection = ReadVec(r);
+                e.Charging = r.ReadBoolean();
+                e.ChargeTravelled = r.ReadSingle();
+                e.ChargeReach = r.ReadSingle();
+                e.ChargeHit.AddRange(ReadIds(r));
+                e.Enraged = r.ReadBoolean();
+                e.EnragePending = r.ReadBoolean();
                 parsed.Enemies.Add(e);
                 enemiesById.Add(e.Id.Value, e);
             }
@@ -384,18 +438,41 @@ namespace HunterSystem.Simulation
             return p;
         }
 
-        private static EnemyDefinition ReadEnemyDefinition(BinaryReader r) => new EnemyDefinition
+        /// <param name="addsToResolve">A boss's adds name entries of the definitions table, which may come later; they are filled in once the table is read.</param>
+        private static EnemyDefinition ReadEnemyDefinition(BinaryReader r, List<(BossDefinition, int, Vec3)> addsToResolve)
         {
-            Name = ReadNullable(r),
-            MaxHealth = r.ReadInt32(),
-            MoveSpeed = r.ReadSingle(),
-            StopDistance = r.ReadSingle(),
-            AttackDamage = r.ReadInt32(),
-            AttackRange = r.ReadSingle(),
-            AttackWindupSeconds = r.ReadSingle(),
-            AttackCooldownSeconds = r.ReadSingle(),
-            XpReward = r.ReadInt32(),
-        };
+            var d = new EnemyDefinition
+            {
+                Name = ReadNullable(r),
+                MaxHealth = r.ReadInt32(),
+                MoveSpeed = r.ReadSingle(),
+                StopDistance = r.ReadSingle(),
+                AttackDamage = r.ReadInt32(),
+                AttackRange = r.ReadSingle(),
+                AttackWindupSeconds = r.ReadSingle(),
+                AttackCooldownSeconds = r.ReadSingle(),
+                XpReward = r.ReadInt32(),
+            };
+            if (!r.ReadBoolean()) return d;
+            d.Boss = new BossDefinition
+            {
+                TurnDegreesPerSecond = r.ReadSingle(),
+                EnrageAtHealthPercent = r.ReadInt32(),
+                EnragedTimePercent = r.ReadInt32(),
+            };
+            for (int i = 0, n = ReadCount(r); i < n; i++)
+            {
+                var kind = r.ReadByte();
+                if (kind > (byte)BossAttackKind.Charge) throw new FormatException("Unknown boss attack.");
+                d.Boss.Attacks.Add(new BossAttackDefinition
+                {
+                    Kind = (BossAttackKind)kind, Damage = r.ReadInt32(), WindupSeconds = r.ReadSingle(), CooldownSeconds = r.ReadSingle(),
+                    Range = r.ReadSingle(), ArcDegrees = r.ReadSingle(), Radius = r.ReadSingle(), Speed = r.ReadSingle(),
+                });
+            }
+            for (int i = 0, n = ReadCount(r); i < n; i++) addsToResolve.Add((d.Boss, r.ReadInt32(), ReadVec(r)));
+            return d;
+        }
 
         internal static ModifierDefinition ReadModifier(BinaryReader r) => new ModifierDefinition
         {

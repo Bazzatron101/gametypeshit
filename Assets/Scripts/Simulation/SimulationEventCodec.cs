@@ -21,6 +21,7 @@ namespace HunterSystem.Simulation
             SkillChargeUnlocked, SkillSlotChanged, ModifierGranted, ModifierRevoked, SkillUnlocked, Explosion,
             ProjectileEnded, EnemyDefeated,
             RoomEntered, RoomCleared, CheckpointActivated, PlayerRevived, GateWiped, GateRestarted, GateCleared,
+            BossAttackStarted, BossEnraged, GateRewardGranted,
         }
 
         public static byte[] Encode(IEnumerable<SimulationEvent> events)
@@ -144,6 +145,17 @@ namespace HunterSystem.Simulation
                 case GateCleared _:
                     Head(w, Code.GateCleared, e);
                     break;
+                case BossAttackStarted b:
+                    Head(w, Code.BossAttackStarted, e); w.Write(b.Enemy.Value); w.Write((byte)b.Kind); SimulationWorld.WriteVec(w, b.Origin);
+                    SimulationWorld.WriteVec(w, b.Direction); w.Write(b.LandsAtTick);
+                    break;
+                case BossEnraged b:
+                    Head(w, Code.BossEnraged, e); w.Write(b.Enemy.Value);
+                    break;
+                case GateRewardGranted g:
+                    Head(w, Code.GateRewardGranted, e); w.Write(g.Player.Value); w.Write(g.Modifier != null);
+                    if (g.Modifier != null) SimulationWorld.WriteModifier(w, g.Modifier);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -220,6 +232,19 @@ namespace HunterSystem.Simulation
                 case Code.GateWiped: return new GateWiped(tick, r.ReadInt32());
                 case Code.GateRestarted: return new GateRestarted(tick, r.ReadInt32());
                 case Code.GateCleared: return new GateCleared(tick);
+                case Code.BossAttackStarted:
+                {
+                    var enemy = Enemy();
+                    var kind = r.ReadByte();
+                    if (kind > (byte)BossAttackKind.Charge) throw new FormatException("Unknown boss attack.");
+                    return new BossAttackStarted(tick, enemy, (BossAttackKind)kind, SimulationWorld.ReadVec(r), SimulationWorld.ReadVec(r), r.ReadInt32());
+                }
+                case Code.BossEnraged: return new BossEnraged(tick, Enemy());
+                case Code.GateRewardGranted:
+                {
+                    var player = Player();
+                    return new GateRewardGranted(tick, player, r.ReadBoolean() ? SimulationWorld.ReadModifier(r) : null);
+                }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }
         }

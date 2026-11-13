@@ -21,7 +21,8 @@ enough to simulate, and four points were not written anywhere. The developer dec
 - The gate's floor is the union of its rooms. Players and enemies cannot leave it; that is all a wall
   is. **The way onward is never locked** (developer's decision): players may run past a fight.
 - A room's enemies appear when a living player first steps into it, and may chase anywhere in the
-  gate. A room is cleared when its enemies are all defeated; the gate when every room is.
+  gate. A room is cleared when its enemies are all defeated. The gate is cleared when every room is, or,
+  in a gate with a boss, when the boss is defeated (ADR 0007).
 - Three seconds after a room is cleared its defeated enemies are removed from the world, so they do
   not ride along in every snapshot for the rest of the gate.
 - Gates live in the game's content and are named by id in snapshots, like skills. Host and guests
@@ -68,8 +69,8 @@ enough to simulate, and four points were not written anywhere. The developer dec
 
 ## Consequences
 
-- With the way always open, a party can run to the next checkpoint without clearing a room. Clearing
-  matters only for finishing the gate (and, later, its boss and reward: ticket 18).
+- With the way always open, a party can run to the next checkpoint without clearing a room. In a gate
+  with a boss, defeating the boss is what clears the gate (ADR 0007); without one, clearing every room is.
 - In co-op there is no cost to dying except waiting, and no limit. Two players can leapfrog between
   checkpoints. If that proves too forgiving, the knobs are the wipe rule and how far apart checkpoints
   are placed.

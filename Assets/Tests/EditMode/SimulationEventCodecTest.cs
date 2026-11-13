@@ -61,6 +61,10 @@ namespace HunterSystem.Tests
             new GateWiped(36, 2),
             new GateRestarted(37, 4),
             new GateCleared(38),
+            new BossAttackStarted(39, E, BossAttackKind.Charge, new Vec3(1f, 0f, 2f), new Vec3(0f, 0f, 1f), 60),
+            new BossEnraged(40, E),
+            new GateRewardGranted(41, P, Ember),
+            new GateRewardGranted(41, P, null),
         };
 
         [Test]

@@ -55,6 +55,8 @@ namespace HunterSystem.Tests
             Assert.That(All<ModifierDefinitionAsset>(), Is.SubsetOf(content.Modifiers));
             Assert.That(All<EnemyDefinitionAsset>(), Is.SubsetOf(content.Enemies));
             Assert.That(All<GateDefinitionAsset>(), Is.SubsetOf(content.Gates));
+            Assert.That(All<BossDefinitionAsset>(), Is.SubsetOf(content.Bosses));
+            Assert.That(content.Bosses, Is.Unique);
             Assert.That(content.Gates, Is.Unique);
             Assert.That(content.Skills, Is.Unique);
             Assert.That(content.Modifiers, Is.Unique);
@@ -86,14 +88,49 @@ namespace HunterSystem.Tests
                     }
                 }
 
+                foreach (var modifier in asset.RewardPool)
+                    Assert.That(content.Modifiers, Has.Member(modifier), $"{asset.name}: a reward that is not in the content list");
+                foreach (var room in asset.Rooms.Where(r => r.Boss != null))
+                {
+                    Assert.That(content.Bosses, Has.Member(room.Boss), $"{room.name}: a boss that is not in the content list");
+                    Assert.That(Mathf.Abs(room.BossOffset.x) <= room.Width / 2f && Mathf.Abs(room.BossOffset.z) <= room.Length / 2f, Is.True,
+                        $"{room.name}: the boss waits outside the room");
+                }
+
                 var gate = config.Gates.Single(g => g.Id == asset.Id);
                 var layout = new GateLayout(gate); // throws on a room with no floor
                 Assert.That(layout.Checkpoints, Is.Not.Empty, $"{asset.name}: at least one checkpoint");
                 Assert.That(gate.SoloRevives, Is.EqualTo(3), $"{asset.name}: the spec's three solo revives");
                 Assert.That(gate.Rooms.SelectMany(r => r.Spawns).Select(sp => sp.Enemy).Distinct().Count(),
-                    Is.EqualTo(asset.Rooms.SelectMany(r => r.Spawns).Select(sp => sp.enemy).Distinct().Count()),
+                    Is.EqualTo(asset.Rooms.SelectMany(r => r.Spawns).Select(sp => sp.enemy).Distinct().Count() +
+                               asset.Rooms.Where(r => r.Boss != null).Select(r => r.Boss).Distinct().Count()),
                     $"{asset.name}: each enemy type is one shared definition, so snapshots stay small");
             }
+        }
+
+        [Test]
+        public void EveryBossHasReadableAttacksAndUsableAdds()
+        {
+            var content = Content();
+            Assert.That(content.Bosses, Is.Not.Empty.And.All.Not.Null);
+            foreach (var boss in content.Bosses)
+            {
+                Assert.That(boss.Attacks, Is.Not.Empty, $"{boss.name}: attacks");
+                Assert.That(boss.Attacks.Select(a => a.kind), Is.Unique, $"{boss.name}: at most one attack of each kind");
+                Assert.That(boss.Attacks.Select(a => a.windupSeconds), Has.All.GreaterThanOrEqualTo(0.5f),
+                    $"{boss.name}: every telegraph long enough to read (half a second)");
+                Assert.That(boss.Attacks.Where(a => a.kind == BossAttackKind.Charge).Select(a => a.speed), Has.All.GreaterThan(0f),
+                    $"{boss.name}: a charge needs speed");
+                foreach (var add in boss.EnrageAdds)
+                    Assert.That(content.Enemies, Has.Member(add.enemy), $"{boss.name}: an add that is not in the content list");
+            }
+        }
+
+        [Test]
+        public void EveryGateWithABossHasARewardPool()
+        {
+            foreach (var gate in Content().Gates.Where(g => g.Rooms.Any(r => r != null && r.Boss != null)))
+                Assert.That(gate.RewardPool, Is.Not.Empty.And.All.Not.Null, $"{gate.name}: a boss gate gives a guaranteed reward");
         }
 
         [Test]

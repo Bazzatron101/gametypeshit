@@ -81,5 +81,37 @@ namespace HunterSystem.Tests
             Assert.That(hud.DeathPanelOpen, Is.False);
             Assert.That(hud.CurrentNotice, Does.Contain("2 of 3"));
         }
+
+        [UnityTest]
+        public IEnumerator TheBossShowsItsHealthAndMarksEachAttackOnTheFloor()
+        {
+            var hud = Object.FindAnyObjectByType<GateHud>();
+            var telegraphs = Object.FindAnyObjectByType<BossTelegraphView>();
+            Assert.That(telegraphs, Is.Not.Null, "the co-op scene needs the boss telegraph view");
+            var me = _runner.LocalPlayerId.Value;
+            var gate = _runner.World.Gate;
+            var chamber = gate.Layout.Rooms[gate.Layout.Rooms.Count - 1];
+            _runner.World.PlacePlayer(me, new Vec3(0f, 0f, chamber.MinZ + 2f)); // into the boss chamber
+
+            var sawTelegraph = false;
+            var deadline = Time.time + 6f;
+            while (!sawTelegraph && Time.time < deadline)
+            {
+                yield return null;
+                sawTelegraph = telegraphs.ShownCount > 0;
+            }
+
+            Assert.That(hud.BossShown, Is.True, "its health bar is up");
+            Assert.That(sawTelegraph, Is.True, "an attack was marked on the floor");
+
+            var boss = default(EnemyId);
+            foreach (var id in _runner.World.EnemyIds) if (_runner.World.GetEnemy(id).IsBoss) boss = id;
+            _runner.World.DamageEnemy(boss, me, 100000);
+            yield return new WaitForSeconds(0.2f);
+
+            Assert.That(_runner.World.Gate.IsCleared, Is.True);
+            Assert.That(hud.BossShown, Is.False);
+            Assert.That(hud.CurrentNotice, Does.Contain("Reward"));
+        }
     }
 }

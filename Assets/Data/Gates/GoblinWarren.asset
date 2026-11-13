@@ -22,6 +22,13 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 62ca9fc920efb2a4bb78af1ee3480749, type: 2}
   - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}
   - {fileID: 11400000, guid: ad749811c934d0041adbd71fee0a3526, type: 2}
+  - {fileID: 11400000, guid: b1896e5d7c6a7674da6b08604790d2a4, type: 2}
+  - {fileID: 11400000, guid: 0b9eaf047509f97418967a87809aff3d, type: 2}
   soloRevives: 3
   checkpointRadius: 2
   wipeDelaySeconds: 3
+  rewardPool:
+  - {fileID: 11400000, guid: 00261d8cc31b452459507cdd56036305, type: 2}
+  - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}
+  - {fileID: 11400000, guid: c27b3a3b1a9038b4589fb03218ff0cc0, type: 2}
+  - {fileID: 11400000, guid: 8d7f52e4a7a38da4195ded7bbc7bbe54, type: 2}

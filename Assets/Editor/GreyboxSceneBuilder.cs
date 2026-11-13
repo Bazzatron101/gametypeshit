@@ -156,8 +156,12 @@ namespace HunterSystem.Editor
                 ("localPlayerMaterial", GetOrCreateMaterial("Greybox_Player", new Color(0.2f, 0.45f, 0.85f))),
                 ("remotePlayerMaterial", GetOrCreateMaterial("Greybox_Ally", new Color(0.25f, 0.75f, 0.4f))),
                 ("swingMaterial", GetOrCreateMaterial("Greybox_Swing", new Color(1f, 0.85f, 0.3f))),
-                ("enemyMaterial", GetOrCreateMaterial("Greybox_Goblin", GoblinColour)));
+                ("enemyMaterial", GetOrCreateMaterial("Greybox_Goblin", GoblinColour)),
+                ("bossMaterial", GetOrCreateMaterial("Greybox_Boss", new Color(0.55f, 0.12f, 0.12f))));
 
+            Wire(simulation.AddComponent<BossTelegraphView>(),
+                ("areaMaterial", GetOrCreateMaterial("Greybox_TelegraphArea", new Color(0.55f, 0.18f, 0.12f))),
+                ("fillMaterial", GetOrCreateMaterial("Greybox_TelegraphFill", new Color(1f, 0.3f, 0.12f))));
             Wire(simulation.AddComponent<GateView>(),
                 ("floorMaterial", GetOrCreateMaterial("Greybox_GateFloor", new Color(0.42f, 0.44f, 0.5f))),
                 ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
@@ -277,7 +281,8 @@ namespace HunterSystem.Editor
             var skills = SkillData.Select(GetOrCreateSkill).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
-            var gates = new[] { GetOrCreateGoblinWarren() };
+            var gates = new[] { GetOrCreateGoblinWarren(modifiers) };
+            var bosses = new[] { GetOrCreateGoblinWarlord() };
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
             if (content == null)
@@ -290,7 +295,8 @@ namespace HunterSystem.Editor
                 WithEveryProjectAsset(content.Skills, skills),
                 WithEveryProjectAsset(content.Modifiers, modifiers),
                 WithEveryProjectAsset(content.Enemies, enemies),
-                WithEveryProjectAsset(content.Gates, gates));
+                WithEveryProjectAsset(content.Gates, gates),
+                WithEveryProjectAsset(content.Bosses, bosses));
             EditorUtility.SetDirty(content);
             AssetDatabase.SaveAssets();
             // Saving re-imports the asset; hand back the reloaded object, or scene references to it come out empty.
@@ -341,12 +347,38 @@ namespace HunterSystem.Editor
         private static RoomPieceAsset GetOrCreateRoom(string name, float width, float length, bool checkpoint, params RoomPieceAsset.Spawn[] spawns) =>
             GetOrCreate<RoomPieceAsset>("Rooms", name, a => a.Set(width, length, spawns, checkpoint));
 
+        private static BossDefinitionAsset.Attack BossAttack(BossAttackKind kind, int damage, float windup, float cooldown,
+            float range = 0f, float arc = 120f, float radius = 0f, float speed = 0f) => new BossDefinitionAsset.Attack
+        {
+            kind = kind, damage = damage, windupSeconds = windup, cooldownSeconds = cooldown, range = range, arcDegrees = arc, radius = radius, speed = speed,
+        };
+
         /// <summary>
-        /// The first gate, built from six kit pieces (the corridor is used three times): an empty
-        /// entrance hall, then three fights of rising size joined by corridors, with a checkpoint
-        /// in the first two. Greybox content for proving the gate runtime, not a designed dungeon.
+        /// The first boss (ticket 18): a Goblin Warlord. A sweep in front (get behind it), a slam all
+        /// around it (get out), and a charge at anyone out of reach (step aside), each with a long
+        /// readable telegraph. At half health it enrages: quicker, and four goblins join.
         /// </summary>
-        private static GateDefinitionAsset GetOrCreateGoblinWarren()
+        private static BossDefinitionAsset GetOrCreateGoblinWarlord()
+        {
+            var goblin = GetOrCreateGoblinDefinition();
+            BossDefinitionAsset.Add At(float x, float z) => new BossDefinitionAsset.Add { enemy = goblin, offset = new Vector3(x, 0f, z) };
+            return GetOrCreate<BossDefinitionAsset>("Bosses", "Goblin Warlord", a => a.Set("Goblin Warlord", health: 600, speed: 2.4f, stop: 1.8f, xp: 300,
+                new[]
+                {
+                    BossAttack(BossAttackKind.Sweep, damage: 22, windup: 0.9f, cooldown: 1.2f, range: 4.5f, arc: 130f),
+                    BossAttack(BossAttackKind.Slam, damage: 30, windup: 1.1f, cooldown: 1.6f, radius: 3.5f),
+                    BossAttack(BossAttackKind.Charge, damage: 26, windup: 1.0f, cooldown: 1.8f, range: 12f, radius: 1.2f, speed: 11f),
+                },
+                new[] { At(-4f, 0f), At(4f, 0f), At(-2f, -3f), At(2f, -3f) }));
+        }
+
+        /// <summary>
+        /// The first gate, built from eight kit pieces (the corridor is used three times): an empty
+        /// entrance hall, three fights of rising size joined by corridors with a checkpoint in the
+        /// first two, then an antechamber checkpoint and the Warlord's chamber. Greybox content for
+        /// proving the gate runtime, not a designed dungeon.
+        /// </summary>
+        private static GateDefinitionAsset GetOrCreateGoblinWarren(ModifierDefinitionAsset[] rewardPool)
         {
             var goblin = GetOrCreateGoblinDefinition();
             var hobgoblin = GetOrCreateHobgoblinDefinition();
@@ -358,8 +390,12 @@ namespace HunterSystem.Editor
                 At(goblin, -5f, 3f), At(goblin, 5f, 3f), At(goblin, -3f, 7f), At(goblin, 3f, 7f), At(hobgoblin, 0f, 8f));
             var hall = GetOrCreateRoom("Great Hall", 18f, 22f, checkpoint: false,
                 At(goblin, -6f, 2f), At(goblin, 6f, 2f), At(goblin, -3f, 6f), At(goblin, 3f, 6f), At(hobgoblin, -4f, 9f), At(hobgoblin, 4f, 9f));
+            var bossChamber = GetOrCreate<RoomPieceAsset>("Rooms", "Warlord Chamber",
+                a => a.Set(22f, 26f, new RoomPieceAsset.Spawn[0], checkpoint: false, roomBoss: GetOrCreateGoblinWarlord(), bossAt: new Vector3(0f, 0f, 6f)));
+            var antechamber = GetOrCreateRoom("Antechamber", 8f, 8f, checkpoint: true); // a checkpoint just before the boss
             return GetOrCreate<GateDefinitionAsset>("Gates", "Goblin Warren",
-                a => a.Set("goblin-warren", "Goblin Warren", new[] { entrance, corridor, den, corridor, guardRoom, corridor, hall }));
+                a => a.Set("goblin-warren", "Goblin Warren", new[] { entrance, corridor, den, corridor, guardRoom, corridor, hall, antechamber, bossChamber },
+                    rewardPool));
         }
 
         /// <summary>A settings asset at a fixed path, created with its field defaults if missing and never overwritten.</summary>

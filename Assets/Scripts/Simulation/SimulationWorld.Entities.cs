@@ -98,6 +98,23 @@ namespace HunterSystem.Simulation
             /// <summary>0 when not winding up.</summary>
             public int AttackLandsAtTick;
             public Player AttackTarget;
+
+            /// <summary>Which way it faces on the floor (unit length). Bosses turn slowly, so getting behind them works.</summary>
+            public Vec3 Facing = new Vec3(0f, 0f, -1f);
+
+            // Bosses only (ticket 18).
+            /// <summary>Index into the boss's attacks while one is winding up or charging; -1 otherwise.</summary>
+            public int BossAttack = -1;
+            public Vec3 AttackOrigin;
+            public Vec3 AttackDirection;
+            public bool Charging;
+            public float ChargeTravelled;
+            /// <summary>How far the current charge will run: its range, or less when a wall is in the way.</summary>
+            public float ChargeReach;
+            public readonly List<int> ChargeHit = new List<int>();
+            public bool Enraged;
+            /// <summary>Enraged this tick; its adds arrive once the enemies have all acted.</summary>
+            public bool EnragePending;
         }
 
         /// <summary>A skill being charged: which one, from which slot, and since which tick.</summary>

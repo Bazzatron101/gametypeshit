@@ -79,7 +79,12 @@ namespace HunterSystem.Game
         private void LateUpdate()
         {
             var gate = Gate;
-            if (gate == null) return;
+            if (gate == null)
+            {
+                _boss = null;
+                return;
+            }
+            FindBoss();
             var me = Me;
             foreach (var e in _runner.FrameEvents)
             {
@@ -105,6 +110,14 @@ namespace HunterSystem.Game
                     case GateCleared _:
                         Notify($"{gate.Definition.Name} cleared.");
                         break;
+                    case BossEnraged b:
+                        Notify($"{_runner.World.GetEnemy(b.Enemy).Definition.Name} is enraged! It strikes faster, and help has arrived.");
+                        break;
+                    case GateRewardGranted r when r.Player == me:
+                        Notify(r.Modifier != null
+                            ? $"{gate.Definition.Name} cleared.  Reward: {r.Modifier.Name}, kept on your hunter."
+                            : $"{gate.Definition.Name} cleared.  You already hold every reward this gate offers.");
+                        break;
                 }
             }
         }
@@ -129,8 +142,46 @@ namespace HunterSystem.Game
             GUI.Label(new Rect(0, 10, Screen.width, 26), header, _title);
 
             if (CurrentNotice != null) GUI.Label(new Rect(0, 40, Screen.width, 24), CurrentNotice, _notice);
+            DrawBossBar();
             if (DeathPanelOpen) DrawDeathPanel(gate);
         }
+
+        /// <summary>The boss's name and health across the top while it is out and standing.</summary>
+        private void DrawBossBar()
+        {
+            if (!_boss.HasValue || !_runner.World.HasEnemy(_boss.Value)) return;
+            {
+                var enemy = _runner.World.GetEnemy(_boss.Value);
+                var width = Mathf.Min(560f, Screen.width - 40f);
+                var area = new Rect((Screen.width - width) / 2f, 70, width, 18);
+                GUI.Label(new Rect(area.x, area.y - 22, width, 20), enemy.IsEnraged ? enemy.Definition.Name + "  (ENRAGED)" : enemy.Definition.Name, _title);
+                GUI.Box(area, GUIContent.none);
+                var fill = new Rect(area.x + 2, area.y + 2, (width - 4) * enemy.Health / (float)enemy.Definition.MaxHealth, area.height - 4);
+                var old = GUI.color;
+                GUI.color = enemy.IsEnraged ? new Color(1f, 0.35f, 0.2f) : new Color(0.85f, 0.15f, 0.15f);
+                GUI.DrawTexture(fill, Texture2D.whiteTexture);
+                GUI.color = old;
+            }
+        }
+
+        /// <summary>The standing boss whose health bar is up, if any; found each frame.</summary>
+        private EnemyId? _boss;
+
+        private void FindBoss()
+        {
+            _boss = null;
+            var world = _runner.World;
+            foreach (var id in world.EnemyIds)
+            {
+                var enemy = world.GetEnemy(id);
+                if (!enemy.IsBoss || enemy.IsDefeated) continue;
+                _boss = id;
+                return;
+            }
+        }
+
+        /// <summary>True while a boss's health bar is on screen (for tests).</summary>
+        public bool BossShown => _boss.HasValue;
 
         private void DrawDeathPanel(GateState gate)
         {
