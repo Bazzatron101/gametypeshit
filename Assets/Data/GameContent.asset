@@ -38,3 +38,4 @@ MonoBehaviour:
   hub: {fileID: 11400000, guid: 18193dd91d58c354d8fbd5393665ae35, type: 2}
   scenes:
   - {fileID: 11400000, guid: b384ddddeda9e7b48baea347225fdcec, type: 2}
+  partyScaling: {fileID: 11400000, guid: 0c27ba66a0ac06047b8392d97a5c6987, type: 2}

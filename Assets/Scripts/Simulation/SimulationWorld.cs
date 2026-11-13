@@ -111,7 +111,10 @@ namespace HunterSystem.Simulation
                 p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready);
         }
 
-        public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
+        public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
+
+        /// <summary>Spawns an enemy, scaled by <paramref name="tier"/> when given (gate rooms and bosses' adds), as authored otherwise.</summary>
+        private EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position, PartyTier tier)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
             var id = new EnemyId(_nextEnemyId++);
@@ -122,8 +125,10 @@ namespace HunterSystem.Simulation
                 WindupTicks = Math.Max(1, SecondsToTicks(definition.AttackWindupSeconds)),
                 AttackCooldownTicks = SecondsToTicks(definition.AttackCooldownSeconds),
                 Position = position,
-                Health = definition.MaxHealth,
+                MaxHealth = Math.Max(1, PartyScalingDefinition.Scale(definition.MaxHealth, tier?.HealthPercent ?? 100)),
+                DamagePercent = tier?.DamagePercent ?? 100,
             };
+            enemy.Health = enemy.MaxHealth;
             var nearest = NearestLivePlayer(position, out _);
             if (nearest != null) FaceTowards(enemy, Flat(nearest.Position - position));
             _enemies.Add(enemy);
@@ -135,7 +140,7 @@ namespace HunterSystem.Simulation
         public EnemyState GetEnemy(EnemyId id)
         {
             if (!_enemiesById.TryGetValue(id, out var e)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
-            return new EnemyState(e.Id, e.Definition, e.Position, e.Health, e.Facing,
+            return new EnemyState(e.Id, e.Definition, e.Position, e.Health, e.MaxHealth, e.Facing,
                 e.BossAttack >= 0 ? e.Definition.Boss.Attacks[e.BossAttack] : null, e.AttackOrigin, e.AttackDirection,
                 e.AttackLandsAtTick, e.Charging, e.Enraged, e.ChargeReach);
         }

@@ -50,6 +50,9 @@ namespace HunterSystem.Simulation
         /// <summary>The hub the party gathers in between gates, or null for a game without one (tests, the arena).</summary>
         public HubDefinition Hub { get; set; }
 
+        /// <summary>Party-size scaling of the enemies that gates spawn (ticket 27). The default changes nothing.</summary>
+        public PartyScalingDefinition PartyScaling { get; set; } = new PartyScalingDefinition();
+
         /// <summary>Text-only story scenes and what makes each one play (ticket 20).</summary>
         public IReadOnlyList<StorySceneDefinition> StoryScenes { get; set; } = Array.Empty<StorySceneDefinition>();
     }

@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW6");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW7");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -58,6 +58,8 @@ namespace HunterSystem.Simulation
                 w.Write(e.AttackCooldownTicks);
                 WriteVec(w, e.Position);
                 w.Write(e.Health);
+                w.Write(e.MaxHealth);
+                w.Write(e.DamagePercent);
                 w.Write(e.AttackReadyAtTick);
                 w.Write(e.AttackLandsAtTick);
                 w.Write(e.AttackTarget != null);
@@ -344,6 +346,8 @@ namespace HunterSystem.Simulation
                     AttackCooldownTicks = r.ReadInt32(),
                     Position = ReadVec(r),
                     Health = r.ReadInt32(),
+                    MaxHealth = r.ReadInt32(),
+                    DamagePercent = r.ReadInt32(),
                     AttackReadyAtTick = r.ReadInt32(),
                     AttackLandsAtTick = r.ReadInt32(),
                 };

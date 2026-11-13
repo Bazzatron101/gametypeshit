@@ -175,6 +175,24 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void PartyScalingMakesBiggerPartiesFaceMoreNeverLess()
+        {
+            var content = Content();
+            Assert.That(content.PartyScaling, Is.Not.Null, "the content has party scaling");
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+            var tiers = new[] { config.PartyScaling.Solo, config.PartyScaling.Small, config.PartyScaling.Large };
+            Assert.That((tiers[0].HealthPercent, tiers[0].DamagePercent, tiers[0].SpawnPercent), Is.EqualTo((100, 100, 100)),
+                "solo is the gate as authored, so every normal gate stays soloable");
+            for (var i = 1; i < tiers.Length; i++)
+            {
+                Assert.That(tiers[i].HealthPercent, Is.GreaterThanOrEqualTo(tiers[i - 1].HealthPercent), "health never drops as the party grows");
+                Assert.That(tiers[i].DamagePercent, Is.GreaterThanOrEqualTo(tiers[i - 1].DamagePercent), "damage never drops as the party grows");
+                Assert.That(tiers[i].SpawnPercent, Is.GreaterThanOrEqualTo(tiers[i - 1].SpawnPercent), "numbers never drop as the party grows");
+            }
+        }
+
+        [Test]
         public void EveryGateWithABossHasARewardPool()
         {
             foreach (var gate in Content().Gates.Where(g => g.Rooms.Any(r => r != null && r.Boss != null)))

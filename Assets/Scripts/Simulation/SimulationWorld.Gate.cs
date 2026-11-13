@@ -221,6 +221,42 @@ namespace HunterSystem.Simulation
         internal int GateAttempt() => _gate.Attempt;
         internal bool GateIsSolo() => PresentCount() == 1;
 
+        internal PartyTierKind GatePartyTier() => PartyScalingDefinition.TierFor(PresentCount());
+
+        /// <summary>The tier for the party present now.</summary>
+        private PartyTier CurrentPartyTier() => (_config.PartyScaling ?? Unscaled)[PartyScalingDefinition.TierFor(PresentCount())];
+
+        private static readonly PartyScalingDefinition Unscaled = new PartyScalingDefinition();
+
+        /// <summary>
+        /// The spawns a tier asks for. The authored ones come first, in their authored order
+        /// (bosses included, never copied), so solo is exactly the gate as authored. Then come any
+        /// extra copies, spread evenly across the authored mix (so a room's Hobgoblin gets copies
+        /// too), each a step to one side of the one it copies. A tier below 100% keeps the first
+        /// authored ones. The same list on every machine.
+        /// </summary>
+        private static IEnumerable<(RoomSpawn spawn, Vec3 offset)> Scaled(IReadOnlyList<RoomSpawn> spawns, PartyTier tier)
+        {
+            var copyable = spawns.Where(s => s.Enemy.Boss == null).ToList();
+            var wanted = tier == null ? copyable.Count : PartyScalingDefinition.Count(copyable.Count, tier.SpawnPercent);
+            var kept = 0;
+            foreach (var spawn in spawns)
+            {
+                if (spawn.Enemy.Boss == null && kept++ >= wanted) continue; // a tier asking for fewer keeps the first ones
+                yield return (spawn, spawn.OffsetFromCentre);
+            }
+
+            var extras = wanted - copyable.Count;
+            for (var j = 0; j < extras; j++)
+            {
+                var original = copyable[(int)((long)j * copyable.Count / extras)];
+                var round = 1 + j / copyable.Count;
+                var angle = (j + 1) * GoldenAngleRadians;
+                var step = new Vec3((float)Math.Cos(angle) * 1.5f * round, 0f, (float)Math.Sin(angle) * 1.5f * round);
+                yield return (original, original.OffsetFromCentre + step);
+            }
+        }
+
         internal int GateRevivesLeft(PlayerId player) =>
             Math.Max(0, _gate.Definition.SoloRevives - (_gate.RevivesUsed.TryGetValue(player, out var used) ? used : 0));
 
@@ -331,9 +367,12 @@ namespace HunterSystem.Simulation
             {
                 if (_gate.Rooms[room] == RoomState.NotEntered && AnyoneStandingIn(layout.Rooms[room]))
                 {
+                    // Scaled for the party present now (ticket 27); a later join changes only later rooms.
                     var centre = layout.Rooms[room].Centre;
-                    foreach (var spawn in _gate.Definition.Rooms[room].Spawns)
-                        _gate.RoomEnemies[room].Add(SpawnEnemy(spawn.Enemy, layout.Confine(centre + spawn.OffsetFromCentre)));
+                    var tier = CurrentPartyTier();
+                    var floor = layout.Rooms[room];
+                    foreach (var (spawn, offset) in Scaled(_gate.Definition.Rooms[room].Spawns, tier))
+                        _gate.RoomEnemies[room].Add(SpawnEnemy(spawn.Enemy, floor.Nearest(centre + offset), tier)); // in this room, not the next
                     _gate.Rooms[room] = RoomState.Entered;
                     _events.Add(new RoomEntered(tick, room));
                 }

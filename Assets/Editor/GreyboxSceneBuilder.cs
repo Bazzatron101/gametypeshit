@@ -36,6 +36,7 @@ namespace HunterSystem.Editor
         private const string ProgressionPath = "Assets/Data/Progression.asset";
         private const string PlayerTuningPath = "Assets/Data/PlayerTuning.asset";
         private const string HubPath = "Assets/Data/Hub.asset";
+        private const string PartyScalingPath = "Assets/Data/PartyScaling.asset";
         private const string ContentPath = "Assets/Data/GameContent.asset";
         private static readonly Color GoblinColour = new Color(0.8f, 0.2f, 0.2f);
 
@@ -298,6 +299,7 @@ namespace HunterSystem.Editor
             var bosses = new[] { GetOrCreateGoblinWarlord() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
             var scenes = new[] { GetOrCreateArrivalScene() };
+            var scaling = GetOrCreateSingle<PartyScalingAsset>(PartyScalingPath); // its defaults are the starting tiers
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
             if (content == null)
@@ -313,7 +315,8 @@ namespace HunterSystem.Editor
                 WithEveryProjectAsset(content.Gates, gates),
                 WithEveryProjectAsset(content.Bosses, bosses),
                 hub,
-                WithEveryProjectAsset(content.Scenes, scenes));
+                WithEveryProjectAsset(content.Scenes, scenes),
+                scaling);
             EditorUtility.SetDirty(content);
             AssetDatabase.SaveAssets();
             // Saving re-imports the asset; hand back the reloaded object, or scene references to it come out empty.

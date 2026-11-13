@@ -218,6 +218,9 @@ namespace HunterSystem.Simulation
         /// <summary>Solo revives the player has left this attempt. Kept per player, whoever comes and goes.</summary>
         public int RevivesLeft(PlayerId player) => _world.GateRevivesLeft(player);
 
+        /// <summary>The party-size tier for the players present now: what the next enemies to spawn are scaled for.</summary>
+        public PartyTierKind PartyTier => _world.GatePartyTier();
+
         /// <summary>True while exactly one player is present: the solo death rule applies.</summary>
         public bool IsSolo => _world.GateIsSolo();
 

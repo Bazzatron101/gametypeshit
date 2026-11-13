@@ -96,6 +96,13 @@ namespace HunterSystem.Simulation
             public int AttackCooldownTicks;
             public Vec3 Position;
             public int Health;
+
+            /// <summary>Its health when full: the definition's, scaled for the party size when it spawned.</summary>
+            public int MaxHealth;
+
+            /// <summary>Its hits deal this percentage of their authored damage (party-size scaling).</summary>
+            public int DamagePercent = 100;
+
             public int AttackReadyAtTick;
 
             /// <summary>0 when not winding up.</summary>

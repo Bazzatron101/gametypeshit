@@ -163,7 +163,7 @@ namespace HunterSystem.Game
                 var area = new Rect((Screen.width - width) / 2f, 70, width, 18);
                 GUI.Label(new Rect(area.x, area.y - 22, width, 20), enemy.IsEnraged ? enemy.Definition.Name + "  (ENRAGED)" : enemy.Definition.Name, _title);
                 GUI.Box(area, GUIContent.none);
-                var fill = new Rect(area.x + 2, area.y + 2, (width - 4) * enemy.Health / (float)enemy.Definition.MaxHealth, area.height - 4);
+                var fill = new Rect(area.x + 2, area.y + 2, (width - 4) * enemy.Health / (float)enemy.MaxHealth, area.height - 4);
                 var old = GUI.color;
                 GUI.color = enemy.IsEnraged ? new Color(1f, 0.35f, 0.2f) : new Color(0.85f, 0.15f, 0.15f);
                 GUI.DrawTexture(fill, Texture2D.whiteTexture);

@@ -198,7 +198,7 @@ namespace HunterSystem.Simulation
                 if (player.IsCharging) CounterWithCharge(player, boss, tick); // a perfect dodge
                 return;
             }
-            var amount = player.TakeDamage(attack.Damage, out var defeated);
+            var amount = player.TakeDamage(PartyScalingDefinition.Scale(attack.Damage, boss.DamagePercent), out var defeated);
             if (amount == 0) return;
             _events.Add(new PlayerDamaged(tick, boss.Id, player.Id, amount, player.Health));
             if (defeated) _events.Add(new PlayerDefeated(tick, player.Id, boss.Id));
@@ -231,7 +231,7 @@ namespace HunterSystem.Simulation
         {
             var boss = enemy.Definition.Boss;
             if (boss == null || enemy.Enraged || enemy.Health <= 0 || boss.EnrageAtHealthPercent <= 0) return;
-            if ((long)enemy.Health * 100 > (long)enemy.Definition.MaxHealth * boss.EnrageAtHealthPercent) return;
+            if ((long)enemy.Health * 100 > (long)enemy.MaxHealth * boss.EnrageAtHealthPercent) return;
             enemy.Enraged = true;
             enemy.EnragePending = true;
         }
@@ -248,11 +248,13 @@ namespace HunterSystem.Simulation
             {
                 boss.EnragePending = false;
                 _events.Add(new BossEnraged(tick, boss.Id));
-                foreach (var add in boss.Definition.Boss.EnrageAdds)
+                // In a gate, its help is scaled for the party there now, like any room's enemies.
+                var tier = _gate != null ? CurrentPartyTier() : null;
+                foreach (var (add, offset) in Scaled(boss.Definition.Boss.EnrageAdds, tier))
                 {
-                    var at = boss.Position + add.OffsetFromCentre;
+                    var at = boss.Position + offset;
                     if (_gate != null) at = _gate.Layout.Confine(at);
-                    var id = SpawnEnemy(add.Enemy, at);
+                    var id = SpawnEnemy(add.Enemy, at, tier);
                     JoinBossRoom(boss.Id, id); // so a wipe takes them away with the boss
                 }
             }
