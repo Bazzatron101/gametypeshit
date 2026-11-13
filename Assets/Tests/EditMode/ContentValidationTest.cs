@@ -144,6 +144,37 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void EveryStorySceneHasLinesAndAValidTrigger()
+        {
+            var content = Content();
+            Assert.That(content.Scenes, Is.Not.Empty.And.All.Not.Null, "the content has a story scene");
+            Assert.That(All<TextSceneAsset>(), Is.SubsetOf(content.Scenes));
+            Assert.That(content.Scenes.Select(s => s.Id), Is.Unique, "scene ids name scenes in saves");
+            foreach (var scene in content.Scenes)
+            {
+                Assert.That(scene.Id, Is.Not.Empty, scene.name);
+                Assert.That(scene.Lines, Is.Not.Empty, $"{scene.name}: lines");
+                Assert.That(scene.Lines.Select(l => l.text), Has.All.Not.Empty, $"{scene.name}: an empty line");
+                if (scene.Trigger == StoryTrigger.GateCleared)
+                    Assert.That(content.Gates, Has.Member(scene.Gate), $"{scene.name}: plays after a gate that is not in the content");
+            }
+        }
+
+        [Test]
+        public void ListTheWritingStillToDo()
+        {
+            // Not a failure: a list for the developer of every text slot still holding its "write me" marker.
+            var content = Content();
+            var unwritten = content.Gates.Where(g => g.Intel == null || g.Intel.Contains(TextSceneAsset.Unwritten)).Select(g => $"gate intel: {g.DisplayName}")
+                .Concat(content.Scenes.SelectMany(s => s.Lines.Select((l, i) => (s, l, i)))
+                    .Where(x => (x.l.text ?? "").Contains(TextSceneAsset.Unwritten) || (x.l.speaker ?? "").StartsWith("["))
+                    .Select(x => $"scene {x.s.Id}, line {x.i + 1}: {x.l.text}"))
+                .ToList();
+            TestContext.WriteLine(unwritten.Count == 0 ? "All text is written." : $"{unwritten.Count} text slots to write:\n  " + string.Join("\n  ", unwritten));
+            Assert.Pass($"{unwritten.Count} text slots to write");
+        }
+
+        [Test]
         public void EveryGateWithABossHasARewardPool()
         {
             foreach (var gate in Content().Gates.Where(g => g.Rooms.Any(r => r != null && r.Boss != null)))

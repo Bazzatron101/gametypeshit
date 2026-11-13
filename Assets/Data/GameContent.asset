@@ -36,3 +36,5 @@ MonoBehaviour:
   bosses:
   - {fileID: 11400000, guid: 7f9a054aa1138ab43957f11c2db0c5d1, type: 2}
   hub: {fileID: 11400000, guid: 18193dd91d58c354d8fbd5393665ae35, type: 2}
+  scenes:
+  - {fileID: 11400000, guid: b384ddddeda9e7b48baea347225fdcec, type: 2}

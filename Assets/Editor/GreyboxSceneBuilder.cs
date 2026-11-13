@@ -169,6 +169,7 @@ namespace HunterSystem.Editor
                 ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
                 ("boardMaterial", GetOrCreateMaterial("Greybox_GateBoard", new Color(0.25f, 0.4f, 0.75f))));
             simulation.AddComponent<GateBoard>();
+            simulation.AddComponent<TextScenePlayer>();
 
             Wire(simulation.AddComponent<BossTelegraphView>(),
                 ("areaMaterial", GetOrCreateMaterial("Greybox_TelegraphArea", new Color(0.55f, 0.18f, 0.12f))),
@@ -296,6 +297,7 @@ namespace HunterSystem.Editor
             var gates = new[] { GetOrCreateGoblinWarren(modifiers) };
             var bosses = new[] { GetOrCreateGoblinWarlord() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
+            var scenes = new[] { GetOrCreateArrivalScene() };
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
             if (content == null)
@@ -310,7 +312,8 @@ namespace HunterSystem.Editor
                 WithEveryProjectAsset(content.Enemies, enemies),
                 WithEveryProjectAsset(content.Gates, gates),
                 WithEveryProjectAsset(content.Bosses, bosses),
-                hub);
+                hub,
+                WithEveryProjectAsset(content.Scenes, scenes));
             EditorUtility.SetDirty(content);
             AssetDatabase.SaveAssets();
             // Saving re-imports the asset; hand back the reloaded object, or scene references to it come out empty.
@@ -410,6 +413,25 @@ namespace HunterSystem.Editor
             return GetOrCreate<GateDefinitionAsset>("Gates", "Goblin Warren",
                 a => a.Set("goblin-warren", "Goblin Warren", new[] { entrance, corridor, den, corridor, guardRoom, corridor, hall, antechamber, bossChamber },
                     rewardPool));
+        }
+
+        /// <summary>
+        /// The first story scene (ticket 20): it plays the first time a host's world reaches the hub.
+        /// Every line is a blank marker: the words are the developer's to write (ticket 16).
+        /// </summary>
+        private static TextSceneAsset GetOrCreateArrivalScene()
+        {
+            TextSceneAsset.Line Blank(string who, string what) => new TextSceneAsset.Line
+            {
+                speaker = who, text = $"[{what}: {TextSceneAsset.Unwritten}]",
+            };
+            return GetOrCreate<TextSceneAsset>("Scenes", "Arrival", a => a.Set("arrival", StoryTrigger.FirstHubArrival, new[]
+            {
+                Blank("", "Narration: arriving at the guild hall"),
+                Blank("[Guild NPC]", "A guild member greets the new E-rank hunter"),
+                Blank("System", "The System's first words"),
+                Blank("[Guild NPC]", "Points the hunter to the gate board"),
+            }));
         }
 
         /// <summary>A settings asset at a fixed path, created with its field defaults if missing and never overwritten.</summary>

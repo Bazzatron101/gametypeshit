@@ -32,6 +32,8 @@ namespace HunterSystem.Game
         // The local player's character: loaded from its save at the start, saved as it progresses.
         private PlayerId? _offlineLocalId;
         private bool _savedOnExit;
+        private string _saveRoot;
+        private bool _savesDisabled;
 
         private readonly Dictionary<PlayerId, IPlayerCommandSource> _sources = new Dictionary<PlayerId, IPlayerCommandSource>();
         private readonly Dictionary<PlayerId, PlayerCommandBuffer> _buffers = new Dictionary<PlayerId, PlayerCommandBuffer>();
@@ -82,13 +84,19 @@ namespace HunterSystem.Game
         {
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
-            if (!useHub) _config.Hub = null;
+            if (!useHub)
+            {
+                _config.Hub = null;
+                _config.StoryScenes = System.Array.Empty<StorySceneDefinition>(); // the story is told around the hub
+            }
             _offlineWorld = new SimulationWorld(_config);
             _clock = new FixedTimestepClock(_config.TickRate);
 
-            Saves = new CharacterSaves(GameSaves.Root, GameSaves.Cloud);
-            Autosave = new CharacterAutosave(Saves) { Enabled = !GameSaves.Disabled };
-            Character = GameSaves.Disabled ? CharacterRecord.New() : Saves.LoadOrNew();
+            _saveRoot = GameSaves.Root; // this runner saves where it loaded from, even if the folder setting changes later
+            _savesDisabled = GameSaves.Disabled;
+            Saves = new CharacterSaves(_saveRoot, GameSaves.Cloud);
+            Autosave = new CharacterAutosave(Saves) { Enabled = !_savesDisabled };
+            Character = _savesDisabled ? CharacterRecord.New() : Saves.LoadOrNew();
             if (Saves.LastProblemOnLoad != null) Debug.LogWarning(Saves.LastProblemOnLoad);
 
             foreach (var view in FindObjectsByType<PlayerView>(FindObjectsSortMode.None))
@@ -126,8 +134,9 @@ namespace HunterSystem.Game
             if (IsOnline) throw new InvalidOperationException("Already online.");
             Host = new HostSession(_config, transport, spawnPoint, snapshotEveryTicks);
             Host.AddLocalPlayer(Character);
-            HostWorld = GameSaves.Disabled ? new WorldRecord() : new WorldSaves(GameSaves.Root).LoadOrNew();
+            HostWorld = _savesDisabled ? new WorldRecord() : new WorldSaves(_saveRoot).LoadOrNew();
             Host.World.SetClearedGates(HostWorld.ClearedGates); // so the board, and guests, see them
+            Host.World.SetSeenStoryScenes(HostWorld.SeenStoryScenes); // so a scene plays once per world
             StartLocalInput();
         }
 
@@ -199,7 +208,7 @@ namespace HunterSystem.Game
 
             try
             {
-                if (Host != null && HostWorld != null && !GameSaves.Disabled) new WorldSaves(GameSaves.Root).Save(HostWorld);
+                if (Host != null && HostWorld != null && !_savesDisabled) new WorldSaves(_saveRoot).Save(HostWorld);
             }
             catch (Exception e)
             {
@@ -345,7 +354,7 @@ namespace HunterSystem.Game
                 {
                     Host.Tick(command);
                     _frameEvents.AddRange(Host.World.Events);
-                    RecordClears(Host.World.Events);
+                    RecordHostWorldProgress(Host.World.Events);
                 }
                 else
                 {
@@ -355,24 +364,35 @@ namespace HunterSystem.Game
             }
         }
 
-        /// <summary>The host's world keeps which gates it has cleared (ADR 0005: host-world progress), saved at once.</summary>
-        private void RecordClears(IReadOnlyList<SimulationEvent> events)
+        /// <summary>The host's world keeps which gates it has cleared and which story scenes it has played (ADR 0005: host-world progress), saved at once.</summary>
+        private void RecordHostWorldProgress(IReadOnlyList<SimulationEvent> events)
         {
             if (HostWorld == null) return;
             foreach (var e in events)
             {
+                if (e is StorySceneStarted scene && !HostWorld.SeenStoryScenes.Contains(scene.SceneId))
+                {
+                    HostWorld.SeenStoryScenes.Add(scene.SceneId);
+                    SaveHostWorld();
+                    continue;
+                }
                 var id = (e as GateCleared)?.GateId;
                 if (id == null || HostWorld.ClearedGates.Contains(id)) continue;
                 HostWorld.ClearedGates.Add(id);
-                if (GameSaves.Disabled) continue;
-                try
-                {
-                    new WorldSaves(GameSaves.Root).Save(HostWorld);
-                }
-                catch (Exception error)
-                {
-                    Debug.LogError("Could not save the world: " + error.Message);
-                }
+                SaveHostWorld();
+            }
+        }
+
+        private void SaveHostWorld()
+        {
+            if (_savesDisabled) return;
+            try
+            {
+                new WorldSaves(_saveRoot).Save(HostWorld);
+            }
+            catch (Exception error)
+            {
+                Debug.LogError("Could not save the world: " + error.Message);
             }
         }
 

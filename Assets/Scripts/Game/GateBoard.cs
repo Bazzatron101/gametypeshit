@@ -6,17 +6,18 @@ using UnityEngine.InputSystem;
 namespace HunterSystem.Game
 {
     /// <summary>
-    /// The gate board in the hub (ticket 19). Walk up to it and press E: it lists the gates (with
-    /// the ones this host's world has cleared), shows who in the party is ready, and lets each
-    /// player mark themselves ready. The host takes the party in once everyone present is ready.
+    /// The gate board in the hub (tickets 19 and 20). Walk up to it and press E: it lists the gates
+    /// (with the ones this host's world has cleared) and the System's intel on each, shows who in the
+    /// party is ready, and lets each player mark themselves ready. The host takes the party in once everyone present is ready.
     /// Readiness goes to the simulation as a command, like any input; starting is the host's.
     /// </summary>
     public sealed class GateBoard : MonoBehaviour
     {
         private SimulationRunner _runner;
         private ThirdPersonCamera _camera;
-        private GUIStyle _title, _label, _button;
+        private GUIStyle _title, _label, _button, _intel;
         private string _message;
+        private TextScenePlayer _scenes;
 
         /// <summary>True while the board's panel is open (for tests).</summary>
         public bool IsOpen { get; private set; }
@@ -44,6 +45,8 @@ namespace HunterSystem.Game
             if (IsOpen && !InReach) SetOpen(false); // walked away, or the party left the hub
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
+            if (_scenes == null) _scenes = FindAnyObjectByType<TextScenePlayer>();
+            if (_scenes != null && _scenes.Playing != null) return; // a story scene has the screen and the keys
             if (keyboard.eKey.wasPressedThisFrame && (IsOpen || InReach)) SetOpen(!IsOpen);
             else if (IsOpen && keyboard.escapeKey.wasPressedThisFrame) SetOpen(false);
         }
@@ -90,7 +93,7 @@ namespace HunterSystem.Game
             }
 
             var me = _runner.LocalPlayerId;
-            var area = new Rect(Screen.width / 2f - 260, Screen.height / 2f - 200, 520, 400);
+            var area = new Rect(Screen.width / 2f - 280, Screen.height / 2f - 230, 560, 460);
             GUILayout.BeginArea(area, GUI.skin.box);
             GUILayout.Label("GATE BOARD", _title);
             GUILayout.Space(6);
@@ -122,6 +125,7 @@ namespace HunterSystem.Game
                     GUI.enabled = true;
                 }
                 GUILayout.EndHorizontal();
+                if (!string.IsNullOrEmpty(gate.Intel)) GUILayout.Label("      " + gate.Intel, _intel);
             }
 
             GUILayout.FlexibleSpace();
@@ -137,6 +141,7 @@ namespace HunterSystem.Game
             _title = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
             _label = new GUIStyle(GUI.skin.label) { fontSize = 14, wordWrap = true };
             _button = new GUIStyle(GUI.skin.button) { fontSize = 14 };
+            _intel = new GUIStyle(GUI.skin.label) { fontSize = 13, wordWrap = true, fontStyle = FontStyle.Italic };
         }
     }
 }

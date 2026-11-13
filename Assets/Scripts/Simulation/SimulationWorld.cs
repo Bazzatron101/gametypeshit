@@ -218,6 +218,7 @@ namespace HunterSystem.Simulation
             ConfineToGate();
             ConfineToHub();
             UpdateGate(tick);
+            UpdateStory(tick);
 
             Tick = tick;
         }

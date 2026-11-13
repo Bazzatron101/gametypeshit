@@ -393,13 +393,18 @@ namespace HunterSystem.Game
     public sealed class WorldRecord
     {
         public List<string> ClearedGates = new List<string>();
+
+        /// <summary>Story scenes this world has played (ticket 20), so each plays once.</summary>
+        public List<string> SeenStoryScenes = new List<string>();
     }
 
     /// <summary>The host's world on this PC, in its own folder, apart from characters.</summary>
     public sealed class WorldSaves
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSWD");
-        private const byte Version = 1;
+
+        /// <summary>1: cleared gates. 2: and the story scenes seen.</summary>
+        private const byte Version = 2;
 
         private readonly RecordFile<WorldRecord> _file;
 
@@ -433,6 +438,8 @@ namespace HunterSystem.Game
             w.Write(Version);
             w.Write(world.ClearedGates.Count);
             foreach (var gate in world.ClearedGates) w.Write(gate);
+            w.Write(world.SeenStoryScenes.Count);
+            foreach (var scene in world.SeenStoryScenes) w.Write(scene);
             w.Flush();
             return stream.ToArray();
         }
@@ -448,9 +455,15 @@ namespace HunterSystem.Game
                 var version = r.ReadByte();
                 if (version > Version) throw new ArgumentException($"This world was saved by a newer version of the game (format {version}).");
                 var world = new WorldRecord();
-                var count = r.ReadInt32();
-                if (count < 0 || count > bytes.Length) throw new FormatException("Impossible collection size.");
-                for (var i = 0; i < count; i++) world.ClearedGates.Add(r.ReadString());
+                int Count()
+                {
+                    var n = r.ReadInt32();
+                    if (n < 0 || n > bytes.Length) throw new FormatException("Impossible collection size.");
+                    return n;
+                }
+                for (int i = 0, n = Count(); i < n; i++) world.ClearedGates.Add(r.ReadString());
+                if (version >= 2)
+                    for (int i = 0, n = Count(); i < n; i++) world.SeenStoryScenes.Add(r.ReadString());
                 return world;
             }
             catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException)

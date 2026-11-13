@@ -480,6 +480,14 @@ namespace HunterSystem.Simulation
         }
     }
 
+    /// <summary>A story scene begins (it plays once per host world). Every player reads it at their own pace.</summary>
+    public sealed class StorySceneStarted : SimulationEvent
+    {
+        public string SceneId { get; }
+
+        public StorySceneStarted(int tick, string sceneId) : base(tick) => SceneId = sceneId;
+    }
+
     public sealed class EnemyDefeated : SimulationEvent
     {
         public EnemyId Enemy { get; }

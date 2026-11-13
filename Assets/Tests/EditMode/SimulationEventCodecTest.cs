@@ -67,6 +67,7 @@ namespace HunterSystem.Tests
             new GateRewardGranted(41, P, null),
             new ReadyChanged(42, P, true),
             new ReturnedToHub(43, "goblin-warren", true),
+            new StorySceneStarted(44, "arrival"),
         };
 
         [Test]

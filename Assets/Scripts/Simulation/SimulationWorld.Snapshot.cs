@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW5");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW6");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -107,6 +107,8 @@ namespace HunterSystem.Simulation
             WriteGate(w);
             w.Write(_clearedGates.Count);
             foreach (var id in _clearedGates) w.Write(id);
+            w.Write(_seenStoryScenes.Count);
+            foreach (var id in _seenStoryScenes) w.Write(id);
 
             w.Flush();
             return stream.ToArray();
@@ -156,6 +158,8 @@ namespace HunterSystem.Simulation
             _gate = parsed.Gate;
             _clearedGates.Clear();
             _clearedGates.AddRange(parsed.ClearedGates);
+            _seenStoryScenes.Clear();
+            _seenStoryScenes.AddRange(parsed.SeenStoryScenes);
             _events.Clear();
             _pendingOperations.Clear();
         }
@@ -304,6 +308,7 @@ namespace HunterSystem.Simulation
             public readonly List<Projectile> Projectiles = new List<Projectile>();
             public GateRun Gate;
             public readonly List<string> ClearedGates = new List<string>();
+            public readonly List<string> SeenStoryScenes = new List<string>();
         }
 
         private ParsedSnapshot Parse(byte[] snapshot)
@@ -397,6 +402,7 @@ namespace HunterSystem.Simulation
 
             parsed.Gate = ReadGate(r);
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.ClearedGates.Add(r.ReadString());
+            for (int i = 0, n = ReadCount(r); i < n; i++) parsed.SeenStoryScenes.Add(r.ReadString());
 
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");
             return parsed;

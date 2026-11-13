@@ -21,6 +21,7 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Every gate, each a chain of room pieces from the kit")] private GateDefinitionAsset[] gates = new GateDefinitionAsset[0];
         [SerializeField, Tooltip("Every boss; room pieces place them in gates")] private BossDefinitionAsset[] bosses = new BossDefinitionAsset[0];
         [SerializeField, Tooltip("The hub the party gathers in between gates (used by scenes that ask for it)")] private HubAsset hub;
+        [SerializeField, Tooltip("Text-only story scenes and what makes each play")] private TextSceneAsset[] scenes = new TextSceneAsset[0];
 
         public PlayerTuningAsset PlayerTuning => playerTuning;
         public ProgressionAsset Progression => progression;
@@ -30,6 +31,7 @@ namespace HunterSystem.Game
         public IReadOnlyList<GateDefinitionAsset> Gates => gates;
         public IReadOnlyList<BossDefinitionAsset> Bosses => bosses;
         public HubAsset Hub => hub;
+        public IReadOnlyList<TextSceneAsset> Scenes => scenes;
 
         /// <summary>
         /// Fills the content parts of a simulation config. The runner and the content tests both go
@@ -59,12 +61,21 @@ namespace HunterSystem.Game
             }
             config.Gates = gateList.ToArray();
             config.Hub = hub != null ? hub.ToDefinition() : null;
+
+            var sceneList = new List<StorySceneDefinition>();
+            foreach (var scene in scenes)
+            {
+                if (scene == null) { Debug.LogWarning($"{name}: an empty entry in the scenes list was skipped.", this); continue; }
+                sceneList.Add(scene.ToDefinition());
+            }
+            config.StoryScenes = sceneList.ToArray();
         }
 
         /// <summary>For editor tooling: replaces the whole content list.</summary>
         public void ReplaceContent(PlayerTuningAsset tuningAsset, ProgressionAsset progressionAsset, SkillDefinitionAsset[] skillAssets,
-            ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets, HubAsset hubAsset)
+            ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets, HubAsset hubAsset, TextSceneAsset[] sceneAssets)
         {
+            scenes = sceneAssets;
             hub = hubAsset;
             bosses = bossAssets;
             gates = gateAssets;
