@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW3");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW5");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -105,6 +105,8 @@ namespace HunterSystem.Simulation
             }
 
             WriteGate(w);
+            w.Write(_clearedGates.Count);
+            foreach (var id in _clearedGates) w.Write(id);
 
             w.Flush();
             return stream.ToArray();
@@ -152,6 +154,8 @@ namespace HunterSystem.Simulation
             _projectiles.Clear();
             _projectiles.AddRange(parsed.Projectiles);
             _gate = parsed.Gate;
+            _clearedGates.Clear();
+            _clearedGates.AddRange(parsed.ClearedGates);
             _events.Clear();
             _pendingOperations.Clear();
         }
@@ -195,6 +199,7 @@ namespace HunterSystem.Simulation
             w.Write(p.InvulnerableUntilTick);
             WriteVec(w, p.DodgeDirection);
             w.Write(p.Away);
+            w.Write(p.Ready);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -298,6 +303,7 @@ namespace HunterSystem.Simulation
             public readonly List<Enemy> Enemies = new List<Enemy>();
             public readonly List<Projectile> Projectiles = new List<Projectile>();
             public GateRun Gate;
+            public readonly List<string> ClearedGates = new List<string>();
         }
 
         private ParsedSnapshot Parse(byte[] snapshot)
@@ -390,6 +396,7 @@ namespace HunterSystem.Simulation
             }
 
             parsed.Gate = ReadGate(r);
+            for (int i = 0, n = ReadCount(r); i < n; i++) parsed.ClearedGates.Add(r.ReadString());
 
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");
             return parsed;
@@ -435,6 +442,7 @@ namespace HunterSystem.Simulation
             p.InvulnerableUntilTick = r.ReadInt32();
             p.DodgeDirection = ReadVec(r);
             p.Away = r.ReadBoolean();
+            p.Ready = r.ReadBoolean();
             return p;
         }
 

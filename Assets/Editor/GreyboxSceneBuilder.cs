@@ -35,6 +35,7 @@ namespace HunterSystem.Editor
         private const string DataFolder = "Assets/Data";
         private const string ProgressionPath = "Assets/Data/Progression.asset";
         private const string PlayerTuningPath = "Assets/Data/PlayerTuning.asset";
+        private const string HubPath = "Assets/Data/Hub.asset";
         private const string ContentPath = "Assets/Data/GameContent.asset";
         private static readonly Color GoblinColour = new Color(0.8f, 0.2f, 0.2f);
 
@@ -159,6 +160,16 @@ namespace HunterSystem.Editor
                 ("enemyMaterial", GetOrCreateMaterial("Greybox_Goblin", GoblinColour)),
                 ("bossMaterial", GetOrCreateMaterial("Greybox_Boss", new Color(0.55f, 0.12f, 0.12f))));
 
+            var runner = simulation.GetComponent<SimulationRunner>();
+            var runnerSettings = new SerializedObject(runner);
+            runnerSettings.FindProperty("useHub").boolValue = true; // the co-op scene gathers in the hub
+            runnerSettings.ApplyModifiedPropertiesWithoutUndo();
+            Wire(simulation.AddComponent<HubView>(),
+                ("floorMaterial", GetOrCreateMaterial("Greybox_HubFloor", new Color(0.5f, 0.47f, 0.42f))),
+                ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
+                ("boardMaterial", GetOrCreateMaterial("Greybox_GateBoard", new Color(0.25f, 0.4f, 0.75f))));
+            simulation.AddComponent<GateBoard>();
+
             Wire(simulation.AddComponent<BossTelegraphView>(),
                 ("areaMaterial", GetOrCreateMaterial("Greybox_TelegraphArea", new Color(0.55f, 0.18f, 0.12f))),
                 ("fillMaterial", GetOrCreateMaterial("Greybox_TelegraphFill", new Color(1f, 0.3f, 0.12f))));
@@ -166,7 +177,8 @@ namespace HunterSystem.Editor
                 ("floorMaterial", GetOrCreateMaterial("Greybox_GateFloor", new Color(0.42f, 0.44f, 0.5f))),
                 ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
                 ("checkpointMaterial", GetOrCreateMaterial("Greybox_Checkpoint", new Color(0.35f, 0.35f, 0.4f))),
-                ("checkpointActiveMaterial", GetOrCreateMaterial("Greybox_CheckpointActive", new Color(0.3f, 0.9f, 1f))));
+                ("checkpointActiveMaterial", GetOrCreateMaterial("Greybox_CheckpointActive", new Color(0.3f, 0.9f, 1f))),
+                ("portalMaterial", GetOrCreateMaterial("Greybox_Portal", new Color(0.55f, 0.95f, 1f))));
             simulation.AddComponent<GateHud>();
 
             var local = CreateNetwork<Tugboat>("Network (Local UDP)");
@@ -283,6 +295,7 @@ namespace HunterSystem.Editor
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
             var gates = new[] { GetOrCreateGoblinWarren(modifiers) };
             var bosses = new[] { GetOrCreateGoblinWarlord() };
+            var hub = GetOrCreateSingle<HubAsset>(HubPath);
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
             if (content == null)
@@ -296,7 +309,8 @@ namespace HunterSystem.Editor
                 WithEveryProjectAsset(content.Modifiers, modifiers),
                 WithEveryProjectAsset(content.Enemies, enemies),
                 WithEveryProjectAsset(content.Gates, gates),
-                WithEveryProjectAsset(content.Bosses, bosses));
+                WithEveryProjectAsset(content.Bosses, bosses),
+                hub);
             EditorUtility.SetDirty(content);
             AssetDatabase.SaveAssets();
             // Saving re-imports the asset; hand back the reloaded object, or scene references to it come out empty.

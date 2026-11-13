@@ -40,6 +40,7 @@ namespace HunterSystem.Tests
             content = assets[0];
             var config = new SimulationConfig();
             content.ApplyTo(config);
+            config.Hub = null; // an open-field fight: the hub round trip has its own test (HubRoundTripTest)
             return config;
         }
 

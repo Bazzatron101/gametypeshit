@@ -18,6 +18,9 @@ namespace HunterSystem.Simulation
             /// <summary>Their connection dropped: still in the run, but no teammate for the gate's rules and ignored by enemies.</summary>
             public bool Away;
 
+            /// <summary>In the hub: ready for the next gate.</summary>
+            public bool Ready;
+
             public int Level = 1;
             public int Xp;
             public int UnspentStatPoints;

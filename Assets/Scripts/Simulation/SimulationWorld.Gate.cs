@@ -50,6 +50,9 @@ namespace HunterSystem.Simulation
             public int WipeAtTick;
 
             public bool ClearAnnounced;
+
+            /// <summary>After the clear (in a game with a hub): when the party is brought home. 0 until then.</summary>
+            public int ReturnAtTick;
         }
 
         private GateRun _gate;
@@ -66,11 +69,16 @@ namespace HunterSystem.Simulation
         /// </summary>
         public void StartGate(string gateId)
         {
+            if (_gate != null && !_gate.ClearAnnounced) throw new InvalidOperationException("A gate is still being run; leave it first.");
             var definition = _config.Gates.FirstOrDefault(g => g.Id == gateId)
                              ?? throw new ArgumentException($"There is no gate '{gateId}' in the game's content.", nameof(gateId));
             foreach (var id in _enemyIds.ToList()) DespawnEnemy(id);
             _gate = NewRun(definition);
-            foreach (var player in _players) StandUp(player, _gate.Layout.Entrance);
+            foreach (var player in _players)
+            {
+                StandUp(player, _gate.Layout.Entrance);
+                player.Ready = false; // readiness is for the hub
+            }
         }
 
         private GateRun NewRun(GateDefinition definition)
@@ -99,6 +107,7 @@ namespace HunterSystem.Simulation
         {
             var player = FindPlayer(id);
             player.Away = away;
+            player.Ready = false; // a ready mark is a choice made in the moment: coming back, they make it again
             if (!away) NoteWhereTheyStand(player); // coming back onto a checkpoint is not reaching it
         }
 
@@ -215,6 +224,13 @@ namespace HunterSystem.Simulation
         internal int GateRevivesLeft(PlayerId player) =>
             Math.Max(0, _gate.Definition.SoloRevives - (_gate.RevivesUsed.TryGetValue(player, out var used) ? used : 0));
 
+        internal float? GateSecondsUntilReturn()
+        {
+            if (_config.Hub == null || !_gate.ClearAnnounced) return null;
+            var at = _gate.ReturnAtTick != 0 ? _gate.ReturnAtTick : ReturnTick(Tick);
+            return Math.Max(0, at - Tick) * TickDelta;
+        }
+
         internal float? GateSecondsUntilWipe() => _gate.WipeAtTick == 0 ? (float?)null : Math.Max(0, _gate.WipeAtTick - Tick) * TickDelta;
 
         /// <summary>A place to stand beside <paramref name="point"/>, different for each player and always on the gate's floor.</summary>
@@ -261,6 +277,7 @@ namespace HunterSystem.Simulation
             _gate.RevivesUsed.Clear();
             _gate.Inside.Clear();
             _gate.WipeAtTick = 0;
+            _gate.ReturnAtTick = 0;
             _gate.ClearAnnounced = false;
             foreach (var player in _players)
                 if (!player.Away) StandUp(player, _gate.Layout.Entrance); // away players stay where they stood
@@ -340,10 +357,12 @@ namespace HunterSystem.Simulation
             {
                 _gate.ClearAnnounced = true;
                 EndBossRooms(tick);
-                _events.Add(new GateCleared(tick));
+                if (!_clearedGates.Contains(_gate.Definition.Id)) _clearedGates.Add(_gate.Definition.Id);
+                _events.Add(new GateCleared(tick, _gate.Definition.Id));
                 GrantClearRewards(tick);
             }
 
+            if (UpdateReturn(tick)) return; // home: the gate is gone
             ReachCheckpoints(tick);
             CheckForWipe(tick);
         }
@@ -437,6 +456,7 @@ namespace HunterSystem.Simulation
             w.Write(_gate.Attempt);
             w.Write(_gate.WipeAtTick);
             w.Write(_gate.ClearAnnounced);
+            w.Write(_gate.ReturnAtTick);
             w.Write(_gate.Rooms.Length);
             for (var room = 0; room < _gate.Rooms.Length; room++)
             {
@@ -475,6 +495,7 @@ namespace HunterSystem.Simulation
                 Attempt = r.ReadInt32(),
                 WipeAtTick = r.ReadInt32(),
                 ClearAnnounced = r.ReadBoolean(),
+                ReturnAtTick = r.ReadInt32(),
             };
             run.View = new GateState(this, definition, layout);
 

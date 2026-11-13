@@ -9,7 +9,8 @@ namespace HunterSystem.Netcode
     /// world it can see and the events it was shown, and decides one command, as a person at the
     /// keyboard would: spend stat points, dodge a hit it saw coming, walk to the nearest enemy,
     /// then swing at it and use whichever skills are ready. In a gate with nothing in sight it walks
-    /// on to the next room, and when it is down it asks to get up.
+    /// on to the next room, after the clear it heads for the portal home, and when it is down it asks
+    /// to get up. In the hub it marks itself ready and waits with the others.
     /// <para>
     /// It sends commands through the normal path (a client session on a bot, the host's own input on
     /// a bot host), so everything it does is checked by the simulation like anyone else's input.
@@ -77,6 +78,9 @@ namespace HunterSystem.Netcode
 
         private PlayerCommand Act(SimulationWorld world, PlayerId me, PlayerState self, int tick)
         {
+            // In the hub: say it is ready, then wait near the others for the host to start.
+            if (world.InHub) return self.IsReady ? FollowParty(world, me, self.Position) : new PlayerCommand(0f, 0f, setReady: true);
+
             var target = NearestLivingEnemy(world, self.Position);
             if (BossHitDueSoon(world, self.Position, tick, out var escape)) return new PlayerCommand(escape.X, escape.Z, dodge: true);
             if (TakeHitDueSoon(tick))
@@ -86,7 +90,8 @@ namespace HunterSystem.Netcode
                 return new PlayerCommand(away.X, away.Z, dodge: true);
             }
 
-            if (!target.HasValue) return world.HasGate ? WalkTheGate(world.Gate, self.Position) : FollowParty(world, me, self.Position);
+            if (!target.HasValue || (world.HasGate && world.Gate.ReturnPortal.HasValue))
+                return world.HasGate ? WalkTheGate(world.Gate, self.Position) : FollowParty(world, me, self.Position);
 
             var offset = world.GetEnemy(target.Value).Position - self.Position;
             offset = new Vec3(offset.X, 0f, offset.Z);
@@ -207,6 +212,13 @@ namespace HunterSystem.Netcode
                 }
                 var toward = Direction(from, destination);
                 return new PlayerCommand(toward.X, toward.Z);
+            }
+
+            // Cleared: head for the way home.
+            if (gate.ReturnPortal.HasValue)
+            {
+                var home = Direction(from, gate.ReturnPortal.Value);
+                return new PlayerCommand(home.X, home.Z);
             }
 
             // Every room cleared: finish on the last checkpoint not yet reached, if any.

@@ -35,3 +35,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d5eca38938261a44dbd68e555dfdd752, type: 2}
   bosses:
   - {fileID: 11400000, guid: 7f9a054aa1138ab43957f11c2db0c5d1, type: 2}
+  hub: {fileID: 11400000, guid: 18193dd91d58c354d8fbd5393665ae35, type: 2}

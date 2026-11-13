@@ -20,6 +20,7 @@ namespace HunterSystem.Game
         [SerializeField] private EnemyDefinitionAsset[] enemies = new EnemyDefinitionAsset[0];
         [SerializeField, Tooltip("Every gate, each a chain of room pieces from the kit")] private GateDefinitionAsset[] gates = new GateDefinitionAsset[0];
         [SerializeField, Tooltip("Every boss; room pieces place them in gates")] private BossDefinitionAsset[] bosses = new BossDefinitionAsset[0];
+        [SerializeField, Tooltip("The hub the party gathers in between gates (used by scenes that ask for it)")] private HubAsset hub;
 
         public PlayerTuningAsset PlayerTuning => playerTuning;
         public ProgressionAsset Progression => progression;
@@ -28,6 +29,7 @@ namespace HunterSystem.Game
         public IReadOnlyList<EnemyDefinitionAsset> Enemies => enemies;
         public IReadOnlyList<GateDefinitionAsset> Gates => gates;
         public IReadOnlyList<BossDefinitionAsset> Bosses => bosses;
+        public HubAsset Hub => hub;
 
         /// <summary>
         /// Fills the content parts of a simulation config. The runner and the content tests both go
@@ -56,12 +58,14 @@ namespace HunterSystem.Game
                 gateList.Add(asset.ToDefinition(enemyDefinitions));
             }
             config.Gates = gateList.ToArray();
+            config.Hub = hub != null ? hub.ToDefinition() : null;
         }
 
         /// <summary>For editor tooling: replaces the whole content list.</summary>
         public void ReplaceContent(PlayerTuningAsset tuningAsset, ProgressionAsset progressionAsset, SkillDefinitionAsset[] skillAssets,
-            ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets)
+            ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets, HubAsset hubAsset)
         {
+            hub = hubAsset;
             bosses = bossAssets;
             gates = gateAssets;
             playerTuning = tuningAsset;

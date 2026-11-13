@@ -401,12 +401,12 @@ namespace HunterSystem.Simulation
         public GateRestarted(int tick, int attempt) : base(tick) => Attempt = attempt;
     }
 
-    /// <summary>Every room of the gate is cleared.</summary>
+    /// <summary>The gate is cleared: its boss defeated, or every room cleared in a gate without one.</summary>
     public sealed class GateCleared : SimulationEvent
     {
-        public GateCleared(int tick) : base(tick)
-        {
-        }
+        public string GateId { get; }
+
+        public GateCleared(int tick, string gateId) : base(tick) => GateId = gateId;
     }
 
     /// <summary>A boss began an attack: the area it marks (see <see cref="BossAttackDefinition.Covers"/>) is hit on <see cref="LandsAtTick"/>.</summary>
@@ -449,6 +449,34 @@ namespace HunterSystem.Simulation
         {
             Player = player;
             Modifier = modifier;
+        }
+    }
+
+    /// <summary>In the hub, a player marked themselves ready for the next gate, or not.</summary>
+    public sealed class ReadyChanged : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public bool Ready { get; }
+
+        public ReadyChanged(int tick, PlayerId player, bool ready) : base(tick)
+        {
+            Player = player;
+            Ready = ready;
+        }
+    }
+
+    /// <summary>The party is back in the hub from a gate: through the portal or the countdown after a clear, or because the host left the run.</summary>
+    public sealed class ReturnedToHub : SimulationEvent
+    {
+        public string GateId { get; }
+
+        /// <summary>True when the gate had been cleared.</summary>
+        public bool Cleared { get; }
+
+        public ReturnedToHub(int tick, string gateId, bool cleared) : base(tick)
+        {
+            GateId = gateId;
+            Cleared = cleared;
         }
     }
 

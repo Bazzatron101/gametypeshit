@@ -26,6 +26,9 @@ namespace HunterSystem.Game
         [SerializeField, Min(1), Tooltip("Online: the host sends a full snapshot every this many ticks")]
         private int snapshotEveryTicks = 3;
 
+        [SerializeField, Tooltip("Gather the party in the content's hub between gates (the co-op scene). Off: an open field (the greybox, the arena).")]
+        private bool useHub;
+
         // The local player's character: loaded from its save at the start, saved as it progresses.
         private PlayerId? _offlineLocalId;
         private bool _savedOnExit;
@@ -79,6 +82,7 @@ namespace HunterSystem.Game
         {
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
+            if (!useHub) _config.Hub = null;
             _offlineWorld = new SimulationWorld(_config);
             _clock = new FixedTimestepClock(_config.TickRate);
 
@@ -123,6 +127,7 @@ namespace HunterSystem.Game
             Host = new HostSession(_config, transport, spawnPoint, snapshotEveryTicks);
             Host.AddLocalPlayer(Character);
             HostWorld = GameSaves.Disabled ? new WorldRecord() : new WorldSaves(GameSaves.Root).LoadOrNew();
+            Host.World.SetClearedGates(HostWorld.ClearedGates); // so the board, and guests, see them
             StartLocalInput();
         }
 
@@ -259,6 +264,9 @@ namespace HunterSystem.Game
         /// <summary>A defeated player asking to come back, sent as a command on the next tick. The gate's death rules decide what happens.</summary>
         public void RequestRespawn(PlayerId id) => BufferFor(id).QueueRespawn();
 
+        /// <summary>In the hub: marks the player ready (or not) for the next gate, as a command on the next tick.</summary>
+        public void RequestReady(PlayerId id, bool ready) => BufferFor(id).QueueSetReady(ready);
+
         /// <summary>Replaces where a player's commands come from (tests, bots).</summary>
         public void SetCommandSource(PlayerId id, IPlayerCommandSource source)
         {
@@ -337,11 +345,33 @@ namespace HunterSystem.Game
                 {
                     Host.Tick(command);
                     _frameEvents.AddRange(Host.World.Events);
+                    RecordClears(Host.World.Events);
                 }
                 else
                 {
                     Client.Tick(command);
                     _frameEvents.AddRange(Client.Events);
+                }
+            }
+        }
+
+        /// <summary>The host's world keeps which gates it has cleared (ADR 0005: host-world progress), saved at once.</summary>
+        private void RecordClears(IReadOnlyList<SimulationEvent> events)
+        {
+            if (HostWorld == null) return;
+            foreach (var e in events)
+            {
+                var id = (e as GateCleared)?.GateId;
+                if (id == null || HostWorld.ClearedGates.Contains(id)) continue;
+                HostWorld.ClearedGates.Add(id);
+                if (GameSaves.Disabled) continue;
+                try
+                {
+                    new WorldSaves(GameSaves.Root).Save(HostWorld);
+                }
+                catch (Exception error)
+                {
+                    Debug.LogError("Could not save the world: " + error.Message);
                 }
             }
         }

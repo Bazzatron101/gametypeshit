@@ -79,24 +79,23 @@ namespace HunterSystem.Game
         private void LateUpdate()
         {
             var gate = Gate;
-            if (gate == null)
-            {
-                _boss = null;
-                return;
-            }
-            FindBoss();
+            if (gate != null) _gateName = gate.Definition.Name;
+            if (gate == null) _boss = null;
+            else FindBoss();
+            if (_runner == null || _runner.World == null) return;
             var me = Me;
             foreach (var e in _runner.FrameEvents)
             {
+                if (e is RoomEntered room && room.Room == 0) _rewardShown = false;
                 switch (e)
                 {
-                    case CheckpointActivated c:
+                    case CheckpointActivated c when gate != null:
                         Notify($"Checkpoint {c.Checkpoint + 1} of {gate.Layout.Checkpoints.Count} reached.");
                         break;
                     case PlayerRevived r when r.Player == me:
                         Notify(r.RevivesLeft == PlayerRevived.NoLimit
                             ? "A teammate reached a checkpoint. You are back."
-                            : $"Revived. {r.RevivesLeft} of {gate.Definition.SoloRevives} revives left.");
+                            : $"Revived. {r.RevivesLeft} of {gate?.Definition.SoloRevives ?? 3} revives left.");
                         break;
                     case PlayerRevived r:
                         Notify($"Player {r.Player.Value} is back at the checkpoint.");
@@ -108,19 +107,26 @@ namespace HunterSystem.Game
                         Notify($"Out of revives. The gate starts again (attempt {g.Attempt}).");
                         break;
                     case GateCleared _:
-                        Notify($"{gate.Definition.Name} cleared.");
+                        Notify($"{_gateName} cleared.");
                         break;
                     case BossEnraged b:
                         Notify($"{_runner.World.GetEnemy(b.Enemy).Definition.Name} is enraged! It strikes faster, and help has arrived.");
                         break;
+                    case ReturnedToHub home:
+                        if (!_rewardShown) Notify(home.Cleared ? "Back in the hub." : "You left the gate. Back in the hub.");
+                        break;
                     case GateRewardGranted r when r.Player == me:
                         Notify(r.Modifier != null
-                            ? $"{gate.Definition.Name} cleared.  Reward: {r.Modifier.Name}, kept on your hunter."
-                            : $"{gate.Definition.Name} cleared.  You already hold every reward this gate offers.");
+                            ? $"{_gateName} cleared.  Reward: {r.Modifier.Name}, kept on your hunter."
+                            : $"{_gateName} cleared.  You already hold every reward this gate offers.");
+                        _rewardShown = true;
                         break;
                 }
             }
         }
+
+        private string _gateName = "The gate";
+        private bool _rewardShown;
 
         private void Notify(string text)
         {
@@ -143,6 +149,7 @@ namespace HunterSystem.Game
 
             if (CurrentNotice != null) GUI.Label(new Rect(0, 40, Screen.width, 24), CurrentNotice, _notice);
             DrawBossBar();
+            DrawWayHome(gate);
             if (DeathPanelOpen) DrawDeathPanel(gate);
         }
 
@@ -161,6 +168,30 @@ namespace HunterSystem.Game
                 GUI.color = enemy.IsEnraged ? new Color(1f, 0.35f, 0.2f) : new Color(0.85f, 0.15f, 0.15f);
                 GUI.DrawTexture(fill, Texture2D.whiteTexture);
                 GUI.color = old;
+            }
+        }
+
+        private float _confirmLeaveUntil;
+
+        /// <summary>After a clear, the countdown home; for the host, a way to leave the run at any time (two clicks).</summary>
+        private void DrawWayHome(GateState gate)
+        {
+            if (_runner.World.Hub == null) return;
+            var home = gate.SecondsUntilReturn;
+            if (home.HasValue)
+                GUI.Label(new Rect(0, Screen.height - 150, Screen.width, 24),
+                    $"The way home is open: walk into the portal, or you return in {Mathf.CeilToInt(home.Value)} s.", _title);
+            if (_runner.Host == null) return;
+            var confirming = Time.unscaledTime < _confirmLeaveUntil;
+            var label = confirming ? (gate.IsCleared ? "Go home now?" : "Leave? This run is lost.") : "Leave gate";
+            if (GUI.Button(new Rect(Screen.width - 196, 12, 180, 30), label, _button))
+            {
+                if (!confirming) _confirmLeaveUntil = Time.unscaledTime + 4f;
+                else
+                {
+                    _confirmLeaveUntil = 0f;
+                    _runner.World.LeaveGate();
+                }
             }
         }
 

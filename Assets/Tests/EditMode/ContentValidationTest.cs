@@ -127,6 +127,23 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void TheHubSitsClearOfEveryGate()
+        {
+            var content = Content();
+            Assert.That(content.Hub, Is.Not.Null, "the content has a hub");
+            Assert.That(All<HubAsset>().Length, Is.EqualTo(1), "one hub");
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+            var hub = config.Hub.Floor;
+            foreach (var gate in config.Gates)
+            foreach (var room in new GateLayout(gate).Rooms)
+            {
+                var overlaps = room.MinX < hub.MaxX && room.MaxX > hub.MinX && room.MinZ < hub.MaxZ && room.MaxZ > hub.MinZ;
+                Assert.That(overlaps, Is.False, $"{gate.Id}: a room overlaps the hub");
+            }
+        }
+
+        [Test]
         public void EveryGateWithABossHasARewardPool()
         {
             foreach (var gate in Content().Gates.Where(g => g.Rooms.Any(r => r != null && r.Boss != null)))

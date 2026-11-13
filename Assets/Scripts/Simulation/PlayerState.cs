@@ -64,12 +64,16 @@ namespace HunterSystem.Simulation
         /// <summary>True while this player's connection is down: their character waits in the run (see <see cref="SimulationWorld.SetAway"/>).</summary>
         public readonly bool IsAway;
 
+        /// <summary>In the hub: this player has marked themselves ready for the next gate.</summary>
+        public readonly bool IsReady;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
-            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false)
+            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false)
         {
+            IsReady = isReady;
             IsAway = isAway;
             Id = id;
             Position = position;

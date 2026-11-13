@@ -22,6 +22,7 @@ namespace HunterSystem.Simulation
             ProjectileEnded, EnemyDefeated,
             RoomEntered, RoomCleared, CheckpointActivated, PlayerRevived, GateWiped, GateRestarted, GateCleared,
             BossAttackStarted, BossEnraged, GateRewardGranted,
+            ReadyChanged, ReturnedToHub,
         }
 
         public static byte[] Encode(IEnumerable<SimulationEvent> events)
@@ -142,8 +143,8 @@ namespace HunterSystem.Simulation
                 case GateRestarted g:
                     Head(w, Code.GateRestarted, e); w.Write(g.Attempt);
                     break;
-                case GateCleared _:
-                    Head(w, Code.GateCleared, e);
+                case GateCleared g:
+                    Head(w, Code.GateCleared, e); SimulationWorld.WriteNullable(w, g.GateId);
                     break;
                 case BossAttackStarted b:
                     Head(w, Code.BossAttackStarted, e); w.Write(b.Enemy.Value); w.Write((byte)b.Kind); SimulationWorld.WriteVec(w, b.Origin);
@@ -151,6 +152,12 @@ namespace HunterSystem.Simulation
                     break;
                 case BossEnraged b:
                     Head(w, Code.BossEnraged, e); w.Write(b.Enemy.Value);
+                    break;
+                case ReadyChanged x:
+                    Head(w, Code.ReadyChanged, e); w.Write(x.Player.Value); w.Write(x.Ready);
+                    break;
+                case ReturnedToHub x:
+                    Head(w, Code.ReturnedToHub, e); SimulationWorld.WriteNullable(w, x.GateId); w.Write(x.Cleared);
                     break;
                 case GateRewardGranted g:
                     Head(w, Code.GateRewardGranted, e); w.Write(g.Player.Value); w.Write(g.Modifier != null);
@@ -231,7 +238,7 @@ namespace HunterSystem.Simulation
                 case Code.PlayerRevived: return new PlayerRevived(tick, Player(), r.ReadInt32(), r.ReadInt32());
                 case Code.GateWiped: return new GateWiped(tick, r.ReadInt32());
                 case Code.GateRestarted: return new GateRestarted(tick, r.ReadInt32());
-                case Code.GateCleared: return new GateCleared(tick);
+                case Code.GateCleared: return new GateCleared(tick, SimulationWorld.ReadNullable(r));
                 case Code.BossAttackStarted:
                 {
                     var enemy = Enemy();
@@ -240,6 +247,8 @@ namespace HunterSystem.Simulation
                     return new BossAttackStarted(tick, enemy, (BossAttackKind)kind, SimulationWorld.ReadVec(r), SimulationWorld.ReadVec(r), r.ReadInt32());
                 }
                 case Code.BossEnraged: return new BossEnraged(tick, Enemy());
+                case Code.ReadyChanged: return new ReadyChanged(tick, Player(), r.ReadBoolean());
+                case Code.ReturnedToHub: return new ReturnedToHub(tick, SimulationWorld.ReadNullable(r), r.ReadBoolean());
                 case Code.GateRewardGranted:
                 {
                     var player = Player();

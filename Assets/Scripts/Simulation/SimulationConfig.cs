@@ -46,5 +46,8 @@ namespace HunterSystem.Simulation
 
         /// <summary>Every gate in the game. Like skills, gates are named by id in snapshots, so host and clients must hold the same list.</summary>
         public IReadOnlyList<GateDefinition> Gates { get; set; } = Array.Empty<GateDefinition>();
+
+        /// <summary>The hub the party gathers in between gates, or null for a game without one (tests, the arena).</summary>
+        public HubDefinition Hub { get; set; }
     }
 }

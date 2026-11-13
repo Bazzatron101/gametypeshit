@@ -224,6 +224,12 @@ namespace HunterSystem.Simulation
         /// <summary>Co-op: seconds until a party that is all down returns at the latest checkpoint; null when no wipe is pending.</summary>
         public float? SecondsUntilWipe => _world.GateSecondsUntilWipe();
 
+        /// <summary>After the clear, in a game with a hub: where the return portal stands. Null before the clear.</summary>
+        public Vec3? ReturnPortal => _world.Hub != null && IsCleared ? _world.GatePortalPosition() : (Vec3?)null;
+
+        /// <summary>After the clear, in a game with a hub: seconds until the party is brought home. Null otherwise.</summary>
+        public float? SecondsUntilReturn => _world.GateSecondsUntilReturn();
+
         /// <summary>Where a player joining or rejoining the run appears: at the latest checkpoint (ADR 0003), a step to one side.</summary>
         public Vec3 JoinPosition(PlayerId player) => _world.GateStandingPlace(LatestCheckpointPosition, player);
     }

@@ -108,7 +108,7 @@ namespace HunterSystem.Simulation
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
-                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away);
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -167,6 +167,7 @@ namespace HunterSystem.Simulation
                 if (cmd.AssignSkill.HasValue) TryAssignSkill(player, cmd.AssignSkill.Value, tick);
                 if (cmd.AllocateStat.HasValue) TryAllocateStat(player, cmd.AllocateStat.Value, tick);
                 if (cmd.Respawn) TryRespawn(player, tick);
+                if (cmd.SetReady.HasValue) TrySetReady(player, cmd.SetReady.Value, tick);
             }
 
             foreach (var player in _players)
@@ -215,6 +216,7 @@ namespace HunterSystem.Simulation
             ApplyEnrages(tick);
 
             ConfineToGate();
+            ConfineToHub();
             UpdateGate(tick);
 
             Tick = tick;

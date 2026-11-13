@@ -812,5 +812,56 @@ namespace HunterSystem.Tests
             Assert.That(seen[guest].OfType<PlayerRevived>().Count(r => r.Player == guestId), Is.EqualTo(1), "and they are told, once");
             Assert.That(seen[guest].OfType<CheckpointActivated>().Count(), Is.EqualTo(1));
         }
+        // --- Ticket 19: the hub over the network ------------------------------------------------
+
+        private static SimulationConfig HubConfig()
+        {
+            var config = GateConfig();
+            config.Hub = new HubDefinition { Width = 20f, Length = 16f, Centre = new Vec3(0f, 0f, -40f) };
+            return config;
+        }
+
+        [Test]
+        public void AGuestReadiesUpTheHostStartsAndLeavesAndBothWorldsFollow()
+        {
+            HostSession host = null;
+            var network = new SimulatedNetwork(Latency);
+            host = new HostSession(HubConfig(), network.HostEndpoint, id => JoinPoint.For(host.World, id, Vec3.Zero));
+            var hostId = host.AddLocalPlayer();
+            var guest = new ClientSession(HubConfig(), network.Connect(), "alice");
+            void Tick(int times, PlayerCommand hostCommand = default, PlayerCommand guestCommand = default)
+            {
+                for (var i = 0; i < times; i++)
+                {
+                    network.Advance();
+                    host.Tick(i == 0 ? hostCommand : PlayerCommand.None);
+                    guest.Tick(i == 0 ? guestCommand : PlayerCommand.None);
+                }
+            }
+            Tick(Latency * 2 + 2);
+            Assert.That(guest.World.InHub, Is.True, "the guest arrives in the hub");
+            Assert.That((host.World.GetPlayer(guest.PlayerId.Value).Position - host.World.Hub.Centre).Length, Is.LessThan(4f));
+
+            Tick(1, new PlayerCommand(0f, 0f, setReady: true));
+            Assert.That(host.World.TryStartGateFromHub("corridor", out var why), Is.False, "the guest is not ready yet");
+            Tick(Latency * 2 + 2, guestCommand: new PlayerCommand(0f, 0f, setReady: true));
+            Assert.That(host.World.GetPlayer(guest.PlayerId.Value).IsReady, Is.True, "the guest's ready mark reached the host");
+            Assert.That(host.World.TryStartGateFromHub("corridor", out why), Is.True, why);
+            Tick(Latency * 2 + 2);
+            Assert.That(guest.World.HasGate, Is.True, "and the guest is taken in too");
+
+            host.World.LeaveGate();
+            var seen = new List<SimulationEvent>();
+            for (var i = 0; i < Latency * 2 + 4; i++)
+            {
+                network.Advance();
+                host.Tick(PlayerCommand.None);
+                guest.Tick(PlayerCommand.None);
+                seen.AddRange(guest.Events);
+            }
+            Assert.That(guest.World.InHub, Is.True);
+            Assert.That(seen.OfType<ReturnedToHub>().Count(), Is.EqualTo(1), "and is told, once");
+            Assert.That(host.World.GetPlayer(hostId).IsReady, Is.False);
+        }
     }
 }

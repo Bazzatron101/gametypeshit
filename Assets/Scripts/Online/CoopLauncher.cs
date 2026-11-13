@@ -140,7 +140,7 @@ namespace HunterSystem.Online
             {
                 _status = "Hosting locally (UDP 7770).";
             }
-            SpawnGoblins(3);
+            if (_runner.World.Hub == null) SpawnGoblins(3); // the hub is no place for goblins
         }
 
         /// <summary>Host only: takes the whole party into a gate from the content list.</summary>
@@ -438,13 +438,8 @@ namespace HunterSystem.Online
                 {
                     GUILayout.Label($"Clients: {_runner.Host.ConnectedClients}   Snapshot: {_runner.Host.LastSnapshotSize} bytes", _label);
                     GUILayout.BeginHorizontal();
-                    if (_runner.Content != null && !_runner.World.HasGate)
-                    {
-                        foreach (var gate in _runner.Content.Gates)
-                            if (gate != null && GUILayout.Button("Enter gate: " + gate.DisplayName)) EnterGate(gate.Id);
-                    }
-                    if (!_runner.World.HasGate && GUILayout.Button("Spawn 3 Goblins")) SpawnGoblins(3);
-                    if (!_runner.World.HasGate && GUILayout.Button("Spawn a Hobgoblin")) SpawnEnemies("Hobgoblin", 1);
+                    if (_runner.World.Hub == null && !_runner.World.HasGate && GUILayout.Button("Spawn 3 Goblins")) SpawnGoblins(3);
+                    if (_runner.World.Hub == null && !_runner.World.HasGate && GUILayout.Button("Spawn a Hobgoblin")) SpawnEnemies("Hobgoblin", 1);
                     if (_onSteam && GUILayout.Button("Invite friends")) SteamFriends.OpenOverlay("friends"); // right-click a friend > Invite to Game
                     if (_onSteam && GUILayout.Button("Copy my SteamID")) GUIUtility.systemCopyBuffer = SteamClient.SteamId.ToString();
                     GUILayout.EndHorizontal();

@@ -213,5 +213,17 @@ namespace HunterSystem.Tests
             }
             Assert.That(asked, Is.True, "within a second it asks");
         }
+        [Test]
+        public void InTheHubABotMarksItselfReady()
+        {
+            var config = Config();
+            config.Hub = new HubDefinition { Centre = new Vec3(0f, 0f, -40f) };
+            var world = new SimulationWorld(config);
+            world.AddPlayer(Me, world.HubJoinPosition(Me));
+
+            Run(world, new BotBrain(seed: 1), 5);
+
+            Assert.That(world.GetPlayer(Me).IsReady, Is.True);
+        }
     }
 }

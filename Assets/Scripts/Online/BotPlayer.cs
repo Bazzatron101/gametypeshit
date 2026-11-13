@@ -33,6 +33,21 @@ namespace HunterSystem.Online
         private readonly List<SimulationEvent> _seen = new List<SimulationEvent>();
         private int _checkpointsSeen, _revivesSeen, _bossAttacksSeen;
         private string _rewardSeen = "";
+        private bool _gateClearedSeen;
+        private string _returnedHome = "";
+        private string _lastGateId = "";
+        private int _lastRooms, _lastRoomsCleared, _lastCheckpoint = -1, _lastAttempt;
+
+        /// <summary>The gate as it stood most recently, kept after the party comes home so the result can report it.</summary>
+        private void RememberGate(GateState gate)
+        {
+            _lastGateId = gate.Definition.Id;
+            _lastRooms = gate.Layout.Rooms.Count;
+            _lastRoomsCleared = 0;
+            for (var room = 0; room < _lastRooms; room++) if (gate.RoomState(room) == RoomState.Cleared) _lastRoomsCleared++;
+            _lastCheckpoint = gate.LatestCheckpoint;
+            _lastAttempt = gate.Attempt;
+        }
 
         /// <param name="expectClients">Host only: measure while this many clients are connected (0: from the warm-up on).</param>
         public void Begin(SimulationRunner runner, int seed, float seconds, string resultPath, int expectClients = 0)
@@ -40,6 +55,7 @@ namespace HunterSystem.Online
             _runner = runner;
             _brain = new BotBrain(seed);
             _runner.SetLocalCommandSource(this);
+            _expectClients = expectClients;
             if (resultPath != null) StartCoroutine(Measure(seconds, resultPath, expectClients));
         }
 
@@ -56,9 +72,11 @@ namespace HunterSystem.Online
                 if (e is PlayerRevived) _revivesSeen++;
                 if (e is BossAttackStarted) _bossAttacksSeen++;
                 if (e is GateRewardGranted reward && reward.Player == _runner.LocalPlayerId) _rewardSeen = reward.Modifier?.Id ?? "(pool owned)";
+                if (e is GateCleared) _gateClearedSeen = true;
+                if (e is ReturnedToHub home) _returnedHome = home.GateId + (home.Cleared ? " (cleared)" : " (left)");
+                if (_runner.World != null && _runner.World.HasGate) RememberGate(_runner.World.Gate);
             }
-            // In a gate the gate supplies the enemies; outside one, keep a fight going.
-            if (_runner.Host != null && !_runner.World.HasGate && Time.frameCount % 30 == 0) TopUpEnemies();
+            if (_runner.Host != null) HostDuties();
         }
 
         public PlayerCommand Sample()
@@ -66,6 +84,27 @@ namespace HunterSystem.Online
             if (_runner.World == null || !_runner.LocalPlayerId.HasValue) return PlayerCommand.None;
             return _brain.Next(_runner.World, _runner.LocalPlayerId.Value, _seen);
         }
+
+        /// <summary>
+        /// A bot host: in the hub, takes the party into the first gate once everyone is ready (once
+        /// per copy, so a test ends after one round trip); in the open field (no hub), keeps a fight going.
+        /// </summary>
+        private void HostDuties()
+        {
+            var world = _runner.World;
+            if (world.InHub)
+            {
+                var gates = _runner.Content != null ? _runner.Content.Gates : null;
+                // Waits for the whole expected party, so nobody joins mid-gate by accident.
+                var everyoneHere = _runner.Host.ConnectedClients >= _expectClients;
+                if (!_startedAGate && everyoneHere && gates != null && gates.Count > 0 && world.TryStartGateFromHub(gates[0].Id, out _)) _startedAGate = true;
+                return;
+            }
+            if (world.Hub == null && !world.HasGate && Time.frameCount % 30 == 0) TopUpEnemies();
+        }
+
+        private bool _startedAGate;
+        private int _expectClients;
 
         private void TopUpEnemies()
         {
@@ -110,6 +149,8 @@ namespace HunterSystem.Online
             public string rewardSeen = "";
             public List<string> localModifiers = new List<string>();
             public int bossAttacksSeen;
+            public string returnedHome = "";
+            public bool inHubAtEnd;
         }
 
         /// <summary>True once the session is in the state worth measuring: full (host) or joined (client), after a warm-up.</summary>
@@ -182,16 +223,15 @@ namespace HunterSystem.Online
                 unreadableEventLists = _runner.Client?.UnreadableEventLists ?? 0,
                 damageByPlayer = damage.Select(pair => $"{pair.Key}:{pair.Value}").ToList(),
             };
-            var gate = world?.Gate;
-            if (gate != null)
-            {
-                result.gateId = gate.Definition.Id;
-                result.gateCleared = gate.IsCleared;
-                result.rooms = gate.Layout.Rooms.Count;
-                for (var room = 0; room < result.rooms; room++) if (gate.RoomState(room) == RoomState.Cleared) result.roomsCleared++;
-                result.latestCheckpoint = gate.LatestCheckpoint;
-                result.gateAttempt = gate.Attempt;
-            }
+            if (world?.Gate != null) RememberGate(world.Gate);
+            result.gateId = _lastGateId;
+            result.gateCleared = _gateClearedSeen;
+            result.rooms = _lastRooms;
+            result.roomsCleared = _lastRoomsCleared;
+            result.latestCheckpoint = _lastCheckpoint;
+            result.gateAttempt = _lastAttempt;
+            result.returnedHome = _returnedHome;
+            result.inHubAtEnd = world != null && world.InHub;
             result.checkpointsSeen = _checkpointsSeen;
             result.rewardSeen = _rewardSeen;
             result.bossAttacksSeen = _bossAttacksSeen;

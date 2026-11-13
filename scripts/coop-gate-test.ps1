@@ -1,6 +1,7 @@
 <#
-A gate played over the network on one PC (ticket 17): the built co-op player runs as a bot host
-that goes straight into a gate, plus bot clients over local UDP (Fish-Net Tugboat). The bots walk
+A gate played over the network on one PC (tickets 17 to 19): the built co-op player runs as a bot
+host plus bot clients over local UDP (Fish-Net Tugboat). They gather in the hub and mark themselves
+ready; the host takes them into the first gate; they clear it, boss included, and come home. The bots walk
 the rooms, fight what appears and reach the checkpoints. Each copy writes what its own world
 ended with; this script compares them.
 
@@ -26,7 +27,7 @@ Get-ChildItem $out -Filter '*.json' | Remove-Item
 function Q([string]$path) { '"' + $path + '"' }   # Start-Process does not quote arguments; the path has a space
 $common = @('-batchmode', '-nographics', '-no-save', '-transport', 'local')
 $hostJson = Join-Path $out 'host.json'
-$hostArgs = $common + @('-coop', 'host', '-gate', $Gate, '-bot', '1', '-bot-expect', $Clients, '-autotest', $Seconds, (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
+$hostArgs = $common + @('-coop', 'host', '-bot', '1', '-bot-expect', $Clients, '-autotest', $Seconds, (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
 $processes = @(Start-Process -FilePath $exe -ArgumentList $hostArgs -PassThru)
 Start-Sleep -Seconds 3
 
@@ -58,7 +59,8 @@ foreach ($r in @($h) + $bots) { Write-Host ("  {0} player {1}: boss attacks seen
 $agree = @($bots | Where-Object { $_.gateId -eq $h.gateId -and $_.gateCleared -eq $h.gateCleared -and $_.roomsCleared -eq $h.roomsCleared -and $_.latestCheckpoint -eq $h.latestCheckpoint }).Count
 $checks = [ordered]@{
     "all $Clients clients joined"                     = @($bots | Where-Object joined).Count -eq $Clients
-    "the host is in gate '$Gate' and cleared it"      = $h.gateId -eq $Gate -and $h.gateCleared
+    "the party went from the hub into '$Gate' and cleared it" = $h.gateId -eq $Gate -and $h.gateCleared
+    'everyone came home to the hub'                   = -not (@($h) + $bots | Where-Object { $_.returnedHome -notlike "$Gate (cleared)" })
     'every client agrees on the gate (cleared, rooms, checkpoint)' = $agree -eq $Clients
     'every client was shown the checkpoints'          = -not ($bots | Where-Object { $_.checkpointsSeen -lt ($h.latestCheckpoint + 1) })
     'every client saw the boss attack'                = -not ($bots | Where-Object { $_.bossAttacksSeen -lt 1 })

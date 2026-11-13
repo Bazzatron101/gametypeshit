@@ -20,6 +20,11 @@ namespace HunterSystem.Game
         [SerializeField] private Material wallMaterial;
         [SerializeField] private Material checkpointMaterial;
         [SerializeField] private Material checkpointActiveMaterial;
+        [SerializeField] private Material portalMaterial;
+        private GameObject _portal;
+
+        /// <summary>True while the portal home is shown (for tests).</summary>
+        public bool PortalShown => _portal != null && _portal.activeSelf;
 
         private SimulationRunner _runner;
         private GateState _builtFor;
@@ -46,10 +51,29 @@ namespace HunterSystem.Game
             if (gate == null) return;
             for (var c = 0; c < _checkpoints.Count; c++)
                 _checkpoints[c].sharedMaterial = gate.IsCheckpointActivated(c) ? checkpointActiveMaterial : checkpointMaterial;
+            ShowPortal(gate.ReturnPortal);
+        }
+
+        /// <summary>A ring of light where the way home opens after a clear.</summary>
+        private void ShowPortal(Vec3? at)
+        {
+            if (_portal == null && at.HasValue)
+            {
+                _portal = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                _portal.name = "Portal home";
+                Destroy(_portal.GetComponent<Collider>());
+                _portal.transform.SetParent(_root, worldPositionStays: false);
+                _portal.transform.localScale = new Vector3(3f, 0.05f, 3f);
+                _portal.GetComponent<Renderer>().sharedMaterial = portalMaterial;
+            }
+            if (_portal == null) return;
+            _portal.SetActive(at.HasValue);
+            if (at.HasValue) _portal.transform.position = new Vector3(at.Value.X, 0.06f, at.Value.Z);
         }
 
         private void Clear()
         {
+            _portal = null;
             if (_root != null) Destroy(_root.gameObject);
             _root = null;
             _checkpoints.Clear();
