@@ -31,6 +31,7 @@ namespace HunterSystem.Online
         private BotBrain _brain;
         private EnemyTopUp _topUp;
         private readonly List<SimulationEvent> _seen = new List<SimulationEvent>();
+        private int _checkpointsSeen, _revivesSeen;
 
         /// <param name="expectClients">Host only: measure while this many clients are connected (0: from the warm-up on).</param>
         public void Begin(SimulationRunner runner, int seed, float seconds, string resultPath, int expectClients = 0)
@@ -47,7 +48,14 @@ namespace HunterSystem.Online
             if (_runner == null) return;
             _seen.Clear();
             _seen.AddRange(_runner.FrameEvents);
-            if (_runner.Host != null && Time.frameCount % 30 == 0) TopUpEnemies();
+            foreach (var e in _seen)
+            {
+                // Counted for this copy's whole life, not just the measured window: a checkpoint may fall before it.
+                if (e is CheckpointActivated) _checkpointsSeen++;
+                if (e is PlayerRevived) _revivesSeen++;
+            }
+            // In a gate the gate supplies the enemies; outside one, keep a fight going.
+            if (_runner.Host != null && !_runner.World.HasGate && Time.frameCount % 30 == 0) TopUpEnemies();
         }
 
         public PlayerCommand Sample()
@@ -89,6 +97,12 @@ namespace HunterSystem.Online
             public int unconfirmedCommands;
             public int unreadableEventLists;
             public List<string> damageByPlayer = new List<string>();
+
+            // The gate this copy ended in, as its own world saw it (empty id: none).
+            public string gateId = "";
+            public bool gateCleared;
+            public int roomsCleared, rooms, latestCheckpoint, gateAttempt;
+            public int checkpointsSeen, revivesSeen;
         }
 
         /// <summary>True once the session is in the state worth measuring: full (host) or joined (client), after a warm-up.</summary>
@@ -131,6 +145,7 @@ namespace HunterSystem.Online
                     if (e is DamageDealt d) damage[d.Attacker.Value] = (damage.TryGetValue(d.Attacker.Value, out var sum) ? sum : 0) + d.Amount;
                     if (e is EnemyDefeated) defeated++;
                     if (e is PlayerDefeated) playerDefeats++;
+
                 }
             }
 
@@ -160,6 +175,18 @@ namespace HunterSystem.Online
                 unreadableEventLists = _runner.Client?.UnreadableEventLists ?? 0,
                 damageByPlayer = damage.Select(pair => $"{pair.Key}:{pair.Value}").ToList(),
             };
+            var gate = world?.Gate;
+            if (gate != null)
+            {
+                result.gateId = gate.Definition.Id;
+                result.gateCleared = gate.IsCleared;
+                result.rooms = gate.Layout.Rooms.Count;
+                for (var room = 0; room < result.rooms; room++) if (gate.RoomState(room) == RoomState.Cleared) result.roomsCleared++;
+                result.latestCheckpoint = gate.LatestCheckpoint;
+                result.gateAttempt = gate.Attempt;
+            }
+            result.checkpointsSeen = _checkpointsSeen;
+            result.revivesSeen = _revivesSeen;
             File.WriteAllText(resultPath, JsonUtility.ToJson(result, prettyPrint: true));
             Application.Quit();
         }

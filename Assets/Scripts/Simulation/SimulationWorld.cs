@@ -96,6 +96,7 @@ namespace HunterSystem.Simulation
             _players.Add(player);
             _playersById.Add(id, player);
             _playerIds.Add(id);
+            NoteWhereTheyStand(player);
         }
 
         public bool HasPlayer(PlayerId id) => _playersById.ContainsKey(id);
@@ -107,7 +108,7 @@ namespace HunterSystem.Simulation
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
-                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f);
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position)
@@ -139,7 +140,8 @@ namespace HunterSystem.Simulation
         /// Advances one tick: queued world operations (modifier grants, granted XP, taught skills...)
         /// apply first, then loadout changes and stat points (so a point spent this tick already counts),
         /// then players dodge, release or keep charging, move and attack or use a skill, then
-        /// projectiles fly, then enemies act (a perfect dodge while charging fires the charge there). Players with no
+        /// projectiles fly, then enemies act (a perfect dodge while charging fires the charge there), then a
+        /// running gate keeps everyone on its floor and applies its rules (rooms, checkpoints, revives). Players with no
         /// entry in <paramref name="commands"/> act as if given <see cref="PlayerCommand.None"/>.
         /// Players act first, so a dodge pressed on the tick a hit lands still counts, and a dodge
         /// cancels an attack windup.
@@ -160,6 +162,7 @@ namespace HunterSystem.Simulation
                 if (!commands.TryGetValue(player.Id, out var cmd)) continue;
                 if (cmd.AssignSkill.HasValue) TryAssignSkill(player, cmd.AssignSkill.Value, tick);
                 if (cmd.AllocateStat.HasValue) TryAllocateStat(player, cmd.AllocateStat.Value, tick);
+                if (cmd.Respawn) TryRespawn(player, tick);
             }
 
             foreach (var player in _players)
@@ -205,6 +208,9 @@ namespace HunterSystem.Simulation
 
             foreach (var enemy in _enemies)
                 if (enemy.Health > 0) UpdateEnemy(enemy, tick);
+
+            ConfineToGate();
+            UpdateGate(tick);
 
             Tick = tick;
         }

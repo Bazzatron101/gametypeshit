@@ -186,14 +186,14 @@ namespace HunterSystem.Tests
         }
 
         [Test]
-        public void ADefeatedBotDoesNothing()
+        public void ADefeatedBotOnlyAsksToGetUp()
         {
             var world = new SimulationWorld(Config());
             world.AddPlayer(Me, Vec3.Zero);
             world.SpawnEnemy(Biter, new Vec3(0f, 0f, 1.5f));
             var bot = new BotBrain(seed: 1);
 
-            // Without dodging, the biter wears the bot down; a defeated bot then sends nothing.
+            // Without dodging, the biter wears the bot down; a defeated bot then sends nothing but a request to get up.
             var commands = new Dictionary<PlayerId, PlayerCommand>();
             for (var i = 0; i < 6000 && !world.GetPlayer(Me).IsDefeated; i++)
             {
@@ -201,13 +201,17 @@ namespace HunterSystem.Tests
                 world.Step(commands);
             }
             Assume.That(world.GetPlayer(Me).IsDefeated, Is.True);
+            var asked = false;
 
             for (var i = 0; i < 60; i++)
             {
-                Assert.That(bot.Next(world, Me, world.Events), Is.EqualTo(PlayerCommand.None), $"tick {i}");
+                var command = bot.Next(world, Me, world.Events);
+                asked |= command.Respawn;
+                Assert.That(command, Is.EqualTo(PlayerCommand.None).Or.EqualTo(new PlayerCommand(0f, 0f, respawn: true)), $"tick {i}");
                 commands[Me] = PlayerCommand.None;
                 world.Step(commands);
             }
+            Assert.That(asked, Is.True, "within a second it asks");
         }
     }
 }

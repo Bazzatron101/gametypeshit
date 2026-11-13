@@ -61,12 +61,16 @@ namespace HunterSystem.Simulation
         /// <summary>How full the current charge is, 0 to 1 (0 when not charging).</summary>
         public readonly float ChargeFraction;
 
+        /// <summary>True while this player's connection is down: their character waits in the run (see <see cref="SimulationWorld.SetAway"/>).</summary>
+        public readonly bool IsAway;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
-            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f)
+            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false)
         {
+            IsAway = isAway;
             Id = id;
             Position = position;
             Facing = facing;

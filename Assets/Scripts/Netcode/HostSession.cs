@@ -145,9 +145,11 @@ namespace HunterSystem.Netcode
                         _awaitingHello.Remove(connection);
                         if (_byConnection.TryGetValue(connection, out var gone))
                         {
-                            // The character stays in the run, standing still, until its owner rejoins.
+                            // The character stays in the run, standing still, until its owner rejoins. While
+                            // away it is no teammate for a gate's death rules, and enemies leave it alone.
                             _byConnection.Remove(connection);
                             gone.ResetConnection(-1);
+                            World.SetAway(gone.Id, true);
                         }
                         break;
                     case NetEventKind.Data:
@@ -206,7 +208,7 @@ namespace HunterSystem.Netcode
         }
 
         private static bool IsMovementOnly(PlayerCommand c) =>
-            !c.LightAttack && !c.HeavyAttack && !c.Dodge && !c.UseSkillSlot.HasValue && !c.AllocateStat.HasValue && !c.AssignSkill.HasValue;
+            !c.LightAttack && !c.HeavyAttack && !c.Dodge && !c.Respawn && !c.UseSkillSlot.HasValue && !c.AllocateStat.HasValue && !c.AssignSkill.HasValue;
 
         /// <summary>
         /// A new player arrives with the character they sent. A returning one gets back the character
@@ -252,6 +254,7 @@ namespace HunterSystem.Netcode
             }
 
             remote.ResetConnection(connection);
+            World.SetAway(remote.Id, false);
             _byConnection[connection] = remote;
             Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
         }

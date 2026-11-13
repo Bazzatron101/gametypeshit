@@ -8,7 +8,8 @@ namespace HunterSystem.Netcode
     /// A simple player, for filling sessions without people (ticket 14). Each tick it looks at the
     /// world it can see and the events it was shown, and decides one command, as a person at the
     /// keyboard would: spend stat points, dodge a hit it saw coming, walk to the nearest enemy,
-    /// then swing at it and use whichever skills are ready.
+    /// then swing at it and use whichever skills are ready. In a gate with nothing in sight it walks
+    /// on to the next room, and when it is down it asks to get up.
     /// <para>
     /// It sends commands through the normal path (a client session on a bot, the host's own input on
     /// a bot host), so everything it does is checked by the simulation like anyone else's input.
@@ -22,6 +23,7 @@ namespace HunterSystem.Netcode
         private const int LightEveryTicks = 20;
         private const int HeavyEveryTicks = 150;
         private const int SkillEveryTicks = 45;
+        private const int AskToRespawnEveryTicks = 60;
 
         /// <summary>Stay this close to the party when there is nothing to fight.</summary>
         private const float FollowDistance = 4f;
@@ -51,8 +53,9 @@ namespace HunterSystem.Netcode
             var self = world.GetPlayer(me);
             if (self.IsDefeated)
             {
+                // Down: all it can do is ask to get up, about once a second (only a solo gate answers).
                 _incomingHits.Clear();
-                return PlayerCommand.None;
+                return (world.Tick + _phase) % AskToRespawnEveryTicks == 0 ? new PlayerCommand(0f, 0f, respawn: true) : PlayerCommand.None;
             }
 
             var tick = world.Tick + 1; // the command is for the next step
@@ -81,7 +84,7 @@ namespace HunterSystem.Netcode
                 return new PlayerCommand(away.X, away.Z, dodge: true);
             }
 
-            if (!target.HasValue) return FollowParty(world, me, self.Position);
+            if (!target.HasValue) return world.HasGate ? WalkTheGate(world.Gate, self.Position) : FollowParty(world, me, self.Position);
 
             var offset = world.GetEnemy(target.Value).Position - self.Position;
             offset = new Vec3(offset.X, 0f, offset.Z);
@@ -146,6 +149,38 @@ namespace HunterSystem.Netcode
                 bestDistance = distance;
             }
             return best;
+        }
+
+        /// <summary>
+        /// Nothing to fight in a gate: head for the first room that is not cleared (its enemies appear
+        /// on arrival), stopping at a checkpoint not yet reached on the way.
+        /// </summary>
+        private static PlayerCommand WalkTheGate(GateState gate, Vec3 from)
+        {
+            var rooms = gate.Layout.Rooms;
+            for (var room = 0; room < rooms.Count; room++)
+            {
+                if (gate.RoomState(room) == RoomState.Cleared) continue;
+                var destination = rooms[room].Centre;
+                var checkpoints = gate.Layout.Checkpoints;
+                for (var c = 0; c < checkpoints.Count; c++)
+                {
+                    if (checkpoints[c].Room >= room || gate.IsCheckpointActivated(c)) continue;
+                    destination = checkpoints[c].Position; // one behind us that was missed
+                    break;
+                }
+                var toward = Direction(from, destination);
+                return new PlayerCommand(toward.X, toward.Z);
+            }
+
+            // Every room cleared: finish on the last checkpoint not yet reached, if any.
+            for (var c = 0; c < gate.Layout.Checkpoints.Count; c++)
+            {
+                if (gate.IsCheckpointActivated(c)) continue;
+                var toward = Direction(from, gate.Layout.Checkpoints[c].Position);
+                return new PlayerCommand(toward.X, toward.Z);
+            }
+            return PlayerCommand.None;
         }
 
         private static PlayerCommand FollowParty(SimulationWorld world, PlayerId me, Vec3 from)

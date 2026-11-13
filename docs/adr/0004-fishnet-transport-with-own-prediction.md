@@ -92,9 +92,10 @@ reasons it was the front-runner; interest management becomes ours to build (see 
   stress test (14) measured about 98 KB/s per client and **about 880 KB/s of host upload** for ten players
   (`docs/measurements/ten-bot-stress-test.md`): the main scaling problem. Compression (measured at 23%),
   then delta snapshots, then our own area-of-interest culling (Fish-Net's is not used) are ticket 31.
-- **Spawn point (ticket 13):** joiners and rejoiners appear beside the party (`JoinPoint.BesideParty`:
-  beside the first standing player, each at its own angle); a rejoiner is moved there, not left where
-  they dropped. ADR 0003's "latest activated checkpoint" replaces this with the gate runtime (17).
+- **Spawn point (tickets 13 and 17):** in a running gate, joiners and rejoiners appear at the latest
+  activated checkpoint (`JoinPoint.For`, ADR 0003). Outside a gate they appear beside the party
+  (`JoinPoint.BesideParty`). A rejoiner is moved there, not left where they dropped. While a player's
+  connection is down their character is marked away (ADR 0006).
 - **Steam invites (ticket 13):** the game starts Steam at the menu, so a friend's invite or "Join Game"
   reaches a running copy (`OnGameRichPresenceJoinRequested`) as well as a newly launched one (`+connect`).
   **On test app 480 this does not work from a closed game:** Steam launches the app it has installed for

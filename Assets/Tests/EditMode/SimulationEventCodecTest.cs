@@ -53,6 +53,14 @@ namespace HunterSystem.Tests
             new Explosion(29, P, Slam, new Vec3(1f, 2f, 3f), 2.5f),
             new ProjectileEnded(30, 44, true, new Vec3(-1f, 0f, 8f)),
             new EnemyDefeated(31, E, P),
+            new RoomEntered(32, 3),
+            new RoomCleared(33, 3),
+            new CheckpointActivated(34, 2, P),
+            new PlayerRevived(35, P, 2, 1),
+            new PlayerRevived(35, P, -1, PlayerRevived.NoLimit),
+            new GateWiped(36, 2),
+            new GateRestarted(37, 4),
+            new GateCleared(38),
         };
 
         [Test]

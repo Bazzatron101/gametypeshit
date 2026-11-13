@@ -31,3 +31,5 @@ MonoBehaviour:
   enemies:
   - {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
   - {fileID: 11400000, guid: b8213ddf57ac7634ab101d13adabee64, type: 2}
+  gates:
+  - {fileID: 11400000, guid: d5eca38938261a44dbd68e555dfdd752, type: 2}

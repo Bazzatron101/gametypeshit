@@ -19,7 +19,7 @@ namespace HunterSystem.Online
     /// <para>
     /// The same can be done from the command line, which is how two built copies are tested
     /// without anyone at the keyboard:
-    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
+    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
     /// With <c>-bot</c> this copy's player is a <see cref="BotPlayer"/> (the 10-bot stress test).
     /// Steam's "Join Game" passes <c>+connect STEAMID</c>, which joins over Steam; a copy already
     /// running at the menu (or disconnected) gets the same request from Steam and joins straight away.
@@ -128,7 +128,7 @@ namespace HunterSystem.Online
             _role = Role.Host;
             var transport = new FishNetHostTransport(_network, addressIsIdentity: steam);
             _network.ServerManager.StartConnection();
-            _runner.StartHost(transport, id => JoinPoint.BesideParty(_runner.World, id, fallback: Vec3.Zero));
+            _runner.StartHost(transport, id => JoinPoint.For(_runner.World, id, fallback: Vec3.Zero));
             if (steam)
             {
                 // Friends can now use "Join Game" from the Steam friends list: Steam launches the
@@ -141,6 +141,14 @@ namespace HunterSystem.Online
                 _status = "Hosting locally (UDP 7770).";
             }
             SpawnGoblins(3);
+        }
+
+        /// <summary>Host only: takes the whole party into a gate from the content list.</summary>
+        public void EnterGate(string gateId)
+        {
+            if (_runner.Host == null) return;
+            _runner.World.StartGate(gateId);
+            _status = "In the gate.";
         }
 
         public void Join(bool steam, string address, string playerKey = null)
@@ -229,7 +237,11 @@ namespace HunterSystem.Online
             var connect = Arg("+connect");
             if ((steam || connect != null) && !_steamReady) return; // the status already says Steam is unavailable
             if (connect != null) Join(steam: true, connect);
-            else if (Arg("-coop") == "host") Host(steam);
+            else if (Arg("-coop") == "host")
+            {
+                Host(steam);
+                if (Arg("-gate") != null) EnterGate(Arg("-gate")); // straight into a gate (automated runs)
+            }
             else if (Arg("-coop") == "join") Join(steam, Arg("-address") ?? "localhost", Arg("-player-key"));
 
             var seconds = 0f;
@@ -398,7 +410,7 @@ namespace HunterSystem.Online
             {
                 DrawCharacterAndSaves();
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Host locally")) Host(steam: false);
+                if (GUILayout.Button("Play solo / host locally")) Host(steam: false);
                 if (GUILayout.Button("Join locally")) Join(steam: false, "localhost");
                 GUILayout.EndHorizontal();
                 GUI.enabled = _steamReady;
@@ -426,8 +438,13 @@ namespace HunterSystem.Online
                 {
                     GUILayout.Label($"Clients: {_runner.Host.ConnectedClients}   Snapshot: {_runner.Host.LastSnapshotSize} bytes", _label);
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button("Spawn 3 Goblins")) SpawnGoblins(3);
-                    if (GUILayout.Button("Spawn a Hobgoblin")) SpawnEnemies("Hobgoblin", 1);
+                    if (_runner.Content != null && !_runner.World.HasGate)
+                    {
+                        foreach (var gate in _runner.Content.Gates)
+                            if (gate != null && GUILayout.Button("Enter gate: " + gate.DisplayName)) EnterGate(gate.Id);
+                    }
+                    if (!_runner.World.HasGate && GUILayout.Button("Spawn 3 Goblins")) SpawnGoblins(3);
+                    if (!_runner.World.HasGate && GUILayout.Button("Spawn a Hobgoblin")) SpawnEnemies("Hobgoblin", 1);
                     if (_onSteam && GUILayout.Button("Invite friends")) SteamFriends.OpenOverlay("friends"); // right-click a friend > Invite to Game
                     if (_onSteam && GUILayout.Button("Copy my SteamID")) GUIUtility.systemCopyBuffer = SteamClient.SteamId.ToString();
                     GUILayout.EndHorizontal();

@@ -40,7 +40,7 @@ namespace HunterSystem.Simulation
             enemy.AttackTarget = null;
             enemy.AttackReadyAtTick = tick + enemy.AttackCooldownTicks;
 
-            if (!target.IsAlive || Flat(target.Position - enemy.Position).Length > enemy.Definition.AttackRange) return; // whiff
+            if (!target.IsAlive || target.Away || Flat(target.Position - enemy.Position).Length > enemy.Definition.AttackRange) return; // whiff
 
             if (target.IsInvulnerable(tick))
             {
@@ -61,7 +61,7 @@ namespace HunterSystem.Simulation
             distance = float.MaxValue;
             foreach (var player in _players)
             {
-                if (!player.IsAlive) continue;
+                if (!player.IsAlive || player.Away) continue;
                 var d = Flat(player.Position - from).Length;
                 if (d < distance) { distance = d; nearest = player; }
             }

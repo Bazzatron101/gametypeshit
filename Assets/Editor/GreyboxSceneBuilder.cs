@@ -158,6 +158,13 @@ namespace HunterSystem.Editor
                 ("swingMaterial", GetOrCreateMaterial("Greybox_Swing", new Color(1f, 0.85f, 0.3f))),
                 ("enemyMaterial", GetOrCreateMaterial("Greybox_Goblin", GoblinColour)));
 
+            Wire(simulation.AddComponent<GateView>(),
+                ("floorMaterial", GetOrCreateMaterial("Greybox_GateFloor", new Color(0.42f, 0.44f, 0.5f))),
+                ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
+                ("checkpointMaterial", GetOrCreateMaterial("Greybox_Checkpoint", new Color(0.35f, 0.35f, 0.4f))),
+                ("checkpointActiveMaterial", GetOrCreateMaterial("Greybox_CheckpointActive", new Color(0.3f, 0.9f, 1f))));
+            simulation.AddComponent<GateHud>();
+
             var local = CreateNetwork<Tugboat>("Network (Local UDP)");
             var steam = CreateNetwork<FishyFacepunch.FishyFacepunch>("Network (Steam)");
             Wire(simulation.AddComponent<CoopLauncher>(), ("localNetwork", local), ("steamNetwork", steam));
@@ -270,6 +277,7 @@ namespace HunterSystem.Editor
             var skills = SkillData.Select(GetOrCreateSkill).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
+            var gates = new[] { GetOrCreateGoblinWarren() };
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
             if (content == null)
@@ -281,7 +289,8 @@ namespace HunterSystem.Editor
             content.ReplaceContent(tuning, progression,
                 WithEveryProjectAsset(content.Skills, skills),
                 WithEveryProjectAsset(content.Modifiers, modifiers),
-                WithEveryProjectAsset(content.Enemies, enemies));
+                WithEveryProjectAsset(content.Enemies, enemies),
+                WithEveryProjectAsset(content.Gates, gates));
             EditorUtility.SetDirty(content);
             AssetDatabase.SaveAssets();
             // Saving re-imports the asset; hand back the reloaded object, or scene references to it come out empty.
@@ -323,6 +332,35 @@ namespace HunterSystem.Editor
                 a.SetStats("Hobgoblin", maxHealth: 90, moveSpeed: 2.2f, stopDistance: 1.4f);
                 a.SetAttackAndReward(damage: 20, range: 1.9f, windupSeconds: 0.8f, cooldownSeconds: 2.2f, xpReward: 60);
             });
+
+        // --- The room kit and the first gate (ticket 17) -----------------------------------------
+
+        private static RoomPieceAsset.Spawn At(EnemyDefinitionAsset enemy, float x, float z) =>
+            new RoomPieceAsset.Spawn { enemy = enemy, offset = new Vector3(x, 0f, z) };
+
+        private static RoomPieceAsset GetOrCreateRoom(string name, float width, float length, bool checkpoint, params RoomPieceAsset.Spawn[] spawns) =>
+            GetOrCreate<RoomPieceAsset>("Rooms", name, a => a.Set(width, length, spawns, checkpoint));
+
+        /// <summary>
+        /// The first gate, built from six kit pieces (the corridor is used three times): an empty
+        /// entrance hall, then three fights of rising size joined by corridors, with a checkpoint
+        /// in the first two. Greybox content for proving the gate runtime, not a designed dungeon.
+        /// </summary>
+        private static GateDefinitionAsset GetOrCreateGoblinWarren()
+        {
+            var goblin = GetOrCreateGoblinDefinition();
+            var hobgoblin = GetOrCreateHobgoblinDefinition();
+            var entrance = GetOrCreateRoom("Entrance Hall", 10f, 10f, checkpoint: false);
+            var corridor = GetOrCreateRoom("Corridor", 4f, 8f, checkpoint: false);
+            var den = GetOrCreateRoom("Goblin Den", 14f, 18f, checkpoint: true,
+                At(goblin, -4f, 4f), At(goblin, 4f, 4f), At(goblin, 0f, 7f));
+            var guardRoom = GetOrCreateRoom("Guard Room", 16f, 20f, checkpoint: true,
+                At(goblin, -5f, 3f), At(goblin, 5f, 3f), At(goblin, -3f, 7f), At(goblin, 3f, 7f), At(hobgoblin, 0f, 8f));
+            var hall = GetOrCreateRoom("Great Hall", 18f, 22f, checkpoint: false,
+                At(goblin, -6f, 2f), At(goblin, 6f, 2f), At(goblin, -3f, 6f), At(goblin, 3f, 6f), At(hobgoblin, -4f, 9f), At(hobgoblin, 4f, 9f));
+            return GetOrCreate<GateDefinitionAsset>("Gates", "Goblin Warren",
+                a => a.Set("goblin-warren", "Goblin Warren", new[] { entrance, corridor, den, corridor, guardRoom, corridor, hall }));
+        }
 
         /// <summary>A settings asset at a fixed path, created with its field defaults if missing and never overwritten.</summary>
         private static T GetOrCreateSingle<T>(string path) where T : ScriptableObject

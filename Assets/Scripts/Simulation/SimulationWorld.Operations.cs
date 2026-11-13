@@ -86,15 +86,18 @@ namespace HunterSystem.Simulation
         public void RestoreHealth(PlayerId id)
         {
             var player = FindPlayer(id);
-            Enqueue(_ =>
-            {
-                player.Health = player.MaxHealth;
-                player.LifeState = PlayerLifeState.Alive;
-                player.PendingAttackLandsAtTick = 0; // back on their feet, not mid-swing or mid-charge
-                player.ClearCharge();
-                player.DodgeEndsAtTick = 0;
-                player.InvulnerableUntilTick = 0;
-            });
+            Enqueue(_ => GetUp(player));
+        }
+
+        /// <summary>Full health and back on their feet, not mid-swing, mid-charge or mid-dodge.</summary>
+        private static void GetUp(Player player)
+        {
+            player.Health = player.MaxHealth;
+            player.LifeState = PlayerLifeState.Alive;
+            player.PendingAttackLandsAtTick = 0;
+            player.ClearCharge();
+            player.DodgeEndsAtTick = 0;
+            player.InvulnerableUntilTick = 0;
         }
 
         /// <summary>

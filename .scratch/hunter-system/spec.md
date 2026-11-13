@@ -106,7 +106,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 54. As a solo player, I want to respawn at the most recent checkpoint a limited number of times per gate, so that one mistake does not cost me a long run.
 55. As a solo player, I want to restart at the gate entrance after using my three revives, so that stakes remain.
-56. As a co-op player who dies, I want the choice to wait for a teammate revive at the next checkpoint or respawn at the closest checkpoint, so that I am never stuck waiting. (Changed 2026-11-13 from "the entrance".)
+56. As a co-op player who dies, I want to come back when a teammate reaches a checkpoint, so that the party carries its fallen forward. (Changed 2026-11-13: first from "respawn at the entrance" to "the closest checkpoint", then to this. There is no respawn choice; see docs/adr/0006.)
 57. As a co-op player, I want a wipe to cost progress inside the gate but never the character, so that failure never destroys what I have built.
 
 ### Story and presentation
@@ -196,8 +196,8 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 ### Deaths, scaling, and rewards
 
-- Solo: three checkpoint revives per gate, then restart at the entrance.
-- Co-op: a dead player chooses between waiting for a checkpoint revive or respawning at the closest checkpoint (the activated checkpoint nearest the living party; decided 2026-11-13). A wipe costs progress inside the gate only.
+- Solo: three checkpoint revives per gate, then the whole gate restarts from the entrance with three new revives.
+- Co-op: a fallen player comes back when a living teammate reaches a checkpoint, and appears there. If the whole party is down, everyone returns at the latest checkpoint and unfinished rooms refill. A wipe costs progress inside the gate only. (Decided 2026-11-13, docs/adr/0006.)
 - No player-power scaling. Rewards are not reduced for over-leveled players.
 - Enemy scaling in tiers (solo, 2 to 4, 5 to 10) through health and damage multipliers plus spawn counts. Every normal gate stays solo-completable. Raid gates (10 players) use split objectives and phases. A "roles by build" idea for raids is optional, if a good design emerges.
 
@@ -252,7 +252,7 @@ Test external behavior through the simulation boundary: given inputs and data, a
 - **Progression:** level-ups grant the right stats and unlocks, rank promotions trigger at the right levels, and quest-gated promotions require their quests.
 - **Combat and skills:** cooldowns, dodge invulnerability windows, and tag-based modifier interactions produce expected damage and effects.
 - **Loot:** guaranteed rewards on clear, draws without replacement until the pool is owned, and duplicate handling afterward.
-- **Death and checkpoints:** three solo revives then restart, co-op revive-or-respawn choice, and wipes costing in-gate progress only.
+- **Death and checkpoints:** three solo revives then restart, co-op revives when a teammate reaches a checkpoint, and wipes costing in-gate progress only.
 - **Party scaling:** enemy health, damage, and spawn counts at each tier, and solo-completability of normal gates.
 - **Co-op via bots:** N bot clients (up to 10) exercise raid mechanics, authority rules, and reconciliation without human players.
 - **Content validation:** every skill, item, enemy, and gate definition loads and passes consistency checks.

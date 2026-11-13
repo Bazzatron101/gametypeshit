@@ -331,6 +331,84 @@ namespace HunterSystem.Simulation
         }
     }
 
+    /// <summary>The party reached a room of the gate and its enemies appeared.</summary>
+    public sealed class RoomEntered : SimulationEvent
+    {
+        public int Room { get; }
+
+        public RoomEntered(int tick, int room) : base(tick) => Room = room;
+    }
+
+    /// <summary>Every enemy of a gate room is defeated.</summary>
+    public sealed class RoomCleared : SimulationEvent
+    {
+        public int Room { get; }
+
+        public RoomCleared(int tick, int room) : base(tick) => Room = room;
+    }
+
+    /// <summary>A living player reached a checkpoint for the first time this attempt.</summary>
+    public sealed class CheckpointActivated : SimulationEvent
+    {
+        /// <summary>Its number along the gate (see <see cref="GateLayout.Checkpoints"/>).</summary>
+        public int Checkpoint { get; }
+
+        public PlayerId Player { get; }
+
+        public CheckpointActivated(int tick, int checkpoint, PlayerId player) : base(tick)
+        {
+            Checkpoint = checkpoint;
+            Player = player;
+        }
+    }
+
+    /// <summary>A fallen player is back on their feet at a checkpoint (or the entrance) of the gate.</summary>
+    public sealed class PlayerRevived : SimulationEvent
+    {
+        /// <summary><see cref="RevivesLeft"/> for a co-op revive, which uses none up.</summary>
+        public const int NoLimit = -1;
+
+        public PlayerId Player { get; }
+
+        /// <summary>The checkpoint they came back at, or -1 for the entrance.</summary>
+        public int Checkpoint { get; }
+
+        /// <summary>Solo revives left after this one, or <see cref="NoLimit"/> when a teammate brought them back.</summary>
+        public int RevivesLeft { get; }
+
+        public PlayerRevived(int tick, PlayerId player, int checkpoint, int revivesLeft) : base(tick)
+        {
+            Player = player;
+            Checkpoint = checkpoint;
+            RevivesLeft = revivesLeft;
+        }
+    }
+
+    /// <summary>Co-op: the whole party was down. Everyone is back at a checkpoint (-1: the entrance) and unfinished rooms start over.</summary>
+    public sealed class GateWiped : SimulationEvent
+    {
+        public int Checkpoint { get; }
+
+        public GateWiped(int tick, int checkpoint) : base(tick) => Checkpoint = checkpoint;
+    }
+
+    /// <summary>Solo, out of revives: the gate starts again from the entrance.</summary>
+    public sealed class GateRestarted : SimulationEvent
+    {
+        /// <summary>Which attempt is starting (2 for the first restart).</summary>
+        public int Attempt { get; }
+
+        public GateRestarted(int tick, int attempt) : base(tick) => Attempt = attempt;
+    }
+
+    /// <summary>Every room of the gate is cleared.</summary>
+    public sealed class GateCleared : SimulationEvent
+    {
+        public GateCleared(int tick) : base(tick)
+        {
+        }
+    }
+
     public sealed class EnemyDefeated : SimulationEvent
     {
         public EnemyId Enemy { get; }

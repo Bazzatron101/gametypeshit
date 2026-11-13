@@ -256,6 +256,9 @@ namespace HunterSystem.Game
         /// </summary>
         public void RequestStatAllocation(PlayerId id, Stat stat) => BufferFor(id).QueueStatAllocation(stat);
 
+        /// <summary>A defeated player asking to come back, sent as a command on the next tick. The gate's death rules decide what happens.</summary>
+        public void RequestRespawn(PlayerId id) => BufferFor(id).QueueRespawn();
+
         /// <summary>Replaces where a player's commands come from (tests, bots).</summary>
         public void SetCommandSource(PlayerId id, IPlayerCommandSource source)
         {

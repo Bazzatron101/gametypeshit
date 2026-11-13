@@ -3,6 +3,7 @@ using HunterSystem.Game;
 using HunterSystem.Simulation;
 using NUnit.Framework;
 using UnityEditor;
+using UnityEngine;
 
 namespace HunterSystem.Tests
 {
@@ -53,9 +54,46 @@ namespace HunterSystem.Tests
             Assert.That(All<SkillDefinitionAsset>(), Is.SubsetOf(content.Skills));
             Assert.That(All<ModifierDefinitionAsset>(), Is.SubsetOf(content.Modifiers));
             Assert.That(All<EnemyDefinitionAsset>(), Is.SubsetOf(content.Enemies));
+            Assert.That(All<GateDefinitionAsset>(), Is.SubsetOf(content.Gates));
+            Assert.That(content.Gates, Is.Unique);
             Assert.That(content.Skills, Is.Unique);
             Assert.That(content.Modifiers, Is.Unique);
             Assert.That(content.Enemies, Is.Unique);
+        }
+
+        [Test]
+        public void EveryGateIsACompleteChainOfRoomPieces()
+        {
+            var content = Content();
+            Assert.That(content.Gates, Is.Not.Empty.And.All.Not.Null);
+            Assert.That(content.Gates.Select(g => g.Id), Is.Unique, "gate ids name gates in saves and over the network");
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+
+            foreach (var asset in content.Gates)
+            {
+                Assert.That(asset.Id, Is.Not.Empty, asset.name);
+                Assert.That(asset.Rooms, Is.Not.Empty.And.All.Not.Null, $"{asset.name}: rooms");
+                Assert.That(asset.Rooms[0].Spawns, Is.Empty, $"{asset.name}: the entrance room is safe to arrive in");
+                foreach (var room in asset.Rooms)
+                {
+                    foreach (var spawn in room.Spawns)
+                    {
+                        Assert.That(spawn.enemy, Is.Not.Null, $"{room.name}: a spawn with no enemy");
+                        Assert.That(content.Enemies, Has.Member(spawn.enemy), $"{room.name}: an enemy that is not in the content list");
+                        Assert.That(Mathf.Abs(spawn.offset.x), Is.LessThanOrEqualTo(room.Width / 2f), $"{room.name}: a spawn outside the room");
+                        Assert.That(Mathf.Abs(spawn.offset.z), Is.LessThanOrEqualTo(room.Length / 2f), $"{room.name}: a spawn outside the room");
+                    }
+                }
+
+                var gate = config.Gates.Single(g => g.Id == asset.Id);
+                var layout = new GateLayout(gate); // throws on a room with no floor
+                Assert.That(layout.Checkpoints, Is.Not.Empty, $"{asset.name}: at least one checkpoint");
+                Assert.That(gate.SoloRevives, Is.EqualTo(3), $"{asset.name}: the spec's three solo revives");
+                Assert.That(gate.Rooms.SelectMany(r => r.Spawns).Select(sp => sp.Enemy).Distinct().Count(),
+                    Is.EqualTo(asset.Rooms.SelectMany(r => r.Spawns).Select(sp => sp.enemy).Distinct().Count()),
+                    $"{asset.name}: each enemy type is one shared definition, so snapshots stay small");
+            }
         }
 
         [Test]

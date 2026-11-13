@@ -15,6 +15,9 @@ namespace HunterSystem.Simulation
             public int MaxHealth;
             public PlayerLifeState LifeState;
 
+            /// <summary>Their connection dropped: still in the run, but no teammate for the gate's rules and ignored by enemies.</summary>
+            public bool Away;
+
             public int Level = 1;
             public int Xp;
             public int UnspentStatPoints;

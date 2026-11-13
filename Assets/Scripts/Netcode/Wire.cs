@@ -39,7 +39,7 @@ namespace HunterSystem.Netcode
     /// <summary>Message encoding. Compact binary, little-endian, no reflection.</summary>
     public static class Wire
     {
-        private const byte LightAttackBit = 1, HeavyAttackBit = 2, DodgeBit = 4;
+        private const byte LightAttackBit = 1, HeavyAttackBit = 2, DodgeBit = 4, RespawnBit = 8;
         public static MessageType TypeOf(byte[] message) =>
             message != null && message.Length > 0 ? (MessageType)message[0] : throw new ArgumentException("Empty message.", nameof(message));
 
@@ -82,7 +82,7 @@ namespace HunterSystem.Netcode
             w.Write(sequence);
             w.Write(command.MoveX);
             w.Write(command.MoveZ);
-            w.Write((byte)((command.LightAttack ? LightAttackBit : 0) | (command.HeavyAttack ? HeavyAttackBit : 0) | (command.Dodge ? DodgeBit : 0)));
+            w.Write((byte)((command.LightAttack ? LightAttackBit : 0) | (command.HeavyAttack ? HeavyAttackBit : 0) | (command.Dodge ? DodgeBit : 0) | (command.Respawn ? RespawnBit : 0)));
             w.Write((sbyte)(command.UseSkillSlot ?? -1));
             w.Write(command.HeldSkillSlots);
             w.Write((sbyte)(command.AllocateStat.HasValue ? (int)command.AllocateStat.Value : -1));
@@ -122,7 +122,7 @@ namespace HunterSystem.Netcode
                 lightAttack: (buttons & LightAttackBit) != 0, dodge: (buttons & DodgeBit) != 0, heavyAttack: (buttons & HeavyAttackBit) != 0,
                 allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
                 useSkillSlot: useSkill >= 0 ? useSkill : (int?)null,
-                assignSkill: assign, heldSkillSlots: held));
+                assignSkill: assign, heldSkillSlots: held, respawn: (buttons & RespawnBit) != 0));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;

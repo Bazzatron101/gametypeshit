@@ -16,6 +16,7 @@ namespace HunterSystem.Game
         private bool _lightAttackPending;
         private bool _heavyAttackPending;
         private bool _dodgePending;
+        private bool _respawnPending;
         private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
         private readonly Queue<SkillAssignment> _skillAssignments = new Queue<SkillAssignment>();
@@ -29,6 +30,7 @@ namespace HunterSystem.Game
             _lightAttackPending |= sampled.LightAttack;
             _heavyAttackPending |= sampled.HeavyAttack;
             _dodgePending |= sampled.Dodge;
+            _respawnPending |= sampled.Respawn;
             if (sampled.UseSkillSlot.HasValue) _skillSlotPending = sampled.UseSkillSlot; // the latest press wins
             // A source that chooses stats or skills itself (a bot) is queued like a menu choice: once each, in order.
             // So such a source must put each choice in one sample only, not repeat it every frame (BotBrain does this).
@@ -38,6 +40,9 @@ namespace HunterSystem.Game
 
         /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>
         public void QueueStatAllocation(Stat stat) => _statAllocations.Enqueue(stat);
+
+        /// <summary>A defeated player asking to come back (the death panel's button); goes out with the next tick.</summary>
+        public void QueueRespawn() => _respawnPending = true;
 
         /// <summary>Queues one loadout change (from a UI). Commands carry one per tick, in order.</summary>
         public void QueueSkillAssignment(SkillAssignment assignment) => _skillAssignments.Enqueue(assignment);
@@ -49,7 +54,8 @@ namespace HunterSystem.Game
             SkillAssignment? assign = _skillAssignments.Count > 0 ? _skillAssignments.Dequeue() : (SkillAssignment?)null;
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
-                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots);
+                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending);
+            _respawnPending = false;
             _lightAttackPending = false;
             _heavyAttackPending = false;
             _dodgePending = false;

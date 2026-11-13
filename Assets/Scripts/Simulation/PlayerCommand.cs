@@ -14,7 +14,7 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -33,9 +33,17 @@ namespace HunterSystem.Simulation
         /// <summary>Rearrange the skill bar (a loadout change), or null for none. One per tick.</summary>
         public readonly SkillAssignment? AssignSkill;
 
+        /// <summary>
+        /// A defeated player asking to come back (a press). In a gate, solo, it spends a revive or,
+        /// with none left, starts the gate again. In co-op and outside a gate it does nothing.
+        /// </summary>
+        public readonly bool Respawn;
+
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
-            Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0)
+            Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
+            bool respawn = false)
         {
+            Respawn = respawn;
             var length = MathF.Sqrt(moveX * moveX + moveZ * moveZ);
             if (length > 1f) { moveX /= length; moveZ /= length; }
             MoveX = moveX;

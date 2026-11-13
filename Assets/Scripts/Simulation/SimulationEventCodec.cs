@@ -20,6 +20,7 @@ namespace HunterSystem.Simulation
             AttackDodged, PlayerDefeated, XpGained, PlayerLeveledUp, StatPointAllocated, SkillUsed, SkillChargeStarted,
             SkillChargeUnlocked, SkillSlotChanged, ModifierGranted, ModifierRevoked, SkillUnlocked, Explosion,
             ProjectileEnded, EnemyDefeated,
+            RoomEntered, RoomCleared, CheckpointActivated, PlayerRevived, GateWiped, GateRestarted, GateCleared,
         }
 
         public static byte[] Encode(IEnumerable<SimulationEvent> events)
@@ -122,6 +123,27 @@ namespace HunterSystem.Simulation
                 case EnemyDefeated d:
                     Head(w, Code.EnemyDefeated, e); w.Write(d.Enemy.Value); w.Write(d.DefeatedBy.Value);
                     break;
+                case RoomEntered x:
+                    Head(w, Code.RoomEntered, e); w.Write(x.Room);
+                    break;
+                case RoomCleared x:
+                    Head(w, Code.RoomCleared, e); w.Write(x.Room);
+                    break;
+                case CheckpointActivated c:
+                    Head(w, Code.CheckpointActivated, e); w.Write(c.Checkpoint); w.Write(c.Player.Value);
+                    break;
+                case PlayerRevived p:
+                    Head(w, Code.PlayerRevived, e); w.Write(p.Player.Value); w.Write(p.Checkpoint); w.Write(p.RevivesLeft);
+                    break;
+                case GateWiped g:
+                    Head(w, Code.GateWiped, e); w.Write(g.Checkpoint);
+                    break;
+                case GateRestarted g:
+                    Head(w, Code.GateRestarted, e); w.Write(g.Attempt);
+                    break;
+                case GateCleared _:
+                    Head(w, Code.GateCleared, e);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -191,6 +213,13 @@ namespace HunterSystem.Simulation
                 case Code.Explosion: return new Explosion(tick, Player(), NullableSkill(), SimulationWorld.ReadVec(r), r.ReadSingle());
                 case Code.ProjectileEnded: return new ProjectileEnded(tick, r.ReadInt32(), r.ReadBoolean(), SimulationWorld.ReadVec(r));
                 case Code.EnemyDefeated: return new EnemyDefeated(tick, Enemy(), Player());
+                case Code.RoomEntered: return new RoomEntered(tick, r.ReadInt32());
+                case Code.RoomCleared: return new RoomCleared(tick, r.ReadInt32());
+                case Code.CheckpointActivated: return new CheckpointActivated(tick, r.ReadInt32(), Player());
+                case Code.PlayerRevived: return new PlayerRevived(tick, Player(), r.ReadInt32(), r.ReadInt32());
+                case Code.GateWiped: return new GateWiped(tick, r.ReadInt32());
+                case Code.GateRestarted: return new GateRestarted(tick, r.ReadInt32());
+                case Code.GateCleared: return new GateCleared(tick);
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }
         }

@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW1");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW2");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -91,6 +91,8 @@ namespace HunterSystem.Simulation
                 w.Write(p.LaunchTick);
             }
 
+            WriteGate(w);
+
             w.Flush();
             return stream.ToArray();
         }
@@ -136,6 +138,7 @@ namespace HunterSystem.Simulation
             }
             _projectiles.Clear();
             _projectiles.AddRange(parsed.Projectiles);
+            _gate = parsed.Gate;
             _events.Clear();
             _pendingOperations.Clear();
         }
@@ -178,6 +181,7 @@ namespace HunterSystem.Simulation
             w.Write(p.DodgeEndsAtTick);
             w.Write(p.InvulnerableUntilTick);
             WriteVec(w, p.DodgeDirection);
+            w.Write(p.Away);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d)
@@ -256,6 +260,7 @@ namespace HunterSystem.Simulation
             public readonly List<Player> Players = new List<Player>();
             public readonly List<Enemy> Enemies = new List<Enemy>();
             public readonly List<Projectile> Projectiles = new List<Projectile>();
+            public GateRun Gate;
         }
 
         private ParsedSnapshot Parse(byte[] snapshot)
@@ -330,6 +335,8 @@ namespace HunterSystem.Simulation
                 });
             }
 
+            parsed.Gate = ReadGate(r);
+
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");
             return parsed;
         }
@@ -373,6 +380,7 @@ namespace HunterSystem.Simulation
             p.DodgeEndsAtTick = r.ReadInt32();
             p.InvulnerableUntilTick = r.ReadInt32();
             p.DodgeDirection = ReadVec(r);
+            p.Away = r.ReadBoolean();
             return p;
         }
 

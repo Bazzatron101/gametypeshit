@@ -5,12 +5,22 @@ namespace HunterSystem.Netcode
 {
     /// <summary>
     /// Where a joining or rejoining player appears. ADR 0003 puts them at the latest activated
-    /// checkpoint; until gates have checkpoints (ticket 17), they appear beside the party.
+    /// checkpoint of the gate being run; outside a gate they appear beside the party.
     /// </summary>
     public static class JoinPoint
     {
         private const float Distance = 2f;
         private const float GoldenAngleRadians = 2.39996323f; // spreads successive joiners round the circle
+
+        /// <summary>
+        /// Where a joining or returning player appears: in a running gate, at the latest checkpoint
+        /// the party has activated (ADR 0003); otherwise beside the party.
+        /// </summary>
+        public static Vec3 For(SimulationWorld world, PlayerId joiner, Vec3 fallback)
+        {
+            if (world == null) throw new ArgumentNullException(nameof(world));
+            return world.HasGate ? world.Gate.JoinPosition(joiner) : BesideParty(world, joiner, fallback);
+        }
 
         /// <summary>
         /// Beside the first standing player other than <paramref name="joiner"/> (the host's, in

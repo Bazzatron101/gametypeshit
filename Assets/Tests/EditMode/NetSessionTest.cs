@@ -680,5 +680,137 @@ namespace HunterSystem.Tests
 
             Assert.That(host.World.GetPlayer(id).Level, Is.EqualTo(4));
         }
+        // --- Ticket 17: gates over the network ---------------------------------------------------
+
+        private static GateDefinition Corridor() => new GateDefinition
+        {
+            Id = "corridor", Name = "Corridor",
+            Rooms =
+            {
+                new RoomDefinition { Width = 10f, Length = 10f },
+                new RoomDefinition { Width = 10f, Length = 20f, HasCheckpoint = true, Spawns = { new RoomSpawn(Prey, new Vec3(0f, 0f, 8f)) } },
+            },
+        };
+
+        private static SimulationConfig GateConfig()
+        {
+            var config = Config();
+            config.Gates = new[] { Corridor() };
+            return config;
+        }
+
+        private static readonly Vec3 CorridorCheckpoint = new Vec3(0f, 0f, 20f);
+
+        [Test]
+        public void AGuestSeesTheGateAndItsWallsHoldInItsOwnPrediction()
+        {
+            var rig = new Rig(hostConfig: GateConfig());
+            var guest = rig.Join("alice", clientConfig: GateConfig());
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.StartGate("corridor");
+            rig.Tick(Latency * 2);
+            Assert.That(guest.World.HasGate, Is.True);
+
+            var me = guest.PlayerId.Value;
+            rig.Input[guest] = new PlayerCommand(-1f, 0f); // west, into the wall, for three seconds
+            var furthestWest = 0f;
+            for (var i = 0; i < 180; i++)
+            {
+                rig.Tick();
+                furthestWest = Math.Min(furthestWest, guest.World.GetPlayer(me).Position.X);
+            }
+
+            Assert.That(furthestWest, Is.EqualTo(-5f).Within(0.01f), "the guest's own prediction stops at the wall, never beyond it");
+            Assert.That(guest.World.GetPlayer(me).Position.X, Is.EqualTo(-5f).Within(0.01f));
+            Assert.That(rig.HostView(guest).Position.X, Is.EqualTo(-5f).Within(0.01f));
+        }
+
+        [Test]
+        public void AFriendJoiningARunningGateAppearsAtTheLatestCheckpoint()
+        {
+            HostSession host = null;
+            var network = new SimulatedNetwork(Latency);
+            host = new HostSession(GateConfig(), network.HostEndpoint, id => JoinPoint.For(host.World, id, Vec3.Zero));
+            var hostId = host.AddLocalPlayer();
+            host.World.StartGate("corridor");
+            host.World.PlacePlayer(hostId, CorridorCheckpoint);
+            host.Tick(PlayerCommand.None);
+            Assert.That(host.World.Gate.LatestCheckpoint, Is.EqualTo(0));
+
+            var guest = new ClientSession(GateConfig(), network.Connect(), "alice");
+            for (var i = 0; i < Latency * 2 + 2; i++)
+            {
+                network.Advance();
+                host.Tick(PlayerCommand.None);
+                guest.Tick(PlayerCommand.None);
+            }
+
+            Assert.That(guest.IsJoined, Is.True);
+            Assert.That((host.World.GetPlayer(guest.PlayerId.Value).Position - CorridorCheckpoint).Length, Is.LessThan(1.5f));
+        }
+
+        [Test]
+        public void ADisconnectedPlayerIsAwayUntilTheyRejoin()
+        {
+            var rig = new Rig();
+            var alice = rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+            var id = alice.PlayerId.Value;
+            Assert.That(rig.Host.World.GetPlayer(id).IsAway, Is.False);
+
+            alice.Disconnect();
+            rig.Clients.Remove(alice);
+            rig.Tick(Latency + 2);
+            Assert.That(rig.Host.World.GetPlayer(id).IsAway, Is.True);
+
+            rig.Join("alice");
+            rig.Tick(Latency * 2 + 2);
+            Assert.That(rig.Host.World.GetPlayer(id).IsAway, Is.False);
+        }
+
+        [Test]
+        public void TheHostAloneWithADisconnectedFriendPlaysByTheSoloRule()
+        {
+            var rig = new Rig(hostConfig: GateConfig());
+            var alice = rig.Join("alice", clientConfig: GateConfig());
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.StartGate("corridor");
+            alice.Disconnect();
+            rig.Clients.Remove(alice);
+            rig.Tick(Latency + 2);
+
+            Assert.That(rig.Host.World.Gate.IsSolo, Is.True, "the friend's character is still there, but away");
+        }
+
+        [Test]
+        public void AFallenGuestIsBroughtBackWhenTheHostReachesACheckpointAndSeesItHappen()
+        {
+            var rig = new Rig(hostConfig: GateConfig());
+            var guest = rig.Join("alice", clientConfig: GateConfig());
+            rig.Tick(Latency * 2 + 2);
+            var world = rig.Host.World;
+            world.StartGate("corridor");
+            var guestId = guest.PlayerId.Value;
+            var killer = world.SpawnEnemy(new EnemyDefinition
+            {
+                Name = "Killer", MaxHealth = 1, MoveSpeed = 0f, AttackDamage = 100000, AttackRange = 1f, AttackWindupSeconds = 0.05f,
+            }, world.GetPlayer(guestId).Position);
+            rig.Tick(20);
+            world.DespawnEnemy(killer);
+            Assert.That(world.GetPlayer(guestId).IsDefeated, Is.True);
+
+            rig.Input[guest] = new PlayerCommand(0f, 0f, respawn: true); // asking does nothing in co-op
+            rig.Tick(Latency * 2 + 4);
+            rig.Input[guest] = PlayerCommand.None;
+            Assert.That(world.GetPlayer(guestId).IsDefeated, Is.True);
+
+            world.PlacePlayer(rig.Host.LocalPlayerId, CorridorCheckpoint);
+            var seen = TickAndCollect(rig, Latency * 2 + 4);
+
+            Assert.That(world.GetPlayer(guestId).IsDefeated, Is.False);
+            Assert.That(guest.World.GetPlayer(guestId).IsDefeated, Is.False, "the guest's world shows them back up");
+            Assert.That(seen[guest].OfType<PlayerRevived>().Count(r => r.Player == guestId), Is.EqualTo(1), "and they are told, once");
+            Assert.That(seen[guest].OfType<CheckpointActivated>().Count(), Is.EqualTo(1));
+        }
     }
 }

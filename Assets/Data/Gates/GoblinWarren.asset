@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bc173683bb56dd499cf53daa3ebb9f5, type: 3}
+  m_Name: GoblinWarren
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GateDefinitionAsset
+  id: goblin-warren
+  displayName: Goblin Warren
+  rooms:
+  - {fileID: 11400000, guid: 768e8c3926cd11a4ba1fc1b7083418cd, type: 2}
+  - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}
+  - {fileID: 11400000, guid: 94ce36ba5c60ae44a8dc9d543636227b, type: 2}
+  - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}
+  - {fileID: 11400000, guid: 62ca9fc920efb2a4bb78af1ee3480749, type: 2}
+  - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}
+  - {fileID: 11400000, guid: ad749811c934d0041adbd71fee0a3526, type: 2}
+  soloRevives: 3
+  checkpointRadius: 2
+  wipeDelaySeconds: 3

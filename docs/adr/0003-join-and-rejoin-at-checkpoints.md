@@ -46,6 +46,9 @@ too much netcode for one developer.
   never makes a fight in progress suddenly harder.
 
 **Death rules and checkpoint revives**
+*(Superseded in part by ADR 0006, 2026-11-13: in co-op a fallen player no longer chooses to respawn; they
+return when a living teammate reaches a checkpoint. The points below about counting revives per player and
+about joiners still hold.)*
 - Revives are tracked per player, by player id, on the host's world, so they survive a
   disconnect and rejoin.
 - A solo run that a friend joins becomes a co-op run from that moment: the solo limit of three
