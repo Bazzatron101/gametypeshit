@@ -488,6 +488,27 @@ namespace HunterSystem.Simulation
         public StorySceneStarted(int tick, string sceneId) : base(tick) => SceneId = sceneId;
     }
 
+    /// <summary>A player jumped.</summary>
+    public sealed class PlayerJumped : SimulationEvent
+    {
+        public PlayerId Player { get; }
+
+        public PlayerJumped(int tick, PlayerId player) : base(tick) => Player = player;
+    }
+
+    /// <summary>A player was in the air and an attack passed under them (a slam's shockwave, or a charge they jumped over).</summary>
+    public sealed class AttackJumped : SimulationEvent
+    {
+        public EnemyId Attacker { get; }
+        public PlayerId Player { get; }
+
+        public AttackJumped(int tick, EnemyId attacker, PlayerId player) : base(tick)
+        {
+            Attacker = attacker;
+            Player = player;
+        }
+    }
+
     public sealed class EnemyDefeated : SimulationEvent
     {
         public EnemyId Enemy { get; }

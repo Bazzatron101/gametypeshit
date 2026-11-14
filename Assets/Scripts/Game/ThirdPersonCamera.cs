@@ -59,6 +59,9 @@ namespace HunterSystem.Game
             if (!InMenu && recapture && Application.isFocused) LockCursor(true);
         }
 
+        private const float JumpFollowRate = 4f;
+        private float _followHeight;
+
         private void Start()
         {
             _look = InputSystem.actions != null ? InputSystem.actions.FindAction("Player/Look") : null;
@@ -81,7 +84,9 @@ namespace HunterSystem.Game
             }
 
             if (target == null) return;
-            var focus = target.position + Vector3.up * targetHeight;
+            // Height (a jump) is followed gently, so the view doesn't bob a full jump every hop.
+            _followHeight = Mathf.Lerp(_followHeight, target.position.y, 1f - Mathf.Exp(-JumpFollowRate * Time.deltaTime));
+            var focus = new Vector3(target.position.x, _followHeight, target.position.z) + Vector3.up * targetHeight;
             transform.position = CameraMath.OrbitPosition(focus, yaw, pitch, distance);
             transform.rotation = Quaternion.LookRotation(focus - transform.position, Vector3.up);
         }

@@ -23,6 +23,7 @@ namespace HunterSystem.Simulation
             RoomEntered, RoomCleared, CheckpointActivated, PlayerRevived, GateWiped, GateRestarted, GateCleared,
             BossAttackStarted, BossEnraged, GateRewardGranted,
             ReadyChanged, ReturnedToHub, StorySceneStarted,
+            PlayerJumped, AttackJumped,
         }
 
         public static byte[] Encode(IEnumerable<SimulationEvent> events)
@@ -156,6 +157,12 @@ namespace HunterSystem.Simulation
                 case ReadyChanged x:
                     Head(w, Code.ReadyChanged, e); w.Write(x.Player.Value); w.Write(x.Ready);
                     break;
+                case PlayerJumped x:
+                    Head(w, Code.PlayerJumped, e); w.Write(x.Player.Value);
+                    break;
+                case AttackJumped x:
+                    Head(w, Code.AttackJumped, e); w.Write(x.Attacker.Value); w.Write(x.Player.Value);
+                    break;
                 case StorySceneStarted x:
                     Head(w, Code.StorySceneStarted, e); SimulationWorld.WriteNullable(w, x.SceneId);
                     break;
@@ -252,6 +259,8 @@ namespace HunterSystem.Simulation
                 case Code.BossEnraged: return new BossEnraged(tick, Enemy());
                 case Code.ReadyChanged: return new ReadyChanged(tick, Player(), r.ReadBoolean());
                 case Code.StorySceneStarted: return new StorySceneStarted(tick, SimulationWorld.ReadNullable(r));
+                case Code.PlayerJumped: return new PlayerJumped(tick, Player());
+                case Code.AttackJumped: return new AttackJumped(tick, Enemy(), Player());
                 case Code.ReturnedToHub: return new ReturnedToHub(tick, SimulationWorld.ReadNullable(r), r.ReadBoolean());
                 case Code.GateRewardGranted:
                 {

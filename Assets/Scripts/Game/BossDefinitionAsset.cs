@@ -38,6 +38,7 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f)] private float moveSpeed = 2f;
         [SerializeField, Min(0f)] private float stopDistance = 1.8f;
         [SerializeField, Min(0)] private int xpReward = 300;
+        [SerializeField, Min(0.1f), Tooltip("How tall it stands: what a jump must clear to pass over its charge")] private float height = 3.5f;
         [SerializeField, Min(1f), Tooltip("Degrees per second. Slow enough that getting behind it is an answer.")] private float turnDegreesPerSecond = 60f;
         [SerializeField, Tooltip("At most one of each kind")] private Attack[] attacks = new Attack[0];
 
@@ -75,7 +76,7 @@ namespace HunterSystem.Game
             return new EnemyDefinition
             {
                 Name = displayName, MaxHealth = maxHealth, MoveSpeed = moveSpeed, StopDistance = stopDistance, XpReward = xpReward,
-                AttackDamage = 0, AttackRange = 0f, Boss = boss,
+                AttackDamage = 0, AttackRange = 0f, Boss = boss, Height = height,
             };
         }
 

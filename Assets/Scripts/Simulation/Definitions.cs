@@ -26,6 +26,9 @@ namespace HunterSystem.Simulation
         /// <summary>XP every player in the world gains when this enemy is defeated.</summary>
         public int XpReward { get; set; } = 25;
 
+        /// <summary>How tall it stands, in metres: what a jump must clear to pass over it (a boss's charge).</summary>
+        public float Height { get; set; } = 1.8f;
+
         /// <summary>Set for a boss: its telegraphed attacks and enrage replace the plain attack above. Null for ordinary enemies.</summary>
         public BossDefinition Boss { get; set; }
     }

@@ -66,6 +66,7 @@ namespace HunterSystem.Simulation
 
             var behind = distance > Epsilon && (toTarget.X * boss.Facing.X + toTarget.Z * boss.Facing.Z) < 0f;
             if (slam != null && (PlayersWithin(boss.Position, slam.Radius) >= 2 || (behind && distance <= slam.Radius))) return slam;
+            if (slam != null && sweep == null && distance <= slam.Radius) return slam; // no sweep to answer someone close
             if (sweep != null && distance <= sweep.Range && !behind) return sweep;
             if (charge != null && distance > (sweep?.Range ?? 0f) && !behind) return charge; // it turns to face them first
             return null;
@@ -127,6 +128,11 @@ namespace HunterSystem.Simulation
             {
                 if (boss.Health <= 0) return; // a perfect dodge's counter can end it mid-swing
                 if (!player.IsAlive || player.Away || !attack.Covers(boss.AttackOrigin, boss.AttackDirection, player.Position)) continue;
+                if (attack.Kind == BossAttackKind.Slam && player.IsAirborne)
+                {
+                    _events.Add(new AttackJumped(tick, boss.Id, player.Id)); // the shockwave runs along the ground, under them
+                    continue;
+                }
                 HitPlayerWithBossAttack(boss, player, attack, tick);
             }
             EndBossAttack(boss, attack, tick);
@@ -159,6 +165,12 @@ namespace HunterSystem.Simulation
                 if (boss.Health <= 0) return; // a perfect dodge's counter can end it mid-charge
                 if (!player.IsAlive || player.Away || boss.ChargeHit.Contains(player.Id.Value)) continue;
                 if (Flat(player.Position - boss.Position).Length > attack.Radius) continue;
+                if (AboveEnemy(player, boss))
+                {
+                    boss.ChargeHit.Add(player.Id.Value); // cleared it: it passes under them, once
+                    _events.Add(new AttackJumped(tick, boss.Id, player.Id));
+                    continue;
+                }
                 boss.ChargeHit.Add(player.Id.Value);
                 HitPlayerWithBossAttack(boss, player, attack, tick);
             }

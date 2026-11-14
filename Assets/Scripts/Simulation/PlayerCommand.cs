@@ -14,7 +14,7 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -42,10 +42,18 @@ namespace HunterSystem.Simulation
         /// <summary>In the hub: mark this player ready (true) or not (false) for the next gate; null for no change.</summary>
         public readonly bool? SetReady;
 
+        /// <summary>A jump (the press).</summary>
+        public readonly bool Jump;
+
+        /// <summary>The sprint key is held.</summary>
+        public readonly bool Sprint;
+
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
             Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
-            bool respawn = false, bool? setReady = null)
+            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false)
         {
+            Jump = jump;
+            Sprint = sprint;
             Respawn = respawn;
             SetReady = setReady;
             var length = MathF.Sqrt(moveX * moveX + moveZ * moveZ);

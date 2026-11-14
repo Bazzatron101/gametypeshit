@@ -249,6 +249,7 @@ namespace HunterSystem.Editor
             var simulation = new GameObject("Simulation");
             Wire(simulation.AddComponent<SimulationRunner>(), ("content", content));
             simulation.AddComponent<SystemHud>();
+            Wire(simulation.AddComponent<PerfectDodgeView>(), ("ringMaterial", GetOrCreateMaterial("Greybox_PerfectDodge", new Color(0.55f, 0.95f, 1f))));
             Wire(simulation.AddComponent<SkillEffectsView>(),
                 ("projectileMaterial", GetOrCreateMaterial("Greybox_Fire", new Color(1f, 0.45f, 0.1f))),
                 ("areaMaterial", GetOrCreateMaterial("Greybox_SkillArea", new Color(1f, 0.75f, 0.3f))),

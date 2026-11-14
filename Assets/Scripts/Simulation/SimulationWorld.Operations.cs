@@ -98,6 +98,7 @@ namespace HunterSystem.Simulation
             player.ClearCharge();
             player.DodgeEndsAtTick = 0;
             player.InvulnerableUntilTick = 0;
+            Land(player);
         }
 
         /// <summary>
@@ -108,6 +109,7 @@ namespace HunterSystem.Simulation
         public void PlacePlayer(PlayerId id, Vec3 position)
         {
             if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
+            Land(player); // placed on the ground, not mid-jump
             player.Position = position;
         }
 

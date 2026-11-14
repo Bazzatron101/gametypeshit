@@ -68,6 +68,8 @@ namespace HunterSystem.Tests
             new ReadyChanged(42, P, true),
             new ReturnedToHub(43, "goblin-warren", true),
             new StorySceneStarted(44, "arrival"),
+            new PlayerJumped(45, P),
+            new AttackJumped(46, E, P),
         };
 
         [Test]

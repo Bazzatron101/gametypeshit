@@ -17,6 +17,8 @@ namespace HunterSystem.Game
         private bool _heavyAttackPending;
         private bool _dodgePending;
         private bool _respawnPending;
+        private bool _jumpPending;
+        private bool _sprintHeld;
         private bool? _setReadyPending;
         private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
@@ -32,6 +34,8 @@ namespace HunterSystem.Game
             _heavyAttackPending |= sampled.HeavyAttack;
             _dodgePending |= sampled.Dodge;
             _respawnPending |= sampled.Respawn;
+            _jumpPending |= sampled.Jump;
+            _sprintHeld = sampled.Sprint; // held, like movement: the latest state
             if (sampled.SetReady.HasValue) _setReadyPending = sampled.SetReady;
             if (sampled.UseSkillSlot.HasValue) _skillSlotPending = sampled.UseSkillSlot; // the latest press wins
             // A source that chooses stats or skills itself (a bot) is queued like a menu choice: once each, in order.
@@ -59,7 +63,8 @@ namespace HunterSystem.Game
             SkillAssignment? assign = _skillAssignments.Count > 0 ? _skillAssignments.Dequeue() : (SkillAssignment?)null;
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
-                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending);
+                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld);
+            _jumpPending = false;
             _respawnPending = false;
             _setReadyPending = null;
             _lightAttackPending = false;

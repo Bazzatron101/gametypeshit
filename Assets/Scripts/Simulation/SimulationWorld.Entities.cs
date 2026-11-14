@@ -21,6 +21,20 @@ namespace HunterSystem.Simulation
             /// <summary>In the hub: ready for the next gate.</summary>
             public bool Ready;
 
+            /// <summary>The tick the current jump took off; 0 on the ground.</summary>
+            public int JumpStartTick;
+
+            /// <summary>This player's jump height as a percentage of the base jump (classes raise it).</summary>
+            public int JumpHeightPercent = 100;
+
+            /// <summary>Moved at sprint speed on the last tick.</summary>
+            public bool Sprinting;
+
+            /// <summary>After an attack or skill starts, sprinting waits until this tick.</summary>
+            public int SprintResumesAtTick;
+
+            public bool IsAirborne => JumpStartTick != 0;
+
             public int Level = 1;
             public int Xp;
             public int UnspentStatPoints;

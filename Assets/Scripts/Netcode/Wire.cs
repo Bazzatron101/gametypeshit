@@ -39,7 +39,7 @@ namespace HunterSystem.Netcode
     /// <summary>Message encoding. Compact binary, little-endian, no reflection.</summary>
     public static class Wire
     {
-        private const byte LightAttackBit = 1, HeavyAttackBit = 2, DodgeBit = 4, RespawnBit = 8, SetReadyBit = 16, ReadyValueBit = 32;
+        private const byte LightAttackBit = 1, HeavyAttackBit = 2, DodgeBit = 4, RespawnBit = 8, SetReadyBit = 16, ReadyValueBit = 32, JumpBit = 64, SprintBit = 128;
         public static MessageType TypeOf(byte[] message) =>
             message != null && message.Length > 0 ? (MessageType)message[0] : throw new ArgumentException("Empty message.", nameof(message));
 
@@ -83,7 +83,8 @@ namespace HunterSystem.Netcode
             w.Write(command.MoveX);
             w.Write(command.MoveZ);
             w.Write((byte)((command.LightAttack ? LightAttackBit : 0) | (command.HeavyAttack ? HeavyAttackBit : 0) | (command.Dodge ? DodgeBit : 0) | (command.Respawn ? RespawnBit : 0) |
-                (command.SetReady.HasValue ? SetReadyBit : 0) | (command.SetReady == true ? ReadyValueBit : 0)));
+                (command.SetReady.HasValue ? SetReadyBit : 0) | (command.SetReady == true ? ReadyValueBit : 0) |
+                (command.Jump ? JumpBit : 0) | (command.Sprint ? SprintBit : 0)));
             w.Write((sbyte)(command.UseSkillSlot ?? -1));
             w.Write(command.HeldSkillSlots);
             w.Write((sbyte)(command.AllocateStat.HasValue ? (int)command.AllocateStat.Value : -1));
@@ -124,7 +125,8 @@ namespace HunterSystem.Netcode
                 allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
                 useSkillSlot: useSkill >= 0 ? useSkill : (int?)null,
                 assignSkill: assign, heldSkillSlots: held, respawn: (buttons & RespawnBit) != 0,
-                setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null));
+                setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null,
+                jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;

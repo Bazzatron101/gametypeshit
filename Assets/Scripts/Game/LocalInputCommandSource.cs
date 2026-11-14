@@ -9,8 +9,9 @@ namespace HunterSystem.Game
     /// world-space command:
     /// "Player/Move" (WASD, arrow keys or left stick, relative to the camera),
     /// "Player/Attack" (left mouse or gamepad west), "Player/HeavyAttack" (right mouse or
-    /// right trigger), "Player/Dodge" (space or gamepad east) and "Player/Skill1" to "Skill6"
-    /// (keys 1 to 6). All input is ignored while the
+    /// right trigger), "Player/Dodge" (left Ctrl or gamepad east), "Player/Jump" (space or gamepad
+    /// south), "Player/Sprint" (hold left Shift, or press the left stick) and "Player/Skill1" to
+    /// "Skill6" (keys 1 to 6). All input is ignored while the
     /// cursor is free (a menu is open, or after Escape).
     /// </summary>
     public sealed class LocalInputCommandSource : IPlayerCommandSource
@@ -19,6 +20,8 @@ namespace HunterSystem.Game
         private readonly InputAction _attack;
         private readonly InputAction _heavyAttack;
         private readonly InputAction _dodge;
+        private readonly InputAction _jump;
+        private readonly InputAction _sprint;
         private readonly InputAction[] _skills = new InputAction[SimulationWorld.SkillSlotCount];
 
         public LocalInputCommandSource()
@@ -27,6 +30,8 @@ namespace HunterSystem.Game
             _attack = Find("Player/Attack");
             _heavyAttack = Find("Player/HeavyAttack");
             _dodge = Find("Player/Dodge");
+            _jump = Find("Player/Jump");
+            _sprint = Find("Player/Sprint");
             for (var i = 0; i < _skills.Length; i++) _skills[i] = Find($"Player/Skill{i + 1}");
         }
 
@@ -49,7 +54,8 @@ namespace HunterSystem.Game
             }
             return new PlayerCommand(move.x, move.y,
                 lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack),
-                useSkillSlot: skillSlot, heldSkillSlots: held);
+                useSkillSlot: skillSlot, heldSkillSlots: held,
+                jump: Pressed(_jump), sprint: _sprint != null && _sprint.IsPressed());
         }
 
         private static bool Pressed(InputAction action) => action != null && action.WasPressedThisFrame();

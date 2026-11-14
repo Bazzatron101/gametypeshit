@@ -193,6 +193,18 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void ABaseJumpClearsNoEnemy()
+        {
+            // Jumping over an enemy is for classes that raise the jump (the developer's rule).
+            var config = new SimulationConfig();
+            var content = Content();
+            content.ApplyTo(config);
+            var heights = content.Enemies.Select(e => e.ToDefinition().Height)
+                .Concat(config.Gates.SelectMany(g => g.Rooms).SelectMany(r => r.Spawns).Select(s => s.Enemy.Height));
+            Assert.That(heights, Has.All.GreaterThan(config.JumpHeight));
+        }
+
+        [Test]
         public void EveryGateWithABossHasARewardPool()
         {
             foreach (var gate in Content().Gates.Where(g => g.Rooms.Any(r => r != null && r.Boss != null)))

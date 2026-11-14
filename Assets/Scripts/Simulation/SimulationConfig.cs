@@ -12,6 +12,15 @@ namespace HunterSystem.Simulation
         /// <summary>Player movement speed in metres per second at full input.</summary>
         public float PlayerMoveSpeed { get; set; } = 5f;
 
+        /// <summary>Holding sprint: move speed as a percentage of walking.</summary>
+        public int SprintSpeedPercent { get; set; } = 160;
+
+        /// <summary>A base jump's peak, in metres. Too low to clear an enemy; classes raise it per player.</summary>
+        public float JumpHeight { get; set; } = 0.9f;
+
+        /// <summary>How long a jump lasts, take-off to landing.</summary>
+        public float JumpSeconds { get; set; } = 0.6f;
+
         public int PlayerMaxHealth { get; set; } = 100;
 
         /// <summary>Move speed while charging a skill, as a percentage of normal.</summary>

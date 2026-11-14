@@ -11,6 +11,7 @@ namespace HunterSystem.Game
         [SerializeField, Min(1)] private int maxHealth = 30;
         [SerializeField, Min(0f), Tooltip("Metres per second")] private float moveSpeed = 3f;
         [SerializeField, Min(0f), Tooltip("Stops chasing this close to its target, in metres")] private float stopDistance = 1.2f;
+        [SerializeField, Min(0.1f), Tooltip("How tall it stands: what a jump must clear to pass over it")] private float height = 1.8f;
 
         [Header("Attack")]
         [SerializeField, Min(0)] private int attackDamage = 10;
@@ -32,6 +33,7 @@ namespace HunterSystem.Game
             AttackWindupSeconds = attackWindupSeconds,
             AttackCooldownSeconds = attackCooldownSeconds,
             XpReward = xpReward,
+            Height = height,
         };
 
         /// <summary>For editor tooling that creates definitions in code.</summary>

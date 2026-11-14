@@ -184,7 +184,7 @@ namespace HunterSystem.Netcode
             {
                 var enemy = world.GetEnemy(id);
                 if (enemy.IsDefeated) continue;
-                var distance = (enemy.Position - from).Length;
+                var distance = Flat(enemy.Position - from).Length;
                 if (distance >= bestDistance) continue;
                 best = id;
                 bestDistance = distance;
@@ -239,7 +239,7 @@ namespace HunterSystem.Netcode
                 var other = world.GetPlayer(id);
                 if (other.IsDefeated) continue;
                 var offset = other.Position - from;
-                if (offset.Length <= FollowDistance) return PlayerCommand.None;
+                if (Flat(offset).Length <= FollowDistance) return PlayerCommand.None;
                 var toward = Direction(from, other.Position);
                 return new PlayerCommand(toward.X, toward.Z);
             }

@@ -526,7 +526,7 @@
                 {
                     "name": "",
                     "id": "c161fdb3-77bf-48d3-b08d-16cdb802833a",
-                    "path": "<Keyboard>/space",
+                    "path": "<Keyboard>/leftCtrl",
                     "interactions": "",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
@@ -630,6 +630,17 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Skill6",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "157fcfcc-4095-4d60-8edb-60c63f681bcd",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "Jump",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

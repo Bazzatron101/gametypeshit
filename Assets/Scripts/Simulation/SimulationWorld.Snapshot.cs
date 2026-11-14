@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW7");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW9");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -206,6 +206,10 @@ namespace HunterSystem.Simulation
             WriteVec(w, p.DodgeDirection);
             w.Write(p.Away);
             w.Write(p.Ready);
+            w.Write(p.JumpStartTick);
+            w.Write(p.JumpHeightPercent);
+            w.Write(p.Sprinting);
+            w.Write(p.SprintResumesAtTick);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -219,6 +223,7 @@ namespace HunterSystem.Simulation
             w.Write(d.AttackWindupSeconds);
             w.Write(d.AttackCooldownSeconds);
             w.Write(d.XpReward);
+            w.Write(d.Height);
             w.Write(d.Boss != null);
             if (d.Boss == null) return;
             w.Write(d.Boss.TurnDegreesPerSecond);
@@ -453,6 +458,10 @@ namespace HunterSystem.Simulation
             p.DodgeDirection = ReadVec(r);
             p.Away = r.ReadBoolean();
             p.Ready = r.ReadBoolean();
+            p.JumpStartTick = r.ReadInt32();
+            p.JumpHeightPercent = r.ReadInt32();
+            p.Sprinting = r.ReadBoolean();
+            p.SprintResumesAtTick = r.ReadInt32();
             return p;
         }
 
@@ -470,6 +479,7 @@ namespace HunterSystem.Simulation
                 AttackWindupSeconds = r.ReadSingle(),
                 AttackCooldownSeconds = r.ReadSingle(),
                 XpReward = r.ReadInt32(),
+                Height = r.ReadSingle(),
             };
             if (!r.ReadBoolean()) return d;
             d.Boss = new BossDefinition

@@ -67,12 +67,19 @@ namespace HunterSystem.Simulation
         /// <summary>In the hub: this player has marked themselves ready for the next gate.</summary>
         public readonly bool IsReady;
 
+        /// <summary>In a jump: <see cref="Position"/>.Y is how high.</summary>
+        public readonly bool IsAirborne;
+
+        public readonly bool IsSprinting;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
-            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false)
+            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false)
         {
+            IsAirborne = isAirborne;
+            IsSprinting = isSprinting;
             IsReady = isReady;
             IsAway = isAway;
             Id = id;

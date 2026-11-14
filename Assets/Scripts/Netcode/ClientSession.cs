@@ -235,6 +235,7 @@ namespace HunterSystem.Netcode
             AttackPerformed a => a.Player == PlayerId,
             AttackWindupStarted a => a.Player == PlayerId,
             DodgePerformed d => d.Player == PlayerId,
+            PlayerJumped j => j.Player == PlayerId,
             SkillUsed s => s.Player == PlayerId,
             SkillChargeStarted s => s.Player == PlayerId,
             _ => false,

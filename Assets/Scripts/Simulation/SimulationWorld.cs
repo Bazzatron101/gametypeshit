@@ -108,7 +108,7 @@ namespace HunterSystem.Simulation
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
-                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready);
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
@@ -179,8 +179,9 @@ namespace HunterSystem.Simulation
             {
                 if (!player.IsAlive) continue;
                 commands.TryGetValue(player.Id, out var cmd);
+                player.Sprinting = false;
 
-                if (cmd.Dodge) TryDodge(player, cmd, tick); // a dodge keeps any charge going
+                if (cmd.Dodge && !player.IsAirborne) TryDodge(player, cmd, tick); // a dodge keeps any charge going
 
                 // Letting go of the key fires the charge, even mid-dash.
                 if (player.IsCharging && !cmd.IsSkillHeld(player.Charge.Slot)) ReleaseCharge(player, tick);
@@ -208,12 +209,24 @@ namespace HunterSystem.Simulation
                     continue; // charging: slowed, no attacks or other skills
                 }
 
-                MovePlayer(player, cmd);
-                if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, cmd.IsSkillHeld(cmd.UseSkillSlot.Value), tick)) continue; // a skill takes the tick
-                if (cmd.HeavyAttack) TryStartAttack(player, _attacks[(int)AttackKind.Heavy], tick);
+                if (cmd.Jump) TryJump(player, tick);
+                // Sprint while held, except just after an attack or skill has started: fighting breaks the run.
+                var sprinting = cmd.Sprint && tick >= player.SprintResumesAtTick;
+                MovePlayer(player, cmd, sprinting ? _config.SprintSpeedPercent / 100f : 1f);
+                player.Sprinting = sprinting && TryGetMoveDirection(cmd, out _, out _);
+                if (player.IsAirborne) continue; // no attacks or skills in the air (a jump keeps its run-up)
+                var eventsBefore = _events.Count;
+                if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, cmd.IsSkillHeld(cmd.UseSkillSlot.Value), tick)) { }
+                else if (cmd.HeavyAttack) TryStartAttack(player, _attacks[(int)AttackKind.Heavy], tick);
                 else if (cmd.LightAttack) TryStartAttack(player, _attacks[(int)AttackKind.Light], tick);
+                if (StartedFighting(player, eventsBefore))
+                {
+                    player.Sprinting = false;
+                    player.SprintResumesAtTick = tick + SprintPauseTicks;
+                }
             }
 
+            foreach (var player in _players) UpdateJump(player, tick);
             UpdateProjectiles(tick);
 
             foreach (var enemy in _enemies)

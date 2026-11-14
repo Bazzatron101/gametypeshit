@@ -17,6 +17,11 @@ namespace HunterSystem.Game
         [SerializeField, Range(0, 100), Tooltip("Move speed while charging a skill, as a percentage of normal")] private int chargeMoveSpeedPercent = 40;
         [SerializeField, Min(0f), Tooltip("A hold shorter than this is a tap: the charge only builds after it")] private float chargeTapGraceSeconds = 0.15f;
 
+        [Header("Sprint and jump")]
+        [SerializeField, Range(100, 300), Tooltip("Holding sprint: move speed as a percentage of walking")] private int sprintSpeedPercent = 160;
+        [SerializeField, Min(0.1f), Tooltip("A base jump's peak, in metres: keep it below every enemy's height (classes raise it)")] private float jumpHeight = 0.9f;
+        [SerializeField, Min(0.2f), Tooltip("Take-off to landing")] private float jumpSeconds = 0.6f;
+
         [Header("Light attack")]
         [SerializeField, Min(0)] private int lightAttackDamage = 10;
         [SerializeField, Min(0f)] private float lightAttackRange = 2f;
@@ -50,6 +55,9 @@ namespace HunterSystem.Game
             config.PlayerMaxHealth = playerMaxHealth;
             config.ChargeMoveSpeedPercent = chargeMoveSpeedPercent;
             config.ChargeTapGraceSeconds = chargeTapGraceSeconds;
+            config.SprintSpeedPercent = sprintSpeedPercent;
+            config.JumpHeight = jumpHeight;
+            config.JumpSeconds = jumpSeconds;
             config.LightAttack = new AttackDefinition
             {
                 Damage = lightAttackDamage, Range = lightAttackRange, ArcDegrees = lightAttackArcDegrees, CooldownSeconds = lightAttackCooldownSeconds,
