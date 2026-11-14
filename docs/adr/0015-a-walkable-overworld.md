@@ -1,6 +1,6 @@
 # 0015: A walkable overworld
 
-**Status:** Proposed (2026-11-14)
+**Status:** Accepted (2026-11-15; proposed 2026-11-14)
 
 ## Context
 
@@ -9,7 +9,7 @@ says "I want to select gates from the hub menu, so that I do not spend time on t
 2026-11-14 the developer chose a walkable overworld instead: you walk to the gates, mounts make travel
 faster, and a crossing takes about an hour. Ticket 36 holds the layout.
 
-## Decision (proposed)
+## Decision
 
 - **The overworld is a third kind of place in the simulation,** next to the hub and the gates (ADR 0008).
   The guild town (the hub) sits on its west edge. Dungeons stay separate places. A gate's entrance in the world

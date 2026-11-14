@@ -1,6 +1,6 @@
 # 36: Lay out the overworld
 
-**What to build:** The layout of the walkable world the game is set in: where the guild town sits, which regions there are, what opens each one, where the gates stand, and how big it is. This replaces the spec's "gates are entered through the hub menu" (see ADR 0015, proposed). Layout only; building terrain, streaming and mounts are later tickets.
+**What to build:** The layout of the walkable world the game is set in: where the guild town sits, which regions there are, what opens each one, where the gates stand, and how big it is. This replaces the spec's "gates are entered through the hub menu" (see ADR 0015, accepted). Layout only; building terrain, streaming and mounts are later tickets.
 
 **Blocked by:** None
 
@@ -11,7 +11,7 @@
 - [ ] Gate placement per region sketched (story gates and farming gates)
 - [x] What physically stops a player entering a region that is not open yet: nothing physical; danger and no guild work there (see Comments)
 - [ ] Mounts: when you get one and how fast it is
-- [ ] ADR 0015 accepted, and the spec's non-goal and stories 40 and 48 rewritten
+- [x] ADR 0015 accepted, and the spec's non-goal and stories 40 and 48 rewritten (2026-11-15)
 
 ## Decided (developer, 2026-11-14)
 

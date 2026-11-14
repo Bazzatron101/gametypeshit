@@ -21,7 +21,7 @@ From the player's perspective, the problem is: existing power-fantasy games eith
 A premium PC game with a finite main campaign and an endgame built around deliberately broken builds.
 
 - The player is a hunter who starts at E-rank and climbs to A-rank in the main game, with an S-rank end story and a possible SS-rank DLC. A "System" interface (levels, stats, skill unlocks, missions, promotions) makes the growth visible and celebrated.
-- From a small hub, the player picks gates (dungeons) from a menu. Gates are long, checkpointed, and built from a modular room kit, ending in handcrafted bosses.
+- From a guild town on the edge of a walkable overworld, the player walks out to find gates (dungeons); the gate board then sends the party into any gate already found and licensed for. (ADR 0015) Gates are long, checkpointed, and built from a modular room kit, ending in handcrafted bosses.
 - Combat is third-person hack-and-slash with six cooldown skills, a dodge, and soft lock-on, played keyboard and mouse first.
 - Power is never scaled down. Over-leveled players can trivialize low gates, and that is a feature, so coasting versus challenge is the player's choice.
 - Up to 10 players can join a host's world through Steam invites. Each player brings their own character and progression. Guests support the host just by being there, while story and map progress belong to the host's world. Enemy difficulty scales in tiers by party size, and 10-player raid gates have dedicated mechanics.
@@ -84,7 +84,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 ### Gates and the world
 
-40. As a player, I want to select gates from the hub menu, so that I do not spend time on travel I do not enjoy.
+40. As a player, I want to walk the overworld to find gates, then be sent into found gates from the gate board, so that the first trip is a journey and repeat runs skip travel I do not enjoy. (ADR 0015)
 41. As a player, I want gates to run 30 minutes or longer with checkpoints, so that a clear feels like an accomplishment.
 42. As a player, I want story gates to have fixed layouts, so that authored story beats and bosses land as designed.
 43. As a player, I want repeatable farming gates to be procedurally shuffled later, so that farming stays fresh.
@@ -95,7 +95,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 ### Hub
 
-48. As a player, I want a small hub showing where gates are, so that I know where to go next.
+48. As a player, I want a guild town with a gate board giving intel on the gates I have found and am licensed for, so that I know where to go next. (ADR 0015)
 49. As a player, I want a mission board in the hub that provides intel about gates, so that I can prepare.
 50. As a player, I want storage in the hub, so that I can manage items between runs.
 51. As a player, I want a minimal shop in the hub, so that I can sell duplicate items. **[assumption]**
@@ -192,7 +192,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 - Gates run 30 minutes or longer, with checkpoints and a handcrafted boss.
 - Story gates are fixed layouts built from a modular room kit. Repeatable farming gates become procedurally shuffled later.
 - The first gates should be kept short to speed up testing and content throughput.
-- The hub is small, shared, and host-owned. It contains a gate board with mission intel, storage, and a minimal shop. Gates are chosen from the hub menu. The map opens by rank promotions and story beats.
+- The hub is small, shared, and host-owned. It contains a gate board with mission intel, storage, and a minimal shop. The hub is the guild town on the west edge of a walkable overworld (about an hour across on foot). Gates stand in the world; the board sends the party into gates already found and licensed for. Regions have no walls: they open (the guild gives work there) by rank promotions and story beats. (ADR 0015)
 
 ### Deaths, scaling, and rewards
 
@@ -284,7 +284,7 @@ Feel and enjoyment, which are checked by hand with the milestone feel tests belo
 - Dedicated servers and anti-cheat, since sessions are host-run among friends.
 - Animated or voiced cutscenes. Story is told through text-only in-engine scenes.
 - Large networked enemy swarms with hundreds of enemies.
-- Open-world streaming. Gates are entered through the hub menu.
+- ~~Open-world streaming. Gates are entered through the hub menu.~~ Reversed by ADR 0015 (2026-11-15): the world is walkable and streamed.
 - Player-power scaling, level-scaling enemies, and rank-locked joining.
 - Mobile, console, and free-to-play or live-service models.
 - New Game Plus and carry-over systems. The hidden class uses a fresh slot.
