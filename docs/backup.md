@@ -6,13 +6,18 @@ so they are ignored.
 
 ## Remote
 
-No remote is configured yet. Once you've created an empty repository (GitHub or GitLab;
-both support LFS), run:
+The remote is GitHub: `https://github.com/Bazzatron101/gametypeshit` (`origin`). **It is public**:
+everything pushed there can be read by anyone (the developer chose to keep it public on 2026-11-14).
+Push at the end of each session:
 
-    git remote add origin <url>
-    git push -u origin main
+    git push origin main
 
-LFS objects are pushed along with the commits.
+LFS objects go up with the commits. To check that nothing is left behind, run
+`git lfs push origin main --dry-run`; it should list nothing.
+
+Never commit secrets (Steam keys, passwords, tokens). Saves live outside the project
+(`%USERPROFILE%/AppData/LocalLow/...`), and test output (`TestResults/`) and builds (`Builds/`)
+are ignored.
 
 ## Offline backup routine (weekly, and before any risky change)
 

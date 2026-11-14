@@ -8,7 +8,7 @@
 
 - [x] Project is on a single locked long-term-support engine version, with the current version number checked against Unity's release page rather than assumed
 - [x] Render pipeline chosen and set up for flat-shaded low-poly art
-- [ ] Version control with large-file support and a remote is configured, and an offline backup routine is documented
+- [x] Version control with large-file support and a remote is configured, and an offline backup routine is documented
 - [x] A trivial headless test runs and passes from the command line
 
 ## Comments
@@ -18,3 +18,9 @@
 - Render pipeline: URP, with flat shading forced at import for `Assets/Art/Models/` (ADR 0002, `Assets/Editor/LowPolyImportRules.cs`).
 - Version control: git and Git LFS set up locally, and the offline backup routine is in `docs/backup.md`. The user deferred the remote (no GitHub CLI available), so that checkbox stays open.
 - Headless tests: `powershell -File scripts/test.ps1` runs EditMode tests in batch mode. 7 of 7 passed on 6000.6.8f1.
+
+**2026-11-14 (agent):** The remote is configured: `origin` is `https://github.com/Bazzatron101/gametypeshit`. It is a public repository; the developer chose to push to it as it is.
+- `main` is pushed, up to the jump and sprint commit, and the LFS objects with it (a dry run shows nothing left to push).
+- `docs/backup.md` now names the remote and the push habit. Its weekly offline bundle routine stands.
+- All four boxes are ticked.
+
