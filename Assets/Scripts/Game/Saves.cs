@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using HunterSystem.Netcode;
 using HunterSystem.Simulation;
 
 namespace HunterSystem.Game
@@ -396,6 +397,36 @@ namespace HunterSystem.Game
 
         /// <summary>Story scenes this world has played (ticket 20), so each plays once.</summary>
         public List<string> SeenStoryScenes = new List<string>();
+    }
+
+    /// <summary>The host's bot teammates (ADR 0014), beside the world they play in: characters and experience.</summary>
+    public sealed class CompanionSaves
+    {
+        private readonly RecordFile<List<CompanionRecord>> _file;
+
+        /// <param name="root">The game's save folder; the teammates go in <c>worlds/</c> under it.</param>
+        public CompanionSaves(string root)
+        {
+            _file = new RecordFile<List<CompanionRecord>>(Path.Combine(root, "worlds", "teammates.hsp"), "teammates",
+                list => CompanionCodec.Encode(list), CompanionCodec.Decode);
+        }
+
+        public string FilePath => _file.Path;
+
+        public string LastProblem { get; private set; }
+
+        /// <summary>The saved teammates, or null when there are none yet.</summary>
+        public List<CompanionRecord> LoadOrNull()
+        {
+            var record = _file.Load(out var problem);
+            LastProblem = problem;
+            return record;
+        }
+
+        public void Save(List<CompanionRecord> companions)
+        {
+            if (_file.Save(companions) != null) LastProblem = null;
+        }
     }
 
     /// <summary>The host's world on this PC, in its own folder, apart from characters.</summary>

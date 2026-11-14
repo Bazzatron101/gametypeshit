@@ -19,7 +19,7 @@ namespace HunterSystem.Online
     /// <para>
     /// The same can be done from the command line, which is how two built copies are tested
     /// without anyone at the keyboard:
-    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-class ID] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
+    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-class ID] [-companions N] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
     /// With <c>-bot</c> this copy's player is a <see cref="BotPlayer"/> (the 10-bot stress test).
     /// Steam's "Join Game" passes <c>+connect STEAMID</c>, which joins over Steam; a copy already
     /// running at the menu (or disconnected) gets the same request from Steam and joins straight away.
@@ -49,6 +49,9 @@ namespace HunterSystem.Online
         private string _joinedAddress, _playerKey;
         private bool _steamReady, _weStartedSteam;
         private string _status = "Not connected.";
+
+        /// <summary>How many bot teammates come along when hosting (ADR 0014): all five from the menu, none in automated runs unless <c>-companions N</c>.</summary>
+        private int _companions = CompanionParty.Size;
         private GUIStyle _label, _header;
 
         private void Start()
@@ -128,7 +131,7 @@ namespace HunterSystem.Online
             _role = Role.Host;
             var transport = new FishNetHostTransport(_network, addressIsIdentity: steam);
             _network.ServerManager.StartConnection();
-            _runner.StartHost(transport, id => JoinPoint.For(_runner.World, id, fallback: Vec3.Zero));
+            _runner.StartHost(transport, id => JoinPoint.For(_runner.World, id, fallback: Vec3.Zero), _companions);
             if (steam)
             {
                 // Friends can now use "Join Game" from the Steam friends list: Steam launches the
@@ -142,6 +145,10 @@ namespace HunterSystem.Online
             }
             if (_runner.World.Hub == null) SpawnGoblins(3); // the hub is no place for goblins
         }
+
+        /// <summary>The host's bot teammates: who, which role, which player number, and how well they play now.</summary>
+        private string TeammatesLine() => "Teammates: " + string.Join(", ", _runner.Host.Companions.Select(c =>
+            $"{c.brain.Record.Name} ({CompanionRoles.Title(c.brain.Role)}, P{c.id.Value}, {CompanionExperience.Rank(c.brain.Proficiency)} {c.brain.Proficiency * 100f:0}%)"));
 
         /// <summary>Host only: takes the whole party into a gate from the content list.</summary>
         public void EnterGate(string gateId)
@@ -246,6 +253,8 @@ namespace HunterSystem.Online
             if (connect != null) StartCoroutine(JoinOnceClassChosen(connect)); // a Steam invite: a new hunter picks a class first
             else if (Arg("-coop") == "host")
             {
+                _companions = int.TryParse(Arg("-companions"), out var companions) ? companions : 0; // automated runs keep their party sizes
+
                 Host(steam);
                 if (Arg("-gate") != null) EnterGate(Arg("-gate")); // straight into a gate (automated runs)
             }
@@ -424,6 +433,8 @@ namespace HunterSystem.Online
                 DrawCharacterAndSaves();
                 if (_runner.NeedsClass) GUILayout.Label("Choose your class to play.", _label);
                 GUI.enabled = !_runner.NeedsClass;
+                var bring = GUILayout.Toggle(_companions > 0, $" Bring {CompanionParty.Size} bot teammates (they learn as they play)");
+                _companions = bring ? CompanionParty.Size : 0;
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Play solo / host locally")) Host(steam: false);
                 if (GUILayout.Button("Join locally")) Join(steam: false, "localhost");
@@ -452,6 +463,7 @@ namespace HunterSystem.Online
                 if (_runner.Host != null)
                 {
                     GUILayout.Label($"Clients: {_runner.Host.ConnectedClients}   Snapshot: {_runner.Host.LastSnapshotSize} bytes", _label);
+                    if (_runner.Host.Companions.Count > 0) GUILayout.Label(TeammatesLine(), _label);
                     GUILayout.BeginHorizontal();
                     if (_runner.World.Hub == null && !_runner.World.HasGate && GUILayout.Button("Spawn 3 Goblins")) SpawnGoblins(3);
                     if (_runner.World.Hub == null && !_runner.World.HasGate && GUILayout.Button("Spawn a Hobgoblin")) SpawnEnemies("Hobgoblin", 1);

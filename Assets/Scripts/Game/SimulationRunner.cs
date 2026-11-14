@@ -177,7 +177,8 @@ namespace HunterSystem.Game
         // --- Online ------------------------------------------------------------------------
 
         /// <summary>Hosts a session over <paramref name="transport"/>. The host's own player joins at once.</summary>
-        public void StartHost(IHostTransport transport, Func<PlayerId, Vec3> spawnPoint)
+        /// <param name="companions">How many of the host's bot teammates come along (ADR 0014): 0 to <see cref="CompanionParty.Size"/>.</param>
+        public void StartHost(IHostTransport transport, Func<PlayerId, Vec3> spawnPoint, int companions = 0)
         {
             if (IsOnline) throw new InvalidOperationException("Already online.");
             Host = new HostSession(_config, transport, spawnPoint, snapshotEveryTicks);
@@ -185,7 +186,53 @@ namespace HunterSystem.Game
             HostWorld = _savesDisabled ? new WorldRecord() : new WorldSaves(_saveRoot).LoadOrNew();
             Host.World.SetClearedGates(HostWorld.ClearedGates); // so the board, and guests, see them
             Host.World.SetSeenStoryScenes(HostWorld.SeenStoryScenes); // so a scene plays once per world
+            AddCompanions(Math.Clamp(companions, 0, CompanionParty.Size));
             StartLocalInput();
+        }
+
+        /// <summary>
+        /// The host's saved teammates join (a new rookie party the first time), each brought up to the
+        /// host's level if it fell behind. The whole party is kept, even the ones left at home this time.
+        /// </summary>
+        private void AddCompanions(int count)
+        {
+            _companionsAtHome = null;
+            if (count == 0) return;
+            var saves = _savesDisabled ? null : new CompanionSaves(_saveRoot);
+            var party = saves?.LoadOrNull();
+            if (saves?.LastProblem != null) Debug.LogWarning(saves.LastProblem);
+            if (party == null || party.Count < CompanionParty.Size)
+            {
+                var fresh = CompanionParty.NewParty(Character?.ClassId, _config);
+                party = (party ?? new List<CompanionRecord>()).Concat(fresh.Skip(party?.Count ?? 0)).ToList();
+            }
+
+            var level = Character == null || Character.IsNew ? 1 : Character.Level;
+            for (var i = 0; i < party.Count; i++)
+            {
+                if (i >= count) continue;
+                party[i].Character = CompanionParty.CaughtUp(party[i].Character, level, _config);
+                Host.AddCompanion(party[i], seed: 7919 * (i + 1));
+            }
+            _companionsAtHome = party.Skip(count).ToList();
+        }
+
+        /// <summary>Teammates who stayed out of this session, kept so the save still has all of them.</summary>
+        private List<CompanionRecord> _companionsAtHome;
+
+        private void SaveCompanions()
+        {
+            if (_savesDisabled || Host == null || Host.Companions.Count == 0) return;
+            try
+            {
+                var party = Host.CaptureCompanions();
+                if (_companionsAtHome != null) party.AddRange(_companionsAtHome);
+                new CompanionSaves(_saveRoot).Save(party);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Could not save the teammates: " + e.Message);
+            }
         }
 
         /// <summary>Joins a session over <paramref name="transport"/>; <paramref name="clientKey"/> identifies this player for rejoining.</summary>
@@ -254,6 +301,7 @@ namespace HunterSystem.Game
                 Debug.LogError("Could not save the character: " + e.Message);
             }
 
+            SaveCompanions();
             try
             {
                 if (Host != null && HostWorld != null && !_savesDisabled) new WorldSaves(_saveRoot).Save(HostWorld);
@@ -426,6 +474,7 @@ namespace HunterSystem.Game
                     continue;
                 }
                 var id = (e as GateCleared)?.GateId;
+                if (id != null) SaveCompanions(); // a clear is what they learn most from
                 if (id == null || HostWorld.ClearedGates.Contains(id)) continue;
                 HostWorld.ClearedGates.Add(id);
                 SaveHostWorld();

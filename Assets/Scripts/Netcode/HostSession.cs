@@ -91,6 +91,44 @@ namespace HunterSystem.Netcode
             return LocalPlayerId;
         }
 
+        private readonly List<(PlayerId id, CompanionBrain brain)> _companions = new List<(PlayerId, CompanionBrain)>();
+
+        /// <summary>The host's bot teammates in the session (ADR 0014), in the order they joined.</summary>
+        public IReadOnlyList<(PlayerId id, CompanionBrain brain)> Companions => _companions;
+
+        public bool IsCompanion(PlayerId id) => _companions.Exists(c => c.id == id);
+
+        /// <summary>
+        /// Adds a bot teammate, played on the host by a <see cref="CompanionBrain"/> that follows the
+        /// host's own player. It is a player like any other: it takes a place in the party (and in
+        /// party-size scaling), and guests see it in snapshots.
+        /// </summary>
+        public PlayerId AddCompanion(CompanionRecord record, int seed)
+        {
+            if (record == null) throw new ArgumentNullException(nameof(record));
+            if (World.PlayerIds.Count >= MaxPlayers) throw new InvalidOperationException($"The session is full ({MaxPlayers} players).");
+            var id = new PlayerId(_nextPlayerId++);
+            World.AddPlayer(id, _spawnPoint(id), record.Character ?? CharacterRecord.New());
+            _companions.Add((id, new CompanionBrain(record, seed) { Leader = LocalPlayerId }));
+            return id;
+        }
+
+        /// <summary>The teammates as they stand now (characters with what they earned here, and their experience), to save.</summary>
+        public List<CompanionRecord> CaptureCompanions()
+        {
+            var records = new List<CompanionRecord>();
+            foreach (var (id, brain) in _companions)
+            {
+                records.Add(new CompanionRecord
+                {
+                    Name = brain.Record.Name,
+                    Character = World.HasPlayer(id) ? World.CaptureCharacter(id) : brain.Record.Character,
+                    Experience = brain.Record.Experience.Clone(),
+                });
+            }
+            return records;
+        }
+
         /// <summary>One host tick: handle arrivals, step the world, and maybe send a snapshot.</summary>
         public void Tick(PlayerCommand localCommand)
         {
@@ -99,6 +137,8 @@ namespace HunterSystem.Netcode
             _commands.Clear();
             if (World.HasPlayer(LocalPlayerId)) _commands[LocalPlayerId] = localCommand;
             foreach (var remote in _remotes) _commands[remote.Id] = NextCommand(remote);
+            foreach (var (id, brain) in _companions) _commands[id] = brain.Next(World, id, World.Events); // the last step's events
+
             World.Step(_commands);
             _eventsSinceSnapshot.AddRange(World.Events);
 
