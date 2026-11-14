@@ -6,12 +6,16 @@ namespace HunterSystem.Game
 {
     /// <summary>
     /// Greybox visuals for skills: a sphere per projectile in flight, and a brief flat flash for
-    /// the area or cone a skill covered and for each explosion. Reads the simulation only.
+    /// the area or cone a skill covered and for each explosion. Each skill is drawn in its own colour
+    /// (<see cref="SkillLook"/>: its class's colour) and its flash opens out and fades over half a
+    /// second, so you can see what teammates are doing (ticket 35). Reads the simulation only.
     /// </summary>
     public sealed class SkillEffectsView : MonoBehaviour
     {
-        private const float FlashSeconds = 0.25f;
+        private const float FlashSeconds = 0.5f;
         private const float EffectHeight = 1f;
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private static readonly Color ExplosionColor = new Color(1f, 0.6f, 0.2f);
 
         [SerializeField] private Material projectileMaterial;
         [SerializeField] private Material areaMaterial;
@@ -21,6 +25,8 @@ namespace HunterSystem.Game
         private SimulationRunner _runner;
         private readonly Dictionary<int, GameObject> _projectiles = new Dictionary<int, GameObject>();
         private readonly HashSet<int> _liveProjectileIds = new HashSet<int>();
+        private readonly List<(Transform shape, Vector3 fullScale, float startedAt)> _flashes = new List<(Transform, Vector3, float)>();
+        private MaterialPropertyBlock _props;
 
         /// <summary>How many projectile visuals are on screen.</summary>
         public int ActiveProjectileVisuals => _projectiles.Count;
@@ -33,12 +39,18 @@ namespace HunterSystem.Game
 
             foreach (var e in _runner.FrameEvents)
             {
-                if (e is SkillUsed used) Flash(used);
+                if (e is SkillUsed used && _runner.World.HasPlayer(used.Player))
+                {
+                    Flash(used);
+                }
                 else if (e is Explosion explosion)
-                    FlashDisc(explosion.Position, explosion.Radius, explosionMaterial != null ? explosionMaterial : areaMaterial, "Explosion Flash");
+                {
+                    FlashDisc(explosion.Position, explosion.Radius, explosionMaterial != null ? explosionMaterial : areaMaterial, "Explosion Flash", ExplosionColor);
+                }
             }
 
             SyncProjectiles();
+            AnimateFlashes();
         }
 
         private void Flash(SkillUsed used)
@@ -51,7 +63,7 @@ namespace HunterSystem.Game
             switch (skill.Effect)
             {
                 case SkillEffectKind.Area:
-                    FlashDisc(player.Position, used.Radius, areaMaterial, "Area Flash");
+                    FlashDisc(player.Position, used.Radius, areaMaterial, "Area Flash", SkillLook.SkillColor(skill));
                     break;
                 case SkillEffectKind.Cone:
                 {
@@ -62,18 +74,39 @@ namespace HunterSystem.Game
                     slab.transform.rotation = Quaternion.LookRotation(facing, Vector3.up);
                     slab.transform.position = origin + facing * (used.Range * 0.5f) + Vector3.up * EffectHeight * 0.5f;
                     slab.transform.localScale = new Vector3(width, 0.05f, used.Range);
-                    Destroy(slab, FlashSeconds);
+                    Tint(slab, SkillLook.SkillColor(skill));
+                    _flashes.Add((slab.transform, slab.transform.localScale, Time.time));
                     break;
                 }
             }
         }
 
-        private void FlashDisc(Vec3 at, float radius, Material material, string name)
+        private void FlashDisc(Vec3 at, float radius, Material material, string name, Color color)
         {
             var disc = Visual(PrimitiveType.Cylinder, material, name);
             disc.transform.position = new Vector3(at.X, 0.05f, at.Z);
             disc.transform.localScale = new Vector3(radius * 2f, 0.02f, radius * 2f);
-            Destroy(disc, FlashSeconds);
+            Tint(disc, color);
+            _flashes.Add((disc.transform, disc.transform.localScale, Time.time));
+        }
+
+        /// <summary>A flash opens out quickly to its full size, holds, then thins away.</summary>
+        private void AnimateFlashes()
+        {
+            for (var i = _flashes.Count - 1; i >= 0; i--)
+            {
+                var (shape, full, startedAt) = _flashes[i];
+                var t = (Time.time - startedAt) / FlashSeconds;
+                if (shape == null || t >= 1f)
+                {
+                    if (shape != null) Destroy(shape.gameObject);
+                    _flashes.RemoveAt(i);
+                    continue;
+                }
+                var open = 0.6f + 0.4f * Mathf.Min(1f, t * 5f);
+                var thin = t < 0.6f ? 1f : 1f - (t - 0.6f) / 0.4f;
+                shape.localScale = new Vector3(full.x * open, full.y * Mathf.Max(0.1f, thin), full.z * open);
+            }
         }
 
         private void SyncProjectiles()
@@ -85,7 +118,8 @@ namespace HunterSystem.Game
                 if (!_projectiles.TryGetValue(p.Id, out var visual))
                 {
                     visual = Visual(PrimitiveType.Sphere, projectileMaterial, $"Projectile {p.Id} ({p.Skill.Id})");
-                    visual.transform.localScale = Vector3.one * Mathf.Max(0.3f, p.Skill.Radius);
+                    visual.transform.localScale = Vector3.one * Mathf.Max(0.35f, p.Skill.Radius);
+                    Tint(visual, SkillLook.SkillColor(p.Skill));
                     _projectiles.Add(p.Id, visual);
                 }
                 visual.transform.position = new Vector3(p.Position.X, p.Position.Y + EffectHeight, p.Position.Z);
@@ -99,6 +133,13 @@ namespace HunterSystem.Game
                 Destroy(_projectiles[id]);
                 _projectiles.Remove(id);
             }
+        }
+
+        private void Tint(GameObject go, Color color)
+        {
+            _props ??= new MaterialPropertyBlock();
+            _props.SetColor(BaseColorId, color);
+            go.GetComponent<Renderer>().SetPropertyBlock(_props);
         }
 
         private GameObject Visual(PrimitiveType shape, Material material, string name)
