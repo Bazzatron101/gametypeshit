@@ -7,8 +7,8 @@
 **Status:** ready-for-human (open questions below)
 
 - [x] Scale settled (how long a crossing takes, and at what speed): an hour at walking pace, ~12 × 7 km
-- [ ] Region list, order and what opens each one settled
-- [ ] Gate placement per region sketched (story gates and farming gates)
+- [x] Region list, order and what opens each one settled (first sketch, 2026-11-14; region sketch 2026-11-15)
+- [x] Gate placement per region sketched (story gates and farming gates): gates sit at each region's important places; region sketch kept 2026-11-15
 - [x] What physically stops a player entering a region that is not open yet: nothing physical; danger and no guild work there (see Comments)
 - [ ] Mounts: when you get one and how fast it is
 - [x] ADR 0015 accepted, and the spec's non-goal and stories 40 and 48 rewritten (2026-11-15)
@@ -122,3 +122,110 @@ Either size is far more ground than can be built by hand at ~250 hours a year (s
 - The guild pays less for it: a reduced clear reward and reduced XP. The reduction is a configuration value, not a code constant (spec: curves are configuration).
 - **The reduced XP is the character's XP** (developer, 2026-11-14). No separate guild standing.
 - Still to settle: by how much it is reduced, and whether loot from the gate itself is reduced too.
+
+**2026-11-15 (developer, recorded by agent):** A clear beyond your licence pays **25 %**: the guild's clear reward and the character's XP for it are a quarter of normal. Kept as a configuration value. Loot dropped inside the gate is not cut (settled below).
+
+**2026-11-15 (developer, recorded by agent):** **Where gates stand and how far leaks reach.** The developer: "The gates are centred around important things in the regions so they will reach to either near the entrance of the town or hits the roads to attack supply carts".
+- **Gates sit at a region's important places** (its landmarks, mines, shrines, crossings), not scattered at random. Each region's gate layout starts from its list of important places.
+- **A leak reaches outward until it meets something people use:** it can come right up near a town's entrance, or reach the road.
+- **Supply carts** travel the roads between towns, and leaked monsters attack them. New: carts are NPC traffic on the roads, and a road near an active gate is where you meet trouble.
+- Still to settle: ~~whether you can see where a leak is~~ (settled below: no), ~~whether clearing a gate stops its leak for a while~~ (settled below: yes), and what happens when a cart is attacked (settled below: a reward for defending).
+
+**2026-11-15 (developer, recorded by agent):** An attacked supply cart is **a reward for defending it.**
+- Saving a cart pays a reward; losing one costs nothing beyond the missed reward. Towns do not run short.
+- The reward is a configuration value. Still open: who in a co-op party gets it (everyone nearby, as with clears?), and whether it is coin, XP or items.
+
+**2026-11-15 (developer, recorded by agent):** A leak is **not visible.** No scorched ground or darker sky: you find out when its monsters show up.
+- The gate itself can still be seen; only how far its leak reaches is hidden.
+- The board's intel (ticket 20) is the way to learn about a leak before meeting it, if intel covers leaks at all (to decide with ticket 20).
+
+**2026-11-15 (developer, recorded by agent):** Clearing a gate **stops its leak for a while.**
+- After a clear, the gate's leaked monsters stop coming and the ground around it (the road, the town's entrance) is safe; then the leak starts again.
+- How long is a configuration value. Suggested: measured in play time in the host's world, so it does not run out while nobody is playing.
+- Clearing a gate near a road or a town is worth doing for the safety, not only the loot.
+- Still open: does the pause belong to the host's world (everyone sees the road safe), as with other world progress? Suggested yes (spec story 71).
+
+**2026-11-15 (developer, recorded by agent):** Loot inside a gate beyond your licence is **full loot.** Only the guild's clear reward and the XP are cut to 25 %; what drops in the dungeon is unchanged. So going past your licence is a risk that can still pay in items.
+
+**2026-11-15 (developer, recorded by agent):** Three more.
+
+**Cart reward.** The developer: "All player that protect the cart can get information with where the gate is or gold".
+- Every player who helped protect the cart gets the reward, not only the host or whoever landed the last hit.
+- The reward is either a gate's location (it becomes found, see below) or gold. Who gets which is random (settled below).
+
+**How long a cleared gate stays quiet.** The developer: "Until a story event happens for it to open or it will be unlocked for a harder challenge at the guild".
+- A cleared gate stops leaking and stays quiet with no timer. It wakes again only when:
+  - **a story event** reopens it, or
+  - **the guild** reopens it as a harder challenge (a higher-rank version of the same gate, offered at the guild).
+- This replaces the suggested play-time timer. The quiet state belongs to the host's world, like clears.
+- A harder reopened gate leaks again at its new strength (settled below).
+
+**Finding gates.** The developer: "The gates will be hidden for the player until they find it for most of them but for some the guild already knows where they are".
+- Most gates are **hidden** (not on the map, not on the board) until a player walks to them, or learns where one is from a cart reward.
+- **Some gates the guild already knows:** they count as found from the start (or from when their region opens) and show on the board and map.
+- Which gates are guild-known is set per gate in its data: story gates and each region's first gate (settled below).
+- Found gates belong to the host's world (`WorldRecord`), so a guest's cart reward reveals the gate for the whole party.
+
+**2026-11-15 (developer, recorded by agent):** The guild knows **the story gates and each region's first gate.**
+- They count as found once their region opens, and show on the board and the map, so the way forward is never hidden.
+- Every other gate (side gates, farming gates) is hidden until walked to or learned from a cart.
+- In a gate's data this is one flag ("known to the guild"), set on story gates and on the first gate of each region.
+
+**2026-11-15 (developer, recorded by agent):** The cart reward is **random**, rolled for each player who protected it: gold, or a hidden gate's location.
+- The chance of each is a configuration value.
+- If no hidden gate is left to reveal (suggested: in the cart's region), the roll gives gold.
+- A revealed location is world progress, so one player's roll reveals the gate for the whole party.
+
+**2026-11-15 (developer, recorded by agent):** A gate the guild reopens as a harder challenge **leaks again, at its new strength.**
+- Its leaked monsters match the harder version (rank and enemies), so a road that was safe in early ranks can turn deadly later. This is how A-rank's "old ground turns dangerous" works.
+- A story event that reopens a gate works the same way: the reopened gate leaks at whatever strength the story sets.
+- Clearing the harder version quiets it again, until the next reopening.
+
+**2026-11-15 (agent, for the developer to change freely):** **Region sketch: towns, important places and gates.** All names are placeholders. Distances are on the ~12 × 7 km map, measured from the west edge (x) and the south edge (y). The main road runs west to east at about y 3.5 km, with short spurs to towns off it. "Known" = known to the guild (story gates and each region's first gate); "hidden" = found by walking or from a cart.
+
+*Greenmarch* (E, open from the start; x 0–3.5 km). Farms, woods and a river ford.
+- **Town:** the guild town (the hub), x 0.5 km, on the road.
+- **The old mill** → *Mill cellar*: the first gate, known, story. 1 km from town. Small, cramped and quiet (ticket 16's tone).
+- **The barrow hill** → *Barrow*: known, story; its clear leads to the D-rank promotion.
+- **Thornwood** → *Thornwood hollow*: hidden, farming.
+- **Greywater ford** (where the road crosses the river) → *Ford gate*: hidden. It leaks onto the road at the ford: the first place carts get attacked.
+
+*Fenward mire* (D promotion; south of the road, x 3.5–6.5 km). Marsh, peat, drowned buildings.
+- **Town:** Stiltmoor, on stilts at the mire's edge, a short spur south of the road.
+- **The drowned chapel** → *Drowned chapel*: first gate, known.
+- **Heron isle** → *Heron isle*: known, story.
+- **The peat cutters' camp** → *Peat camp*: hidden. Close to Stiltmoor, so its leak reaches the town's entrance.
+- **The sunken causeway** → *Causeway gate*: hidden. Leaks onto the road.
+
+*Brokenstone hills* (a story beat during C; north of the road, x 3.5–6.5 km). Quarries, ruins, old mines.
+- **Town:** Quarrygate, at the foot of the hills, a short spur north of the road.
+- **The great quarry** → *Great quarry*: first gate, known.
+- **The collapsed mine** → *Deep mine*: known, story (the beat that opens the region happens here or leads here).
+- **The watchtower ruins** → *Watchtower*: hidden. Overlooks the road; leaks onto it.
+- **The cairn field** → *Cairns*: hidden, farming.
+- C-rank before the story beat: the guild offers C-rank versions of found gates in the Greenmarch and Fenward mire (harder reopenings), so C has work before its region opens.
+
+*Ashen steppe* (B promotion; south of the road, x 6.5–9.5 km). Open grass, burnt stone, room for mounts to run.
+- **Town:** Ember crossing, a caravan town on the road. Most supply carts start or stop here.
+- **The standing stones** → *Stone ring*: first gate, known.
+- **The old battlefield** → *Battlefield*: known, story. A good place for the first raid gate (ticket 29).
+- **The dry riverbed** → *Riverbed gate*: hidden. Leaks onto the road.
+- **The herd grounds** → *Herd grounds*: hidden, farming.
+
+*Saltreach coast* (B specialty quests, ticket 26; north of the road, x 6.5–9.5 km). Cliffs, a harbour, sea caves.
+- **Town:** Saltreach harbour, on a spur north to the coast.
+- **The lighthouse** → *Lighthouse*: first gate, known.
+- **Four specialty quest gates,** one per class (Warrior, Rogue, Archer, Wizard), all known, story. Each sits at its own place: the cliff monastery, the smugglers' caves, the clifftop eyrie, the drowned library.
+- **Wreck cove** → *Wreck cove*: hidden, farming.
+
+*Riftlands* (S story; x 9.5–12 km). Waits on the story hook (ticket 16) for its look and places.
+- **Town:** Farwatch, the guild's last outpost, at the road's end.
+- **Three story gates, all known:** an outpost gate, one deeper in, and the Rift itself at the far east.
+
+*A-rank:* no new region. The guild reopens found gates across the map as A-rank challenges, and they leak at their new strength.
+
+**Count:** 25 gates (4 + 4 + 4 + 4 + 6 + 3; the raid can be the battlefield gate). Every one can be reopened harder, which is how the spec's 40 to 60 gates are reached without building that many places.
+
+Still to settle: names, which places carry which story beats (waits partly on the hook, ticket 16), and the raid gate's place.
+
+**2026-11-15 (developer, recorded by agent):** The region sketch is **kept** as the starting layout. More towns may be added later ("we may add more towns in the end"), so the layout should leave room for them: one town per region is the minimum, not a rule.

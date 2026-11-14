@@ -19,7 +19,8 @@ faster, and a crossing takes about an hour. Ticket 36 holds the layout.
   region that is not open is too dangerous, and its town's guild gives you little or no work there.
   "Opening" a region means its guild starts giving you quests. A party may still go through any gate it
   reaches, at its own risk, with no licence check and no scaling down (developer, 2026-11-14). Such a clear
-  counts, but the guild's clear reward and the character's XP for it are reduced, by a configuration value.
+  counts, but the guild's clear reward and the character's XP for it are 25 % of normal; loot inside the gate is not cut (developer,
+  2026-11-15), a configuration value.
 - **Regions open by rank promotions and story beats,** recorded in the host's world (ADR 0005's
   `WorldRecord`), with discovered gates. Guests see the host's world, as with gates today.
 - **The gate board stays:** it gives intel and sends the party into gates the host's world has already
@@ -45,3 +46,6 @@ faster, and a crossing takes about an hour. Ticket 36 holds the layout.
   landmarks and the road. This competes with the 40 to 60 gates the spec plans for.
 - Mounts become part of the character (ADR 0005). The first comes with the D-rank promotion (developer,
   2026-11-14), so a guest still at E-rank has none and walks; there is no riding double (developer, 2026-11-14).
+- **Gates are hidden until found,** by walking to them or from a supply cart's reward; some are known to
+  the guild from the start: the story gates and each region's first gate (developer, 2026-11-15). A cleared gate stops leaking until a story event or
+  the guild reopens it as a harder challenge. All of this is the host's world's.
