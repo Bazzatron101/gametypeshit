@@ -13,16 +13,17 @@ MonoBehaviour:
   m_Name: FireBolt
   m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.SkillDefinitionAsset
   id: fire-bolt
-  displayName: Fire Bolt
+  displayName: Fireball
   cooldownSeconds: 2
   unlockLevel: 1
+  characterClass: {fileID: 11400000, guid: eee3fddc0de53b7479758d35962c5502, type: 2}
   tags:
   - fire
   - projectile
   - magic
   scalingStat: 3
   effect: 2
-  damage: 25
+  damage: 18
   range: 12
   arcDegrees: 120
   radius: 0.5

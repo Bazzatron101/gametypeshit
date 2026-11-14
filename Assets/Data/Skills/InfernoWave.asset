@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Inferno Wave
   cooldownSeconds: 10
   unlockLevel: 15
+  characterClass: {fileID: 11400000, guid: eee3fddc0de53b7479758d35962c5502, type: 2}
   tags:
   - fire
   - magic

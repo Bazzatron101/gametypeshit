@@ -48,9 +48,9 @@ namespace HunterSystem.Tests
             yield return new WaitForSeconds(0.2f);
 
             state = runner.World.GetPlayer(LocalPlayer);
-            Assert.That(state.Stats[Stat.Vitality], Is.EqualTo(12));
+            Assert.That(state.Stats[Stat.Vitality], Is.EqualTo(13), "10, +1 for the Warrior's level, +2 placed");
             Assert.That(state.UnspentStatPoints, Is.EqualTo(1));
-            Assert.That(state.MaxHealth, Is.EqualTo(120));
+            Assert.That(state.MaxHealth, Is.EqualTo(130));
         }
     }
 }

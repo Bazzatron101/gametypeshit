@@ -15,13 +15,14 @@ MonoBehaviour:
   id: hunters-javelin
   displayName: Hunter's Javelin
   cooldownSeconds: 5
-  unlockLevel: 5
+  unlockLevel: 1
+  characterClass: {fileID: 11400000, guid: 1a8667069c9c1c94bb386f02f8d45ba5, type: 2}
   tags:
   - projectile
   - physical
-  scalingStat: 0
+  scalingStat: 1
   effect: 2
-  damage: 40
+  damage: 30
   range: 16
   arcDegrees: 120
   radius: 0.6

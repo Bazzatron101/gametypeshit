@@ -53,6 +53,17 @@ namespace HunterSystem.Simulation
         /// <summary>Every skill in the game. Starters (unlock level 1) fill the bar in this order.</summary>
         public IReadOnlyList<SkillDefinition> Skills { get; set; } = Array.Empty<SkillDefinition>();
 
+        /// <summary>The classes a character can be (ticket 24). Skills name their class by id.</summary>
+        public IReadOnlyList<ClassDefinition> Classes { get; set; } = Array.Empty<ClassDefinition>();
+
+        /// <summary>The class with this id, or null (none given, or not one of the game's).</summary>
+        public ClassDefinition ClassById(string id)
+        {
+            if (id == null || Classes == null) return null;
+            foreach (var c in Classes) if (c != null && c.Id == id) return c;
+            return null;
+        }
+
         /// <summary>Every gate in the game. Like skills, gates are named by id in snapshots, so host and clients must hold the same list.</summary>
         public IReadOnlyList<GateDefinition> Gates { get; set; } = Array.Empty<GateDefinition>();
 

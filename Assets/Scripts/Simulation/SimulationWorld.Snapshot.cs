@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSW9");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSWA");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -210,6 +210,7 @@ namespace HunterSystem.Simulation
             w.Write(p.JumpHeightPercent);
             w.Write(p.Sprinting);
             w.Write(p.SprintResumesAtTick);
+            WriteNullable(w, p.Class?.Id);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -462,6 +463,9 @@ namespace HunterSystem.Simulation
             p.JumpHeightPercent = r.ReadInt32();
             p.Sprinting = r.ReadBoolean();
             p.SprintResumesAtTick = r.ReadInt32();
+            var classId = ReadNullable(r);
+            if (classId != null)
+                p.Class = _config.ClassById(classId) ?? throw new FormatException($"The snapshot names class '{classId}', which this world does not have.");
             return p;
         }
 

@@ -72,12 +72,21 @@ namespace HunterSystem.Simulation
 
         public readonly bool IsSprinting;
 
+        /// <summary>The character's class, or null for one from before classes.</summary>
+        public readonly ClassDefinition Class;
+
+        /// <summary>How high this player jumps, as a percentage of the base jump.</summary>
+        public readonly int JumpHeightPercent;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
-            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false)
+            IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false,
+            ClassDefinition characterClass = null, int jumpHeightPercent = 100)
         {
+            Class = characterClass;
+            JumpHeightPercent = jumpHeightPercent;
             IsAirborne = isAirborne;
             IsSprinting = isSprinting;
             IsReady = isReady;

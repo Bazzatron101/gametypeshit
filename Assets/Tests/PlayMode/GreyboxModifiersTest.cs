@@ -11,7 +11,7 @@ namespace HunterSystem.Tests
 {
     /// <summary>
     /// Checks the demo synergy in the real greybox scene: toggling Split Shot through the debug
-    /// toggles makes one Fire Bolt press put three bolts on screen. Modifier rules are covered in
+    /// toggles makes one Fireball press put three bolts on screen. Modifier rules are covered in
     /// SimulationModifiersTest.
     /// </summary>
     public class GreyboxModifiersTest
@@ -21,7 +21,7 @@ namespace HunterSystem.Tests
         [UnityTest]
         public IEnumerator SplitShotTurnsOneFireBoltIntoThree()
         {
-            TestSaves.UseFreshFolder();
+            TestSaves.UseFreshFolder(classId: "wizard"); // the Fireball is the wizard's
             yield return SceneManager.LoadSceneAsync("Greybox", LoadSceneMode.Single);
             var runner = Object.FindAnyObjectByType<SimulationRunner>();
             var toggles = Object.FindAnyObjectByType<DebugModifierToggles>();
@@ -35,7 +35,7 @@ namespace HunterSystem.Tests
             while (!toggles.IsActive(splitShot) && Time.time < until) yield return null; // applies on the next tick
             Assert.That(runner.World.GetPlayer(LocalPlayer).ActiveModifiers.Select(m => m.Id), Has.Some.EqualTo("split-shot"));
 
-            runner.SetCommandSource(LocalPlayer, new ConstantCommandSource(new PlayerCommand(0f, 0f, useSkillSlot: 2)));
+            runner.SetCommandSource(LocalPlayer, new ConstantCommandSource(new PlayerCommand(0f, 0f, useSkillSlot: 0)));
             var deadline = Time.time + 1f;
             while (effects.ActiveProjectileVisuals < 3 && Time.time < deadline) yield return null;
 

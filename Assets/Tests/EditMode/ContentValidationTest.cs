@@ -51,6 +51,7 @@ namespace HunterSystem.Tests
         {
             var content = Content();
 
+            Assert.That(All<ClassDefinitionAsset>(), Is.SubsetOf(content.Classes));
             Assert.That(All<SkillDefinitionAsset>(), Is.SubsetOf(content.Skills));
             Assert.That(All<ModifierDefinitionAsset>(), Is.SubsetOf(content.Modifiers));
             Assert.That(All<EnemyDefinitionAsset>(), Is.SubsetOf(content.Enemies));
@@ -237,6 +238,31 @@ namespace HunterSystem.Tests
 
             foreach (var asset in content.Enemies)
                 Assert.DoesNotThrow(() => world.SpawnEnemy(asset.ToDefinition(), Vec3.Zero), asset.name);
+        }
+
+        [Test]
+        public void TheFourClassesEachHaveTheirOwnKit()
+        {
+            var config = new SimulationConfig();
+            Content().ApplyTo(config);
+
+            Assert.That(config.Classes.Select(c => c.Id), Is.EquivalentTo(new[] { "warrior", "rogue", "archer", "wizard" }));
+            foreach (var c in config.Classes)
+            {
+                var kit = config.Skills.Where(s => s.ClassId == c.Id).ToArray();
+                Assert.That(kit.Count(s => s.UnlockLevel == 1), Is.GreaterThanOrEqualTo(1), $"{c.Id} starts with a skill");
+                Assert.That(kit.Length, Is.GreaterThanOrEqualTo(4), $"{c.Id} has skills to unlock");
+                Assert.That(c.StatsPerLevel.Sum(), Is.GreaterThan(0), $"{c.Id} gains stats each level");
+            }
+            Assert.That(config.Skills.Where(s => s.Tags.Contains("magic")).Select(s => s.ClassId), Has.All.EqualTo("wizard"), "magic is the wizard's");
+
+            // Only the Rogue jumps over an enemy: its jump clears the tallest one in the game.
+            var tallest = Content().Bosses.Select(b => b.ToDefinition(new System.Collections.Generic.Dictionary<ScriptableObject, EnemyDefinition>()).Height).Max();
+            foreach (var c in config.Classes)
+            {
+                var clears = config.JumpHeight * c.JumpHeightPercent / 100f >= tallest;
+                Assert.That(clears, Is.EqualTo(c.Id == "rogue"), $"{c.Id} {(clears ? "clears" : "does not clear")} a {tallest} m boss");
+            }
         }
 
         [Test]

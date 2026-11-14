@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Flame Burst
   cooldownSeconds: 8
   unlockLevel: 3
+  characterClass: {fileID: 11400000, guid: eee3fddc0de53b7479758d35962c5502, type: 2}
   tags:
   - fire
   - area

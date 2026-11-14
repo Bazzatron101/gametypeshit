@@ -34,6 +34,9 @@ namespace HunterSystem.Simulation
         /// <summary>The level at which the skill is learned. 1 means a starter skill.</summary>
         public int UnlockLevel { get; set; } = 1;
 
+        /// <summary>The class that learns this skill, or null for one every character learns.</summary>
+        public string ClassId { get; set; }
+
         public string[] Tags { get; set; } = Array.Empty<string>();
 
         /// <summary>The stat whose points above the starting value raise this skill's damage.</summary>

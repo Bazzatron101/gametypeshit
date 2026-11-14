@@ -66,61 +66,167 @@ namespace HunterSystem.Editor
         };
 
         /// <summary>
+        /// The four classes (ticket 24), in the order the picker shows them. Each level gives two
+        /// points in the class's main stats on top of the free ones. Only the Rogue jumps high
+        /// enough to clear an enemy: 450% of the 0.9 m base is 4.05 m, over the Warlord's 3.5 m.
+        /// </summary>
+        private static readonly ClassDefinition[] ClassData =
+        {
+            new ClassDefinition
+            {
+                Id = "warrior", Name = "Warrior", StatsPerLevel = ClassStats(str: 1, vit: 1),
+                Description = "Front line. Heavy blades and the health to stand in the fight. +1 Strength, +1 Vitality each level.",
+            },
+            new ClassDefinition
+            {
+                Id = "rogue", Name = "Rogue", StatsPerLevel = ClassStats(agi: 1, luck: 1), JumpHeightPercent = 450,
+                Description = "Quick knives up close, and a leap that clears an enemy's charge. +1 Agility, +1 Luck each level.",
+            },
+            new ClassDefinition
+            {
+                Id = "archer", Name = "Archer", StatsPerLevel = ClassStats(agi: 1, sense: 1),
+                Description = "Keeps its distance: arrows, javelins and volleys. +1 Agility, +1 Sense each level.",
+            },
+            new ClassDefinition
+            {
+                Id = "wizard", Name = "Wizard", StatsPerLevel = ClassStats(intel: 1, sense: 1),
+                Description = "Starts with one weak Fireball and grows into the strongest spells in the game. +1 Intelligence, +1 Sense each level.",
+            },
+        };
+
+        private static int[] ClassStats(int str = 0, int agi = 0, int vit = 0, int intel = 0, int sense = 0, int luck = 0)
+        {
+            var stats = new int[PlayerStats.Count];
+            stats[(int)Stat.Strength] = str;
+            stats[(int)Stat.Agility] = agi;
+            stats[(int)Stat.Vitality] = vit;
+            stats[(int)Stat.Intelligence] = intel;
+            stats[(int)Stat.Sense] = sense;
+            stats[(int)Stat.Luck] = luck;
+            return stats;
+        }
+
+        /// <summary>
         /// Every skill as created on a fresh project, in bar order (starters first, then by unlock level).
-        /// After that the assets are the source of truth: rebuilding never overwrites them.
+        /// After that the assets are the source of truth: rebuilding never overwrites them, except
+        /// once to move a skill made before classes onto its class (see <see cref="GetOrCreateSkill"/>).
         /// </summary>
         private static readonly SkillDefinition[] SkillData =
         {
+            // Warrior
             new SkillDefinition
             {
-                Id = "rending-slash", Name = "Rending Slash", Effect = SkillEffectKind.Cone, Damage = 30, Range = 3f, ArcDegrees = 160f,
+                Id = "rending-slash", Name = "Rending Slash", ClassId = "warrior", Effect = SkillEffectKind.Cone, Damage = 30, Range = 3f, ArcDegrees = 160f,
                 CooldownSeconds = 4f, UnlockLevel = 1, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical" },
                 ChargeSeconds = 0.8f, ChargedDamagePercent = 100, ChargeUnlockLevel = 4,
             },
             new SkillDefinition
             {
-                Id = "ground-slam", Name = "Ground Slam", Effect = SkillEffectKind.Area, Damage = 20, Radius = 3.5f,
+                Id = "ground-slam", Name = "Ground Slam", ClassId = "warrior", Effect = SkillEffectKind.Area, Damage = 20, Radius = 3.5f,
                 CooldownSeconds = 6f, UnlockLevel = 1, ScalingStat = Stat.Strength, Tags = new[] { "melee", "area", "physical" },
                 ChargeSeconds = 1f, ChargedSizePercent = 100, ChargeUnlockLevel = 6,
             },
+            // Rogue
             new SkillDefinition
             {
-                Id = "fire-bolt", Name = "Fire Bolt", Effect = SkillEffectKind.Projectile, Damage = 25, Range = 12f, Radius = 0.5f,
-                ProjectileSpeed = 15f, CooldownSeconds = 2f, UnlockLevel = 1, ScalingStat = Stat.Intelligence,
-                Tags = new[] { "fire", "projectile", "magic" },
+                Id = "twin-fangs", Name = "Twin Fangs", ClassId = "rogue", Effect = SkillEffectKind.Cone, Damage = 22, Range = 2.2f, ArcDegrees = 90f,
+                CooldownSeconds = 2.5f, UnlockLevel = 1, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical" },
+                ChargeSeconds = 0.6f, ChargedDamagePercent = 80, ChargeUnlockLevel = 4,
+            },
+            // Archer
+            new SkillDefinition
+            {
+                Id = "quick-shot", Name = "Quick Shot", ClassId = "archer", Effect = SkillEffectKind.Projectile, Damage = 16, Range = 14f, Radius = 0.4f,
+                ProjectileSpeed = 24f, CooldownSeconds = 1.5f, UnlockLevel = 1, ScalingStat = Stat.Agility, Tags = new[] { "projectile", "physical" },
             },
             new SkillDefinition
             {
-                Id = "flame-burst", Name = "Flame Burst", Effect = SkillEffectKind.Area, Damage = 35, Radius = 4f,
+                // Before classes this was a level-5 Strength skill for everyone; it is the Archer's heavy shot now.
+                Id = "hunters-javelin", Name = "Hunter's Javelin", ClassId = "archer", Effect = SkillEffectKind.Projectile, Damage = 30, Range = 16f, Radius = 0.6f,
+                ProjectileSpeed = 22f, CooldownSeconds = 5f, UnlockLevel = 1, ScalingStat = Stat.Agility,
+                Tags = new[] { "projectile", "physical" },
+                ChargeSeconds = 1f, ChargedDamagePercent = 100, ChargeUnlockLevel = 8,
+            },
+            // Wizard
+            new SkillDefinition
+            {
+                // The wizard's only starter, and weak: magic grows with the wizard (it was Fire Bolt before classes).
+                Id = "fire-bolt", Name = "Fireball", ClassId = "wizard", Effect = SkillEffectKind.Projectile, Damage = 18, Range = 12f, Radius = 0.5f,
+                ProjectileSpeed = 15f, CooldownSeconds = 2f, UnlockLevel = 1, ScalingStat = Stat.Intelligence,
+                Tags = new[] { "fire", "projectile", "magic" },
+            },
+            // Unlocks, by level
+            new SkillDefinition
+            {
+                Id = "shadow-flurry", Name = "Shadow Flurry", ClassId = "rogue", Effect = SkillEffectKind.Area, Damage = 28, Radius = 2.5f,
+                CooldownSeconds = 7f, UnlockLevel = 3, ScalingStat = Stat.Agility, Tags = new[] { "melee", "area", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "arrow-rain", Name = "Arrow Rain", ClassId = "archer", Effect = SkillEffectKind.Area, Damage = 26, Radius = 4f,
+                CooldownSeconds = 8f, UnlockLevel = 3, ScalingStat = Stat.Agility, Tags = new[] { "area", "physical" },
+                ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 7,
+            },
+            new SkillDefinition
+            {
+                Id = "flame-burst", Name = "Flame Burst", ClassId = "wizard", Effect = SkillEffectKind.Area, Damage = 35, Radius = 4f,
                 CooldownSeconds = 8f, UnlockLevel = 3, ScalingStat = Stat.Intelligence, Tags = new[] { "fire", "area", "magic" },
                 ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 7,
             },
             new SkillDefinition
             {
-                Id = "hunters-javelin", Name = "Hunter's Javelin", Effect = SkillEffectKind.Projectile, Damage = 40, Range = 16f, Radius = 0.6f,
-                ProjectileSpeed = 22f, CooldownSeconds = 5f, UnlockLevel = 5, ScalingStat = Stat.Strength,
-                Tags = new[] { "projectile", "physical" },
-                ChargeSeconds = 1f, ChargedDamagePercent = 100, ChargeUnlockLevel = 8,
+                Id = "shield-bash", Name = "Shield Bash", ClassId = "warrior", Effect = SkillEffectKind.Cone, Damage = 35, Range = 2f, ArcDegrees = 90f,
+                CooldownSeconds = 6f, UnlockLevel = 5, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical" },
             },
             new SkillDefinition
             {
-                Id = "whirlwind", Name = "Whirlwind", Effect = SkillEffectKind.Area, Damage = 30, Radius = 3.2f,
+                Id = "throwing-knives", Name = "Throwing Knives", ClassId = "rogue", Effect = SkillEffectKind.Projectile, Damage = 25, Range = 10f, Radius = 0.4f,
+                ProjectileSpeed = 20f, CooldownSeconds = 4f, UnlockLevel = 5, ScalingStat = Stat.Agility, Tags = new[] { "projectile", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "arcane-orb", Name = "Arcane Orb", ClassId = "wizard", Effect = SkillEffectKind.Projectile, Damage = 45, Range = 12f, Radius = 1.2f,
+                ProjectileSpeed = 9f, CooldownSeconds = 6f, UnlockLevel = 8, ScalingStat = Stat.Intelligence, Tags = new[] { "projectile", "magic" },
+                ChargeSeconds = 1f, ChargedDamagePercent = 80, ChargeUnlockLevel = 11,
+            },
+            new SkillDefinition
+            {
+                Id = "whirlwind", Name = "Whirlwind", ClassId = "warrior", Effect = SkillEffectKind.Area, Damage = 30, Radius = 3.2f,
                 CooldownSeconds = 7f, UnlockLevel = 10, ScalingStat = Stat.Strength, Tags = new[] { "melee", "area", "physical" },
                 ChargeSeconds = 1.2f, ChargedSizePercent = 80, ChargeUnlockLevel = 12,
             },
             new SkillDefinition
             {
-                Id = "inferno-wave", Name = "Inferno Wave", Effect = SkillEffectKind.Cone, Damage = 45, Range = 6f, ArcDegrees = 70f,
+                Id = "eviscerate", Name = "Eviscerate", ClassId = "rogue", Effect = SkillEffectKind.Cone, Damage = 60, Range = 2.5f, ArcDegrees = 60f,
+                CooldownSeconds = 9f, UnlockLevel = 10, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical" },
+                ChargeSeconds = 0.8f, ChargedDamagePercent = 100, ChargeUnlockLevel = 13,
+            },
+            new SkillDefinition
+            {
+                Id = "volley", Name = "Volley", ClassId = "archer", Effect = SkillEffectKind.Cone, Damage = 40, Range = 10f, ArcDegrees = 40f,
+                CooldownSeconds = 9f, UnlockLevel = 10, ScalingStat = Stat.Agility, Tags = new[] { "projectile", "physical" },
+                ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 13,
+            },
+            new SkillDefinition
+            {
+                Id = "inferno-wave", Name = "Inferno Wave", ClassId = "wizard", Effect = SkillEffectKind.Cone, Damage = 45, Range = 6f, ArcDegrees = 70f,
                 CooldownSeconds = 10f, UnlockLevel = 15, ScalingStat = Stat.Intelligence, Tags = new[] { "fire", "magic" },
                 ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 18,
             },
             new SkillDefinition
             {
                 // The capstone: no charge, it is already enormous.
-                Id = "monarchs-decree", Name = "Monarch's Decree", Effect = SkillEffectKind.Area, Damage = 80, Radius = 6f,
+                Id = "monarchs-decree", Name = "Monarch's Decree", ClassId = "wizard", Effect = SkillEffectKind.Area, Damage = 80, Radius = 6f,
                 CooldownSeconds = 20f, UnlockLevel = 20, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "area" },
             },
         };
+
+        /// <summary>
+        /// Skills made before classes whose asset file keeps its old name, and those whose name,
+        /// unlock level, scaling stat or damage changed when they moved onto a class.
+        /// </summary>
+        private static readonly Dictionary<string, string> SkillFileNames = new Dictionary<string, string> { ["fire-bolt"] = "Fire Bolt" };
+        private static readonly HashSet<string> RetunedForClasses = new HashSet<string> { "fire-bolt", "hunters-javelin" };
 
         /// <summary>Three Goblins at 25 XP each: enough for the first level-up (50 XP) in one fight.</summary>
         private static readonly Vector3[] GoblinSpawns = { new Vector3(0f, 0f, 8f), new Vector3(-4f, 0f, 10f), new Vector3(4f, 0f, 10f) };
@@ -249,6 +355,7 @@ namespace HunterSystem.Editor
             var simulation = new GameObject("Simulation");
             Wire(simulation.AddComponent<SimulationRunner>(), ("content", content));
             simulation.AddComponent<SystemHud>();
+            simulation.AddComponent<ClassPicker>();
             Wire(simulation.AddComponent<PerfectDodgeView>(), ("ringMaterial", GetOrCreateMaterial("Greybox_PerfectDodge", new Color(0.55f, 0.95f, 1f))));
             Wire(simulation.AddComponent<SkillEffectsView>(),
                 ("projectileMaterial", GetOrCreateMaterial("Greybox_Fire", new Color(1f, 0.45f, 0.1f))),
@@ -293,7 +400,8 @@ namespace HunterSystem.Editor
         {
             var tuning = GetOrCreateSingle<PlayerTuningAsset>(PlayerTuningPath);
             var progression = GetOrCreateSingle<ProgressionAsset>(ProgressionPath); // its defaults hold the default curve
-            var skills = SkillData.Select(GetOrCreateSkill).ToArray();
+            var classes = ClassData.Select(GetOrCreateClass).ToArray();
+            var skills = SkillData.Select(data => GetOrCreateSkill(data, classes)).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
             var gates = new[] { GetOrCreateGoblinWarren(modifiers) };
@@ -310,6 +418,7 @@ namespace HunterSystem.Editor
             }
 
             content.ReplaceContent(tuning, progression,
+                WithEveryProjectAsset(content.Classes, classes),
                 WithEveryProjectAsset(content.Skills, skills),
                 WithEveryProjectAsset(content.Modifiers, modifiers),
                 WithEveryProjectAsset(content.Enemies, enemies),
@@ -343,8 +452,31 @@ namespace HunterSystem.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static SkillDefinitionAsset GetOrCreateSkill(SkillDefinition data) =>
-            GetOrCreate<SkillDefinitionAsset>("Skills", data.Name, a => a.CopyFrom(data));
+        private static ClassDefinitionAsset GetOrCreateClass(ClassDefinition data) =>
+            GetOrCreate<ClassDefinitionAsset>("Classes", data.Name, a => a.CopyFrom(data));
+
+        /// <summary>
+        /// The skill's asset, created if missing. A skill asset made before classes (no class yet)
+        /// is moved onto its class once, and retuned if it changed when it did; after that, as with
+        /// every asset, the Inspector's values stand.
+        /// </summary>
+        private static SkillDefinitionAsset GetOrCreateSkill(SkillDefinition data, ClassDefinitionAsset[] classes)
+        {
+            var characterClass = classes.FirstOrDefault(c => c.Id == data.ClassId);
+            var fileName = SkillFileNames.TryGetValue(data.Id, out var old) ? old : data.Name;
+            var asset = GetOrCreate<SkillDefinitionAsset>("Skills", fileName, a =>
+            {
+                a.CopyFrom(data);
+                a.SetClass(characterClass);
+            });
+            if (asset.Class == null && characterClass != null && asset.Id == data.Id)
+            {
+                asset.SetClass(characterClass);
+                if (RetunedForClasses.Contains(data.Id)) asset.SetForClasses(data.Name, data.UnlockLevel, data.ScalingStat, data.Damage);
+                EditorUtility.SetDirty(asset);
+            }
+            return asset;
+        }
 
         private static ModifierDefinitionAsset GetOrCreateModifier(ModifierDefinition data) =>
             GetOrCreate<ModifierDefinitionAsset>("Modifiers", data.Name, a => a.CopyFrom(data));

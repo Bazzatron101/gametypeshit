@@ -21,11 +21,16 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>Content validation: every skill must be usable as written, or the world refuses to start.</summary>
-        private static void ValidateSkills(IReadOnlyList<SkillDefinition> skills, int levelCap, HashSet<string> knownTags)
+        private static void ValidateSkills(IReadOnlyList<SkillDefinition> skills, int levelCap, HashSet<string> knownTags, IReadOnlyList<ClassDefinition> classes)
         {
             if (skills == null) throw new ArgumentException("Skills must be set (it may be empty).", nameof(skills));
             var ids = new HashSet<string>();
-            var starters = 0;
+            var classIds = new HashSet<string>();
+            foreach (var c in classes ?? Array.Empty<ClassDefinition>())
+            {
+                if (c == null || string.IsNullOrWhiteSpace(c.Id)) throw new ArgumentException("A class has no Id.", nameof(classes));
+                if (!classIds.Add(c.Id)) throw new ArgumentException($"Class '{c.Id}' is defined twice.", nameof(classes));
+            }
             foreach (var skill in skills)
             {
                 if (skill == null) throw new ArgumentException("Skills contains a null entry.", nameof(skills));
@@ -58,10 +63,20 @@ namespace HunterSystem.Simulation
                     Require(skill.ProjectileSpeed > 0f, "a projectile needs a positive ProjectileSpeed.");
                     Require(skill.Range > 0f, "a projectile needs a positive Range.");
                 }
-                if (skill.UnlockLevel == 1) starters++;
+                Require(skill.ClassId == null || classIds.Contains(skill.ClassId),
+                    $"its class '{skill.ClassId}' is not one of the game's classes.");
             }
-            if (starters > SkillSlotCount)
-                throw new ArgumentException($"{starters} starter skills cannot fit on a {SkillSlotCount}-slot bar.", nameof(skills));
+
+            // Each class starts with its own starters plus the shared ones, and they must fit the bar.
+            var shared = skills.Count(s => s.UnlockLevel <= 1 && s.ClassId == null);
+            if (shared > SkillSlotCount)
+                throw new ArgumentException($"{shared} shared starter skills cannot fit on a {SkillSlotCount}-slot bar.", nameof(skills));
+            foreach (var c in classes ?? Array.Empty<ClassDefinition>())
+            {
+                var starters = shared + skills.Count(s => s.UnlockLevel <= 1 && s.ClassId == c.Id);
+                if (starters > SkillSlotCount)
+                    throw new ArgumentException($"Class '{c.Id}': {starters} starter skills cannot fit on a {SkillSlotCount}-slot bar.", nameof(skills));
+            }
         }
 
         private IReadOnlyList<SkillSlotState> SkillBarSnapshot(Player player)
@@ -82,15 +97,18 @@ namespace HunterSystem.Simulation
         private void LearnStarterSkills(Player player)
         {
             foreach (var skill in _config.Skills)
-                if (skill.UnlockLevel <= 1) Learn(player, skill);
+                if (skill.UnlockLevel <= 1 && IsForClass(skill, player)) Learn(player, skill);
         }
+
+        /// <summary>A skill this player's class learns: its own class's, or a shared one.</summary>
+        private static bool IsForClass(SkillDefinition skill, Player player) => skill.ClassId == null || skill.ClassId == player.Class?.Id;
 
         /// <summary>Learns every skill whose unlock level is <paramref name="level"/>, announcing each.</summary>
         private void UnlockSkillsForLevel(Player player, int level, int tick)
         {
             foreach (var skill in _config.Skills)
             {
-                if (skill.UnlockLevel != level || player.KnownSkills.Contains(skill)) continue;
+                if (skill.UnlockLevel != level || player.KnownSkills.Contains(skill) || !IsForClass(skill, player)) continue;
                 var slot = Learn(player, skill);
                 _events.Add(new SkillUnlocked(tick, player.Id, skill, slot));
             }

@@ -68,7 +68,7 @@ namespace HunterSystem.Tests
             yield return Until(() => Player.Level == 5);
 
             Assert.That(Player.Level, Is.EqualTo(5));
-            Assert.That(Player.KnownSkills.Select(s => s.Id), Has.Some.EqualTo("flame-burst"), "the level 3 unlock happened");
+            Assert.That(Player.KnownSkills.Select(s => s.Id), Has.Some.EqualTo("shield-bash"), "the Warrior's level 5 unlock happened");
         }
 
         [UnityTest]

@@ -52,6 +52,7 @@ namespace HunterSystem.Simulation
                 player.Level++;
                 player.Xp = 0;
                 player.UnspentStatPoints += _config.Progression.FreePointsPerLevel;
+                GainClassStats(player);
                 levelsGained++;
             }
 
@@ -67,6 +68,14 @@ namespace HunterSystem.Simulation
 
             // The System restores a hunter who levels up.
             if (levelsGained > 0 && player.IsAlive) player.Health = player.MaxHealth;
+        }
+
+        /// <summary>A level's class stats, on top of the free points (spec: "a few free points per level plus class bonuses").</summary>
+        private void GainClassStats(Player player)
+        {
+            if (player.Class == null) return;
+            for (var i = 0; i < player.Stats.Length; i++) player.Stats[i] += player.Class.StatPerLevel(i);
+            player.MaxHealth = ComputeMaxHealth(player);
         }
 
         private void TryAllocateStat(Player player, Stat stat, int tick)

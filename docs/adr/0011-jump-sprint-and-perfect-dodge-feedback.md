@@ -23,7 +23,7 @@ base jump is not high enough to jump over an enemy, but classes can make it so.
 - **Jumping over an enemy** (developer's rule) means being higher than the enemy is tall when it would
   hit you. Every enemy has a height (goblins 1.8 m, the Warlord 3.5 m), and the base jump is below all
   of them, which content validation checks. So **a base jump does not clear a boss's charge**: the boss
-  runs through you. Each player has a jump height percentage, for classes (ticket 24) to raise; a high
+  runs through you. Each player has a jump height percentage, for classes (ticket 24) to raise (the Rogue does, ADR 0012); a high
   enough jump passes over the charge.
 - **Perfect dodge feedback:** an enemy's hit landing inside a dodge's invulnerability bursts a ring
   around that player, which everyone sees, and shows the local player a "PERFECT DODGE" banner. Each

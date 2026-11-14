@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b224a181a491ed4f97d855920a9fd24, type: 3}
+  m_Name: Wizard
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.ClassDefinitionAsset
+  id: wizard
+  displayName: Wizard
+  description: Starts with one weak Fireball and grows into the strongest spells in the game. +1 Intelligence, +1 Sense each level.
+  strength: 0
+  agility: 0
+  vitality: 0
+  intelligence: 1
+  sense: 1
+  luck: 0
+  jumpHeightPercent: 100

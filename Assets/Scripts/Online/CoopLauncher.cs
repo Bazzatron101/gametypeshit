@@ -19,7 +19,7 @@ namespace HunterSystem.Online
     /// <para>
     /// The same can be done from the command line, which is how two built copies are tested
     /// without anyone at the keyboard:
-    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
+    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-class ID] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
     /// With <c>-bot</c> this copy's player is a <see cref="BotPlayer"/> (the 10-bot stress test).
     /// Steam's "Join Game" passes <c>+connect STEAMID</c>, which joins over Steam; a copy already
     /// running at the menu (or disconnected) gets the same request from Steam and joins straight away.
@@ -89,7 +89,7 @@ namespace HunterSystem.Online
             if (host == null) return;
             try
             {
-                if (_network == null) Join(steam: true, host);
+                if (_network == null) StartCoroutine(JoinOnceClassChosen(host)); // a new hunter picks a class first
                 else if (CanRejoin && _onSteam) Rejoin(host);
                 else _status = "Already in a session; ignored a join to " + friend.Name + ".";
             }
@@ -236,7 +236,14 @@ namespace HunterSystem.Online
             var steam = Arg("-transport") == "steam";
             var connect = Arg("+connect");
             if ((steam || connect != null) && !_steamReady) return; // the status already says Steam is unavailable
-            if (connect != null) Join(steam: true, connect);
+            // Automated runs (-coop) play a class without asking: -class ID, or the first class.
+            if (Arg("-coop") != null && _runner.NeedsClass)
+            {
+                var wanted = Arg("-class");
+                if (wanted != null && _runner.ClassById(wanted) == null) Debug.LogWarning($"-class {wanted}: there is no such class; playing {_runner.Classes[0].Id}.");
+                _runner.ChooseClass(_runner.ClassById(wanted)?.Id ?? _runner.Classes[0].Id);
+            }
+            if (connect != null) StartCoroutine(JoinOnceClassChosen(connect)); // a Steam invite: a new hunter picks a class first
             else if (Arg("-coop") == "host")
             {
                 Host(steam);
@@ -263,6 +270,12 @@ namespace HunterSystem.Online
             {
                 StartCoroutine(AutoTest(seconds, Arg("-autotest", 2) ?? "coop-autotest.json"));
             }
+        }
+
+        private IEnumerator JoinOnceClassChosen(string hostSteamId)
+        {
+            while (_runner.NeedsClass) yield return null;
+            if (_network == null) Join(steam: true, hostSteamId);
         }
 
         [Serializable]
@@ -409,11 +422,13 @@ namespace HunterSystem.Online
             if (_network == null)
             {
                 DrawCharacterAndSaves();
+                if (_runner.NeedsClass) GUILayout.Label("Choose your class to play.", _label);
+                GUI.enabled = !_runner.NeedsClass;
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Play solo / host locally")) Host(steam: false);
                 if (GUILayout.Button("Join locally")) Join(steam: false, "localhost");
                 GUILayout.EndHorizontal();
-                GUI.enabled = _steamReady;
+                GUI.enabled = _steamReady && !_runner.NeedsClass;
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Host on Steam")) Host(steam: true);
                 GUILayout.EndHorizontal();
@@ -478,7 +493,8 @@ namespace HunterSystem.Online
         {
             var saves = _runner.Saves;
             var character = _runner.Character;
-            GUILayout.Label(character.IsNew ? "Your hunter: new (level 1)" : $"Your hunter: level {character.Level}", _label);
+            var className = _runner.ClassById(character.ClassId)?.Name ?? "no class yet";
+            GUILayout.Label(character.IsNew ? $"Your hunter: new {className} (level 1)" : $"Your hunter: level {character.Level} {className}", _label);
             if (saves.LastProblemOnLoad != null) GUILayout.Label(saves.LastProblemOnLoad, _label);
 
             GUI.enabled = saves.CloudAvailable;

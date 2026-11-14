@@ -12,6 +12,7 @@ namespace HunterSystem.Simulation
             if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
             var record = new CharacterRecord
             {
+                ClassId = player.Class?.Id,
                 Level = player.Level,
                 Xp = player.Xp,
                 UnspentStatPoints = player.UnspentStatPoints,
@@ -37,9 +38,12 @@ namespace HunterSystem.Simulation
         public void AddPlayer(PlayerId id, Vec3 spawnPosition, CharacterRecord character)
         {
             if (character == null) throw new ArgumentNullException(nameof(character));
-            AddPlayer(id, spawnPosition);
+            AddPlayer(id, spawnPosition, ClassOf(character));
             if (!character.IsNew) Apply(_playersById[id], character);
         }
+
+        /// <summary>The record's class in this game, or null (none chosen, or one the game does not have).</summary>
+        private ClassDefinition ClassOf(CharacterRecord character) => _config.ClassById(character.ClassId);
 
         /// <summary>
         /// Swaps a player's character for <paramref name="character"/> where they stand (a returning
@@ -56,6 +60,8 @@ namespace HunterSystem.Simulation
             player.SkillReadyAtTick.Clear();
             player.SkillCooldownTicks.Clear();
             var defeated = !player.IsAlive;
+            player.Class = ClassOf(character);
+            player.JumpHeightPercent = player.Class?.JumpHeightPercent ?? 100;
             Apply(player, character);
             if (defeated) player.Health = 0; // swapping characters is not a revive
         }
@@ -87,9 +93,13 @@ namespace HunterSystem.Simulation
                 var skill = player.KnownSkills.FirstOrDefault(s => s.Id == character.SkillBar[slot]);
                 if (skill != null && Array.IndexOf(player.SkillSlots, skill) < 0) player.SkillSlots[slot] = skill;
             }
+            // Only its class's skills (and shared ones): a skill it knew from another class, or from before classes, is dropped.
+            player.KnownSkills.RemoveAll(s => !IsForClass(s, player));
+            for (var slot = 0; slot < SkillSlotCount; slot++)
+                if (player.SkillSlots[slot] != null && !IsForClass(player.SkillSlots[slot], player)) player.SkillSlots[slot] = null;
             // ...plus anything its level should have that it does not (skills added to the game since it was saved).
             foreach (var skill in _config.Skills)
-                if (skill.UnlockLevel <= player.Level && !player.KnownSkills.Contains(skill)) Learn(player, skill);
+                if (skill.UnlockLevel <= player.Level && !player.KnownSkills.Contains(skill) && IsForClass(skill, player)) Learn(player, skill);
 
             player.Modifiers.Clear();
             foreach (var modifier in character.Modifiers ?? Enumerable.Empty<ModifierDefinition>())

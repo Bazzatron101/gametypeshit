@@ -11,6 +11,7 @@ namespace HunterSystem.Game
         [SerializeField] private string displayName = "";
         [SerializeField, Min(0f)] private float cooldownSeconds = 5f;
         [SerializeField, Min(1), Tooltip("1 = a starter skill")] private int unlockLevel = 1;
+        [SerializeField, Tooltip("The class that learns it; empty = every class")] private ClassDefinitionAsset characterClass;
         [SerializeField, Tooltip("Free-form tags for modifiers, e.g. fire, projectile, melee, area")] private string[] tags = new string[0];
         [SerializeField] private Stat scalingStat = Stat.Strength;
 
@@ -30,6 +31,7 @@ namespace HunterSystem.Game
 
         public string Id => id;
         public string DisplayName => displayName;
+        public ClassDefinitionAsset Class => characterClass;
 
         public SkillDefinition ToDefinition() => new SkillDefinition
         {
@@ -37,6 +39,7 @@ namespace HunterSystem.Game
             Name = displayName,
             CooldownSeconds = cooldownSeconds,
             UnlockLevel = unlockLevel,
+            ClassId = characterClass != null ? characterClass.Id : null,
             Tags = (string[])tags.Clone(),
             ScalingStat = scalingStat,
             Effect = effect,
@@ -50,6 +53,18 @@ namespace HunterSystem.Game
             ChargedDamagePercent = chargedDamagePercent,
             ChargeUnlockLevel = chargeUnlockLevel,
         };
+
+        /// <summary>For editor tooling: the class that learns this skill.</summary>
+        public void SetClass(ClassDefinitionAsset value) => characterClass = value;
+
+        /// <summary>For editor tooling: moving an existing skill when classes arrived (ticket 24).</summary>
+        public void SetForClasses(string name, int unlock, Stat scaling, int baseDamage)
+        {
+            displayName = name;
+            unlockLevel = unlock;
+            scalingStat = scaling;
+            damage = baseDamage;
+        }
 
         /// <summary>For editor tooling that creates skills in code.</summary>
         public void CopyFrom(SkillDefinition d)

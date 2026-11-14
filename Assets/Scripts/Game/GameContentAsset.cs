@@ -15,6 +15,7 @@ namespace HunterSystem.Game
     {
         [SerializeField] private PlayerTuningAsset playerTuning;
         [SerializeField] private ProgressionAsset progression;
+        [SerializeField, Tooltip("The classes a new character picks from, in the order shown")] private ClassDefinitionAsset[] classes = new ClassDefinitionAsset[0];
         [SerializeField, Tooltip("Starters (unlock level 1) fill the bar in this order")] private SkillDefinitionAsset[] skills = new SkillDefinitionAsset[0];
         [SerializeField] private ModifierDefinitionAsset[] modifiers = new ModifierDefinitionAsset[0];
         [SerializeField] private EnemyDefinitionAsset[] enemies = new EnemyDefinitionAsset[0];
@@ -26,6 +27,7 @@ namespace HunterSystem.Game
 
         public PlayerTuningAsset PlayerTuning => playerTuning;
         public ProgressionAsset Progression => progression;
+        public IReadOnlyList<ClassDefinitionAsset> Classes => classes;
         public IReadOnlyList<SkillDefinitionAsset> Skills => skills;
         public IReadOnlyList<ModifierDefinitionAsset> Modifiers => modifiers;
         public IReadOnlyList<EnemyDefinitionAsset> Enemies => enemies;
@@ -44,6 +46,14 @@ namespace HunterSystem.Game
             if (playerTuning != null) playerTuning.ApplyTo(config);
             config.Progression = progression != null ? progression.ToProgression() : new ProgressionDefinition();
             config.StatEffects = progression != null ? progression.ToStatEffects() : new StatEffectsDefinition();
+
+            var classList = new List<ClassDefinition>();
+            foreach (var asset in classes)
+            {
+                if (asset == null) { Debug.LogWarning($"{name}: an empty entry in the classes list was skipped.", this); continue; }
+                classList.Add(asset.ToDefinition());
+            }
+            config.Classes = classList.ToArray();
 
             var list = new List<SkillDefinition>();
             foreach (var asset in skills)
@@ -75,9 +85,10 @@ namespace HunterSystem.Game
         }
 
         /// <summary>For editor tooling: replaces the whole content list.</summary>
-        public void ReplaceContent(PlayerTuningAsset tuningAsset, ProgressionAsset progressionAsset, SkillDefinitionAsset[] skillAssets,
+        public void ReplaceContent(PlayerTuningAsset tuningAsset, ProgressionAsset progressionAsset, ClassDefinitionAsset[] classAssets, SkillDefinitionAsset[] skillAssets,
             ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets, HubAsset hubAsset, TextSceneAsset[] sceneAssets, PartyScalingAsset scalingAsset)
         {
+            classes = classAssets;
             partyScaling = scalingAsset;
             scenes = sceneAssets;
             hub = hubAsset;

@@ -58,7 +58,7 @@ namespace HunterSystem.Simulation
             _damagePerMillePerStrength = (int)MathF.Round(config.StatEffects.DamagePerStrength * 1000f);
             _damagePerMillePerIntelligence = (int)MathF.Round(config.StatEffects.DamagePerIntelligence * 1000f);
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
-            ValidateSkills(config.Skills, progression.LevelCap, _knownTags);
+            ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
             TickDelta = 1f / config.TickRate;
             _attacks = new ResolvedAttack[AttackKindCount];
             _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
@@ -84,12 +84,18 @@ namespace HunterSystem.Simulation
         /// <summary>What happened during the most recent <see cref="Step"/>, in order.</summary>
         public IReadOnlyList<SimulationEvent> Events => _events;
 
-        public void AddPlayer(PlayerId id, Vec3 spawnPosition)
+        public void AddPlayer(PlayerId id, Vec3 spawnPosition) => AddPlayer(id, spawnPosition, (ClassDefinition)null);
+
+        private void AddPlayer(PlayerId id, Vec3 spawnPosition, ClassDefinition characterClass)
         {
             if (_playersById.ContainsKey(id)) throw new ArgumentException($"{id} is already in the simulation.", nameof(id));
             var stats = new int[PlayerStats.Count];
             for (var i = 0; i < stats.Length; i++) stats[i] = _config.Progression.StartingStatValue;
-            var player = new Player { Id = id, Position = spawnPosition, Facing = DefaultFacing, Stats = stats };
+            var player = new Player
+            {
+                Id = id, Position = spawnPosition, Facing = DefaultFacing, Stats = stats,
+                Class = characterClass, JumpHeightPercent = characterClass?.JumpHeightPercent ?? 100,
+            };
             player.MaxHealth = ComputeMaxHealth(player);
             player.Health = player.MaxHealth;
             LearnStarterSkills(player);
@@ -108,7 +114,7 @@ namespace HunterSystem.Simulation
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
-                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting);
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);

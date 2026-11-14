@@ -70,11 +70,11 @@ namespace HunterSystem.Tests
             _panel.LevelTo(20);
             yield return Until(() => Player.Level == 20);
 
-            Assert.That(Player.KnownSkills.Select(s => s.Id),
-                Is.SupersetOf(new[] { "hunters-javelin", "whirlwind", "inferno-wave", "monarchs-decree" }));
+            // The test character is a Warrior: its own unlocks, and none of the other classes'.
+            Assert.That(Player.KnownSkills.Select(s => s.Id), Is.SupersetOf(new[] { "shield-bash", "whirlwind" }));
+            Assert.That(Player.KnownSkills.Select(s => s.Id).Intersect(new[] { "inferno-wave", "monarchs-decree", "eviscerate", "volley" }), Is.Empty);
             var unlockLevels = _runner.Content.Skills.ToDictionary(s => s.Id, s => s.ToDefinition().UnlockLevel);
-            Assert.That((unlockLevels["hunters-javelin"], unlockLevels["whirlwind"], unlockLevels["inferno-wave"], unlockLevels["monarchs-decree"]),
-                Is.EqualTo((5, 10, 15, 20)));
+            Assert.That((unlockLevels["shield-bash"], unlockLevels["whirlwind"]), Is.EqualTo((5, 10)));
         }
     }
 }

@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Whirlwind
   cooldownSeconds: 7
   unlockLevel: 10
+  characterClass: {fileID: 11400000, guid: 3541ba375ea2d5c48af24b398ddeaa92, type: 2}
   tags:
   - melee
   - area

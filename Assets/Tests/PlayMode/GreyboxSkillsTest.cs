@@ -11,7 +11,7 @@ namespace HunterSystem.Tests
 {
     /// <summary>
     /// Checks skill wiring in the real greybox scene: the skill assets load into the bar, a skill
-    /// command fires, and a Fire Bolt appears in flight. Skill rules are covered in SimulationSkillsTest.
+    /// command fires, and a Fireball appears in flight. Skill rules are covered in SimulationSkillsTest.
     /// </summary>
     public class GreyboxSkillsTest
     {
@@ -22,7 +22,7 @@ namespace HunterSystem.Tests
         [UnitySetUp]
         public IEnumerator LoadGreybox()
         {
-            TestSaves.UseFreshFolder();
+            TestSaves.UseFreshFolder(classId: "wizard");
             yield return SceneManager.LoadSceneAsync("Greybox", LoadSceneMode.Single);
             _runner = Object.FindAnyObjectByType<SimulationRunner>();
         }
@@ -32,7 +32,7 @@ namespace HunterSystem.Tests
         {
             var names = _runner.World.GetPlayer(LocalPlayer).SkillSlots.Select(s => s.Skill?.Name).ToArray();
 
-            Assert.That(names, Is.EqualTo(new[] { "Rending Slash", "Ground Slam", "Fire Bolt", null, null, null }));
+            Assert.That(names, Is.EqualTo(new[] { "Fireball", null, null, null, null, null }), "a new wizard has its one weak spell");
         }
 
         [UnityTest]
@@ -40,7 +40,7 @@ namespace HunterSystem.Tests
         {
             var effects = Object.FindAnyObjectByType<SkillEffectsView>();
             Assert.That(effects, Is.Not.Null, "Greybox scene needs the skill visuals");
-            _runner.SetCommandSource(LocalPlayer, new ConstantCommandSource(new PlayerCommand(0f, 0f, useSkillSlot: 2)));
+            _runner.SetCommandSource(LocalPlayer, new ConstantCommandSource(new PlayerCommand(0f, 0f, useSkillSlot: 0)));
 
             var used = false;
             var deadline = Time.time + 1f;

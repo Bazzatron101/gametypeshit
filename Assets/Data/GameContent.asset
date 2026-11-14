@@ -14,6 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GameContentAsset
   playerTuning: {fileID: 11400000, guid: 58eca55e8835aa5498d4a7aaefc90716, type: 2}
   progression: {fileID: 11400000, guid: 38303f249260ae54fb68407969e7954c, type: 2}
+  classes:
+  - {fileID: 11400000, guid: 3541ba375ea2d5c48af24b398ddeaa92, type: 2}
+  - {fileID: 11400000, guid: c625030c26ba35b4fa3be6027ec2ced0, type: 2}
+  - {fileID: 11400000, guid: 1a8667069c9c1c94bb386f02f8d45ba5, type: 2}
+  - {fileID: 11400000, guid: eee3fddc0de53b7479758d35962c5502, type: 2}
   skills:
   - {fileID: 11400000, guid: 47de00f911805d84dbaa8b7cad2ae17a, type: 2}
   - {fileID: 11400000, guid: 195f10a5bd313964ea2f9a3050f616ba, type: 2}
@@ -23,6 +28,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 686b338f9354230499569a6ee8f9d113, type: 2}
   - {fileID: 11400000, guid: a3476bede4143b04f99b6d7d45b6ff48, type: 2}
   - {fileID: 11400000, guid: c77c61935d71ce24585d1b7cb780cff7, type: 2}
+  - {fileID: 11400000, guid: 1f5b6900c644ffe4c932adb0df4bb9a5, type: 2}
+  - {fileID: 11400000, guid: b01822bc1889e964a829fcd6ae6ee196, type: 2}
+  - {fileID: 11400000, guid: 5d2d0eddc71b32f448d4f480e3efce60, type: 2}
+  - {fileID: 11400000, guid: 2f6b9a1d2ad54904d9f68fdcddcf7add, type: 2}
+  - {fileID: 11400000, guid: 2eae02df0bac07f419843461459047b6, type: 2}
+  - {fileID: 11400000, guid: 94434574876669a4284b921a60d05725, type: 2}
+  - {fileID: 11400000, guid: e6b56001c56c2da4d81cfe40389bc2ee, type: 2}
+  - {fileID: 11400000, guid: f8e25b4dceaf3f641b80922f1377ef7f, type: 2}
+  - {fileID: 11400000, guid: 2bdaef055b867434f9a4e6a513716946, type: 2}
   modifiers:
   - {fileID: 11400000, guid: 00261d8cc31b452459507cdd56036305, type: 2}
   - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}

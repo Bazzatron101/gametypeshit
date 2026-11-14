@@ -21,6 +21,9 @@ namespace HunterSystem.Simulation
             /// <summary>In the hub: ready for the next gate.</summary>
             public bool Ready;
 
+            /// <summary>The character's class, or null.</summary>
+            public ClassDefinition Class;
+
             /// <summary>The tick the current jump took off; 0 on the ground.</summary>
             public int JumpStartTick;
 

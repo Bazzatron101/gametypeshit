@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: Monarch's Decree
   cooldownSeconds: 20
   unlockLevel: 20
+  characterClass: {fileID: 11400000, guid: eee3fddc0de53b7479758d35962c5502, type: 2}
   tags:
   - magic
   - area

@@ -16,8 +16,11 @@ namespace HunterSystem.Simulation
     /// join this record under a new <see cref="CharacterCodec"/> version.
     /// </para>
     /// </summary>
-    public sealed class CharacterRecord
+    public sealed partial class CharacterRecord
     {
+        /// <summary>The class chosen when the character was made, or null (a character from before classes).</summary>
+        public string ClassId;
+
         public int Level = 1;
         public int Xp;
         public int UnspentStatPoints;
@@ -62,16 +65,22 @@ namespace HunterSystem.Simulation
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSCH");
 
-        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers.</summary>
-        public const byte Version = 1;
+        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class.</summary>
+        public const byte Version = 2;
 
-        public static byte[] Encode(CharacterRecord c)
+        public static byte[] Encode(CharacterRecord c) => Encode(c, Version);
+
+        /// <summary>Writes a character as an older game would have (for tests of loading old saves).</summary>
+        public static byte[] EncodeVersion1ForTests(CharacterRecord c) => Encode(c, 1);
+
+        private static byte[] Encode(CharacterRecord c, byte version)
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
             using var stream = new MemoryStream();
             using var w = new BinaryWriter(stream);
             w.Write(Magic);
-            w.Write(Version);
+            w.Write(version);
+            if (version >= 2) SimulationWorld.WriteNullable(w, c.ClassId);
             w.Write(c.IsNew);
             w.Write(c.Level);
             w.Write(c.Xp);
@@ -103,8 +112,10 @@ namespace HunterSystem.Simulation
                     throw new ArgumentException($"This character was saved by a newer version of the game (format {version}; this game reads up to {Version}).", nameof(bytes));
                 if (version < 1) throw new FormatException("Unknown character format.");
 
+                var classId = version >= 2 ? SimulationWorld.ReadNullable(r) : null;
                 var c = new CharacterRecord
                 {
+                    ClassId = classId,
                     IsNew = r.ReadBoolean(),
                     Level = r.ReadInt32(),
                     Xp = r.ReadInt32(),

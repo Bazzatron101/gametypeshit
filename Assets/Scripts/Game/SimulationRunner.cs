@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HunterSystem.Netcode;
 using HunterSystem.Simulation;
 using UnityEngine;
@@ -70,6 +71,53 @@ namespace HunterSystem.Game
 
         /// <summary>Hosting: the host's world progress, saved apart from any character.</summary>
         public WorldRecord HostWorld { get; private set; }
+
+        /// <summary>The classes a character can pick from (ticket 24), in the order the picker shows them.</summary>
+        public IReadOnlyList<ClassDefinition> Classes => _config.Classes;
+
+        /// <summary>
+        /// True while the local character has no class (a new character, or one from before classes)
+        /// and the game has classes to pick from. Offline play waits for the pick; going online needs one.
+        /// </summary>
+        public bool NeedsClass => !IsOnline && _config.Classes.Count > 0 && Character != null && ClassOf(Character) == null;
+
+        /// <summary>True when the scene has its own local player playing offline (the greybox, the arena).</summary>
+        public bool PlaysOffline => _offlineLocalId.HasValue;
+
+        private ClassDefinition ClassOf(CharacterRecord character) => _config.ClassById(character.ClassId);
+
+        /// <summary>The class with this id, or null.</summary>
+        public ClassDefinition ClassById(string id) => _config.ClassById(id);
+
+        /// <summary>
+        /// Makes the local character a <paramref name="classId"/>, permanently, and saves it at once.
+        /// A character that has already levelled (one from before classes) gains the class's stats for
+        /// those levels and the class's skills its level has reached. Only at the menu or offline.
+        /// </summary>
+        public void ChooseClass(string classId)
+        {
+            if (IsOnline) throw new InvalidOperationException("Pick a class at the menu, before going online.");
+            if (!NeedsClass) throw new InvalidOperationException("This character already has a class; the choice is permanent.");
+            var chosen = _config.ClassById(classId) ?? throw new ArgumentException($"There is no class '{classId}'.", nameof(classId));
+
+            // A character whose saved class the game no longer has already carries that class's stats.
+            var addEarnedStats = Character.ClassId == null;
+            CharacterRecord record;
+            if (_offlineLocalId is { } me && _offlineWorld.HasPlayer(me))
+            {
+                record = _offlineWorld.CaptureCharacter(me).WithClass(chosen, _config.Progression, addEarnedStats);
+                _offlineWorld.ReplaceCharacter(me, record);
+            }
+            else
+            {
+                // A copy without the class id it may have (one this game does not have); the loaded record is left alone.
+                var classless = CharacterCodec.Decode(CharacterCodec.Encode(Character));
+                classless.ClassId = null;
+                record = classless.WithClass(chosen, _config.Progression, addEarnedStats);
+            }
+            Character = record;
+            Autosave.SaveNow(record);
+        }
 
         /// <summary>The game's content list (may be null in a bare test scene).</summary>
         public GameContentAsset Content => content;
@@ -328,6 +376,7 @@ namespace HunterSystem.Game
 
         private void UpdateOffline()
         {
+            if (NeedsClass && _offlineLocalId.HasValue) return; // the world waits for the class pick
             foreach (var pair in _sources) _buffers[pair.Key].Add(pair.Value.Sample());
 
             var ticks = _clock.Advance(Time.deltaTime);

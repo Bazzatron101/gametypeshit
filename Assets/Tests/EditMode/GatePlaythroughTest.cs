@@ -27,7 +27,13 @@ namespace HunterSystem.Tests
             return assets[0];
         }
 
-        private static SimulationWorld WorldInFirstGate(int players, out GateDefinitionAsset gate)
+        /// <summary>The party's classes in join order; a bot plays whatever kit its class has.</summary>
+        private static readonly string[] PartyClasses = { "warrior", "archer", "wizard", "rogue" };
+
+        private static SimulationWorld WorldInFirstGate(int players, out GateDefinitionAsset gate) =>
+            WorldInFirstGate(Enumerable.Range(0, players).Select(i => PartyClasses[i % PartyClasses.Length]).ToArray(), out gate);
+
+        private static SimulationWorld WorldInFirstGate(string[] classes, out GateDefinitionAsset gate)
         {
             var content = Content();
             Assert.That(content.Gates, Is.Not.Empty, "the content has a gate");
@@ -35,7 +41,7 @@ namespace HunterSystem.Tests
             var config = new SimulationConfig();
             content.ApplyTo(config);
             var world = new SimulationWorld(config);
-            for (var i = 1; i <= players; i++) world.AddPlayer(new PlayerId(i), Vec3.Zero);
+            for (var i = 0; i < classes.Length; i++) world.AddPlayer(new PlayerId(i + 1), Vec3.Zero, new CharacterRecord { IsNew = true, ClassId = classes[i] });
             world.StartGate(gate.Id);
             return world;
         }
@@ -103,10 +109,13 @@ namespace HunterSystem.Tests
             AssertBossFightAndRewards(world, events);
         }
 
-        [Test]
-        public void ASoloBotGetsThroughTheFirstGateAndBeatsItsBossByTheSoloRules()
+        [TestCase("warrior")]
+        [TestCase("rogue")]
+        [TestCase("archer")]
+        [TestCase("wizard")]
+        public void ASoloBotGetsThroughTheFirstGateAndBeatsItsBossByTheSoloRules(string classId)
         {
-            var world = WorldInFirstGate(1, out _);
+            var world = WorldInFirstGate(new[] { classId }, out _);
 
             var events = Play(world, minutes: 20);
 
