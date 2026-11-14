@@ -406,5 +406,85 @@ namespace HunterSystem.Tests
 
             Assert.That(events.OfType<ProjectileEnded>(), Is.Empty, "still flying after 7 m");
         }
+
+        // --- Aiming with the camera ---------------------------------------------------------------
+
+        private static Dictionary<PlayerId, PlayerCommand> UseSlotAimed(int slot, float yawDegrees) =>
+            Cmd(new PlayerCommand(0f, 0f, useSkillSlot: slot, aimYawDegrees: yawDegrees));
+
+        [Test]
+        public void ASkillGoesWhereTheCameraLooksNotWhereThePlayerFaces()
+        {
+            var sim = World(Config(Bolt)); // faces +Z
+
+            RunTo(sim, 1, _ => UseSlotAimed(0, 90f)); // the camera looks along +X
+
+            var bolt = sim.Projectiles.Single();
+            Assert.That(bolt.Direction.X, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(bolt.Direction.Z, Is.EqualTo(0f).Within(0.001f));
+            Assert.That(sim.GetPlayer(P1).Facing.X, Is.EqualTo(1f).Within(0.001f), "the player turns to face it");
+        }
+
+        [Test]
+        public void AConeSkillHitsWhatTheCameraLooksAt()
+        {
+            var sim = World(Config(Slash));
+            var behind = sim.SpawnEnemy(Dummy(), new Vec3(0f, 0f, -2f)); // behind the player
+
+            var events = RunTo(sim, 1, _ => UseSlotAimed(0, 180f));
+
+            Assert.That(events.OfType<DamageDealt>().Select(e => e.Target), Has.Member(behind));
+        }
+
+        [Test]
+        public void SoftLockOnDoesNotPullAnAimedSkillOffTheCameraLine()
+        {
+            var config = Config(Bolt);
+            config.SoftLockOn = new SoftLockOnDefinition { Enabled = true, ConeDegrees = 90f, Range = 12f };
+            var sim = World(config);
+            sim.SpawnEnemy(Dummy(), new Vec3(3f, 0f, 3f)); // 45 degrees off the aim, and close
+
+            RunTo(sim, 1, _ => UseSlotAimed(0, 0f));
+
+            Assert.That(sim.Projectiles.Single().Direction.Z, Is.EqualTo(1f).Within(0.001f), "straight where the camera looks");
+        }
+
+        [Test]
+        public void WithoutAnAimASkillGoesWhereThePlayerFaces()
+        {
+            var sim = World(Config(Bolt));
+
+            RunTo(sim, 1, _ => UseSlot(0));
+
+            Assert.That(sim.Projectiles.Single().Direction.Z, Is.EqualTo(1f).Within(0.001f));
+        }
+
+        [Test]
+        public void AChargedSkillGoesWhereTheCameraLooksWhenItIsLetGo()
+        {
+            var charged = Bolt;
+            charged.ChargeSeconds = 1f;
+            charged.ChargedDamagePercent = 50;
+            var sim = World(Config(charged));
+            const int slot = 0;
+
+            RunTo(sim, 30, t => Cmd(new PlayerCommand(0f, 0f, useSkillSlot: t == 1 ? slot : (int?)null, heldSkillSlots: 1 << slot, aimYawDegrees: 0f)));
+            RunTo(sim, 31, _ => Cmd(new PlayerCommand(0f, 0f, aimYawDegrees: -90f))); // let go, looking along -X
+
+            Assert.That(sim.Projectiles.Single().Direction.X, Is.EqualTo(-1f).Within(0.001f));
+        }
+
+        [Test]
+        public void TheAimIsTheSameAfterTheWire()
+        {
+            var sent = new PlayerCommand(0f, 0f, useSkillSlot: 2, aimYawDegrees: 123.4f);
+
+            var (_, received) = HunterSystem.Netcode.Wire.ReadCommand(HunterSystem.Netcode.Wire.Command(7, sent));
+
+            Assert.That(received.HasAim, Is.True);
+            Assert.That(received.AimDirection.X, Is.EqualTo(sent.AimDirection.X), "exactly: the host must replay what the client predicted");
+            Assert.That(received.AimDirection.Z, Is.EqualTo(sent.AimDirection.Z));
+            Assert.That(HunterSystem.Netcode.Wire.ReadCommand(HunterSystem.Netcode.Wire.Command(8, new PlayerCommand(0f, 0f))).command.HasAim, Is.False);
+        }
     }
 }

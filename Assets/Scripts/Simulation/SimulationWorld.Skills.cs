@@ -234,11 +234,14 @@ namespace HunterSystem.Simulation
             player.SkillCooldownTicks[skill.Id] = resolved.CooldownTicks;
             _events.Add(new SkillUsed(tick, player.Id, skill, slot, resolved.Range, resolved.Radius, chargeFraction, counter));
             var damage = ScaledDamage(player, resolved.BaseDamage, skill.ScalingStat);
+            // Where the camera looks, exactly: an aimed skill takes no soft lock-on (ADR 0013). Without an aim (bots) the assist still helps.
+            var aimed = !counter && player.Aim.HasValue;
+            if (aimed) player.Facing = player.Aim.Value;
 
             switch (skill.Effect)
             {
                 case SkillEffectKind.Cone:
-                    if (!counter) ApplySoftLockOn(player, resolved.Range);
+                    if (!counter && !aimed) ApplySoftLockOn(player, resolved.Range);
                     var minCos = HalfAngleCos(skill.ArcDegrees);
                     HitEnemiesWhere(player, damage, tick, resolved, at => InCone(player, at, resolved.Range, minCos));
                     break;
@@ -248,7 +251,7 @@ namespace HunterSystem.Simulation
                     break;
 
                 case SkillEffectKind.Projectile:
-                    if (!counter) ApplySoftLockOn(player, resolved.Range);
+                    if (!counter && !aimed) ApplySoftLockOn(player, resolved.Range);
                     for (var i = 0; i < resolved.ProjectileCount; i++)
                     {
                         // Fan the bolts out evenly around the aim: -s, 0, +s for three.

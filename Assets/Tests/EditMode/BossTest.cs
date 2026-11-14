@@ -425,6 +425,68 @@ namespace HunterSystem.Tests
             Assert.That(world.GetEnemy(again).IsEnraged, Is.False);
         }
 
+        [Test]
+        public void ASoloDeathBringsTheBossBackToFullHealth()
+        {
+            var world = InWarlordGate(players: 1);
+            world.PlacePlayer(P1, new Vec3(0f, 0f, 15f)); // the checkpoint room
+            Step(world);
+            var boss = EnterBossChamber(world);
+            HitBoss(world, boss, 60); // enraged, adds out
+            Step(world, 3);
+            Assert.That(world.GetEnemy(boss).IsEnraged, Is.True);
+
+            Defeat(world, P1);
+            Assert.That(world.EnemyIds.Count(id => world.GetEnemy(id).Definition.Boss != null && !world.GetEnemy(id).IsDefeated), Is.Zero,
+                "the moment the player falls, the boss chamber resets: the wounded boss and its goblins are gone");
+            Step(world, 1, new Dictionary<PlayerId, PlayerCommand> { [P1] = new PlayerCommand(0f, 0f, respawn: true) });
+
+            var again = EnterBossChamber(world);
+            Assert.That(world.GetEnemy(again).Health, Is.EqualTo(100), "back to full");
+            Assert.That(world.GetEnemy(again).IsEnraged, Is.False);
+        }
+
+        [Test]
+        public void ABossThatFallsInTheSameTickAsTheSoloPlayerStaysBeaten()
+        {
+            var world = InWarlordGate(players: 1);
+            world.PlacePlayer(P1, new Vec3(0f, 0f, 15f));
+            Step(world);
+            var boss = EnterBossChamber(world);
+            world.PlacePlayer(P1, new Vec3(6f, 0f, 30f)); // out of the boss's way
+            Step(world);
+            world.SpawnEnemy(Killer, world.GetPlayer(P1).Position);
+
+            // Find the tick the killer lands, on a copy, then make the boss fall in that same tick.
+            var copy = SimulationWorld.FromSnapshot(Config(WarlordGate()), world.CaptureSnapshot());
+            var ticks = 0;
+            while (!copy.GetPlayer(P1).IsDefeated && ticks < 60) { Step(copy); ticks++; }
+            Step(world, ticks - 1);
+            HitBoss(world, boss, 1000);
+            var events = Step(world);
+
+            Assert.That(world.GetPlayer(P1).IsDefeated, Is.True, "test setup: both fall in the same tick");
+            Assert.That(events.OfType<PlayerDefeated>().Any(), Is.True, "test setup: in this tick");
+            Assert.That(world.Gate.IsCleared, Is.True, "the boss stays beaten and the gate is won");
+        }
+
+        [Test]
+        public void ASoloDeathLeavesOtherRoomsAsTheyWere()
+        {
+            var world = InWarlordGate(players: 1);
+            world.PlacePlayer(P1, new Vec3(0f, 0f, 15f)); // the goblin room: its goblin is out
+            Step(world);
+            var goblin = world.EnemyIds.Single();
+            world.DamageEnemy(goblin, P1, 1);
+            Step(world);
+            var hurt = world.GetEnemy(goblin).Health;
+
+            Defeat(world, P1);
+
+            Assert.That(world.HasEnemy(goblin), Is.True);
+            Assert.That(world.GetEnemy(goblin).Health, Is.EqualTo(hurt), "only bosses heal");
+        }
+
         // --- Edges found in review ------------------------------------------------------------------
 
         [Test]

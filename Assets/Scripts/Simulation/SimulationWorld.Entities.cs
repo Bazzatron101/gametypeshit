@@ -24,6 +24,9 @@ namespace HunterSystem.Simulation
             /// <summary>The character's class, or null.</summary>
             public ClassDefinition Class;
 
+            /// <summary>Where this tick's command aims skills (the camera), or null to use the facing. Set each tick the player is standing, before any skill; never saved.</summary>
+            public Vec3? Aim;
+
             /// <summary>The tick the current jump took off; 0 on the ground.</summary>
             public int JumpStartTick;
 

@@ -185,6 +185,7 @@ namespace HunterSystem.Simulation
             {
                 if (!player.IsAlive) continue;
                 commands.TryGetValue(player.Id, out var cmd);
+                player.Aim = cmd.HasAim ? cmd.AimDirection : (Vec3?)null;
                 player.Sprinting = false;
 
                 if (cmd.Dodge && !player.IsAirborne) TryDodge(player, cmd, tick); // a dodge keeps any charge going

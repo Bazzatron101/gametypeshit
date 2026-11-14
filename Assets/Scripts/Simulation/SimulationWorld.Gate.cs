@@ -140,11 +140,8 @@ namespace HunterSystem.Simulation
             if (!_gate.Definition.HasBoss) return _gate.Rooms.All(r => r == RoomState.Cleared);
             for (var room = 0; room < _gate.Rooms.Length; room++)
             {
-                var spawns = _gate.Definition.Rooms[room].Spawns;
-                if (!spawns.Any(s => s.Enemy.Boss != null)) continue;
-                if (_gate.Rooms[room] == RoomState.NotEntered) return false;
-                foreach (var id in _gate.RoomEnemies[room])
-                    if (_enemiesById.TryGetValue(id, out var enemy) && enemy.Definition.Boss != null && enemy.Health > 0) return false;
+                if (!RoomHasBoss(room)) continue;
+                if (_gate.Rooms[room] == RoomState.NotEntered || !BossesDownIn(room)) return false;
             }
             return true;
         }
@@ -157,7 +154,7 @@ namespace HunterSystem.Simulation
         {
             for (var room = 0; room < _gate.Rooms.Length; room++)
             {
-                if (!_gate.Definition.Rooms[room].Spawns.Any(s => s.Enemy.Boss != null)) continue;
+                if (!RoomHasBoss(room)) continue;
                 foreach (var id in _gate.RoomEnemies[room])
                     if (_enemiesById.TryGetValue(id, out var enemy) && enemy.Health > 0) DespawnEnemy(id);
                 _gate.RoomEnemies[room].RemoveAll(id => !_enemiesById.ContainsKey(id));
@@ -321,17 +318,43 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>Takes rooms' enemies out of the world and marks the rooms as not yet reached. Rooms with no enemies count as cleared.</summary>
-        private void ResetRooms(GateRun run, bool onlyUnfinished)
+        private void ResetRooms(GateRun run, bool onlyUnfinished) =>
+            ResetRooms(run, room => !onlyUnfinished || run.Rooms[room] != RoomState.Cleared);
+
+        private void ResetRooms(GateRun run, Func<int, bool> which)
         {
             for (var room = 0; room < run.Rooms.Length; room++)
             {
-                if (onlyUnfinished && run.Rooms[room] == RoomState.Cleared) continue;
+                if (!which(room)) continue;
                 foreach (var enemy in run.RoomEnemies[room])
                     if (HasEnemy(enemy)) DespawnEnemy(enemy);
                 run.RoomEnemies[room].Clear();
                 run.RoomTidyAtTick[room] = 0;
                 run.Rooms[room] = run.Definition.Rooms[room].Spawns.Count == 0 ? RoomState.Cleared : RoomState.NotEntered;
             }
+        }
+
+        /// <summary>
+        /// Solo, a fall brings every boss not yet beaten back fresh (ADR 0013): its room
+        /// empties, and the boss returns at full health, calm, without its goblins, when the player
+        /// walks back in. Other rooms stay as they were. In co-op the wipe does the same for every
+        /// unfinished room.
+        /// </summary>
+        private void ResetBossesIfASoloPlayerFell()
+        {
+            if (_gate.ClearAnnounced || PresentCount() != 1 || !_events.OfType<PlayerDefeated>().Any()) return;
+            // A boss that went down this same tick stays down: the trade is the player's win.
+            ResetRooms(_gate, room => RoomHasBoss(room) && _gate.Rooms[room] != RoomState.Cleared && !(_gate.Rooms[room] == RoomState.Entered && BossesDownIn(room)));
+        }
+
+        private bool RoomHasBoss(int room) => _gate.Definition.Rooms[room].Spawns.Any(s => s.Enemy.Boss != null);
+
+        /// <summary>Every boss this room has called up is down (true for a room not entered: it has called none).</summary>
+        private bool BossesDownIn(int room)
+        {
+            foreach (var id in _gate.RoomEnemies[room])
+                if (_enemiesById.TryGetValue(id, out var enemy) && enemy.Definition.Boss != null && enemy.Health > 0) return false;
+            return true;
         }
 
         /// <summary>Back on their feet at full health beside <paramref name="point"/>.</summary>
@@ -362,6 +385,7 @@ namespace HunterSystem.Simulation
         {
             if (_gate == null) return;
             var layout = _gate.Layout;
+            ResetBossesIfASoloPlayerFell();
 
             for (var room = 0; room < _gate.Rooms.Length; room++)
             {

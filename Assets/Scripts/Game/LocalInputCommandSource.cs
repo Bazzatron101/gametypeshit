@@ -55,7 +55,8 @@ namespace HunterSystem.Game
             return new PlayerCommand(move.x, move.y,
                 lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack),
                 useSkillSlot: skillSlot, heldSkillSlots: held,
-                jump: Pressed(_jump), sprint: _sprint != null && _sprint.IsPressed());
+                jump: Pressed(_jump), sprint: _sprint != null && _sprint.IsPressed(),
+                aimYawDegrees: camera != null ? camera.transform.eulerAngles.y : (float?)null); // skills fire where the camera looks
         }
 
         private static bool Pressed(InputAction action) => action != null && action.WasPressedThisFrame();

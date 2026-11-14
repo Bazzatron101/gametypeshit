@@ -14,7 +14,7 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -48,10 +48,36 @@ namespace HunterSystem.Simulation
         /// <summary>The sprint key is held.</summary>
         public readonly bool Sprint;
 
+        /// <summary>Steps of the aim's yaw in a full turn. The aim is stored in these steps, so it is exactly the same after the wire.</summary>
+        public const int AimSteps = 65536;
+
+        /// <summary>
+        /// Where the player is looking (the camera), as a yaw in <see cref="AimSteps"/> steps
+        /// clockwise from +Z seen from above; meaningful only when <see cref="HasAim"/>. Skills fire
+        /// this way. A source with no camera (a bot) sends none, and skills go where the player faces.
+        /// </summary>
+        public readonly ushort AimYaw;
+        public readonly bool HasAim;
+
+        /// <summary>The aim in degrees, or null for none.</summary>
+        public float? AimYawDegrees => HasAim ? AimYaw * (360f / AimSteps) : (float?)null;
+
+        /// <summary>The aim as a direction on the floor (length 1); +Z when there is none.</summary>
+        public Vec3 AimDirection
+        {
+            get
+            {
+                var radians = (HasAim ? AimYaw : 0) * (2f * MathF.PI / AimSteps);
+                return new Vec3(MathF.Sin(radians), 0f, MathF.Cos(radians));
+            }
+        }
+
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
             Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
-            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false)
+            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null)
         {
+            HasAim = aimYawDegrees.HasValue && !float.IsNaN(aimYawDegrees.Value) && !float.IsInfinity(aimYawDegrees.Value);
+            AimYaw = HasAim ? ToAimSteps(aimYawDegrees.Value) : (ushort)0;
             Jump = jump;
             Sprint = sprint;
             Respawn = respawn;
@@ -67,6 +93,13 @@ namespace HunterSystem.Simulation
             UseSkillSlot = useSkillSlot;
             AssignSkill = assignSkill;
             HeldSkillSlots = heldSkillSlots;
+        }
+
+        private static ushort ToAimSteps(float degrees)
+        {
+            var turn = degrees / 360f;
+            turn -= MathF.Floor(turn); // into [0, 1)
+            return (ushort)((int)MathF.Round(turn * AimSteps) % AimSteps);
         }
 
         public bool IsSkillHeld(int slot) => slot >= 0 && slot < 32 && (HeldSkillSlots & (1 << slot)) != 0;

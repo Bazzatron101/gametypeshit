@@ -95,6 +95,8 @@ namespace HunterSystem.Netcode
                 w.Write(command.AssignSkill.Value.SkillId != null);
                 if (command.AssignSkill.Value.SkillId != null) w.Write(command.AssignSkill.Value.SkillId);
             }
+            w.Write(command.HasAim);
+            if (command.HasAim) w.Write(command.AimYaw);
         });
 
         public static byte[] Refused(string reason) => Write(MessageType.Refused, w => w.Write(reason));
@@ -120,13 +122,14 @@ namespace HunterSystem.Netcode
                 var slot = r.ReadInt32();
                 assign = new SkillAssignment(slot, r.ReadBoolean() ? r.ReadString() : null);
             }
+            float? aim = r.ReadBoolean() ? r.ReadUInt16() * (360f / PlayerCommand.AimSteps) : (float?)null;
             return (sequence, new PlayerCommand(moveX, moveZ,
                 lightAttack: (buttons & LightAttackBit) != 0, dodge: (buttons & DodgeBit) != 0, heavyAttack: (buttons & HeavyAttackBit) != 0,
                 allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
                 useSkillSlot: useSkill >= 0 ? useSkill : (int?)null,
                 assignSkill: assign, heldSkillSlots: held, respawn: (buttons & RespawnBit) != 0,
                 setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null,
-                jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0));
+                jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0, aimYawDegrees: aim));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;
