@@ -222,7 +222,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 ### Kill switch
 
-After M3, if friends ask to play again without being prompted, start spending the commission budget and consider going public. If not, redesign before building more. The developer should rewrite this trigger in their own words before starting.
+In the developer's words (2026-11-14, ticket 21): "we will keep on adding things to the game until I feel like its a game thats good enough to play". There is no go/no-go point after M3: features keep being added until the developer judges the game good enough to play, and only then is money spent or the game shown publicly. (Before 2026-11-14 the trigger was: after M3, if friends ask to play again unprompted, start spending and consider going public; if not, redesign first.)
 
 ### Parked decisions
 
@@ -271,7 +271,7 @@ Feel and enjoyment, which are checked by hand with the milestone feel tests belo
 |---|---|
 | M1 | Levelling up makes me feel an increase in power. Using skills feels easy and rewarding to pull off. |
 | M3 | Clearing a dungeon is enjoyable. |
-| After M3 | Friends ask to play again unprompted (the kill-switch trigger). |
+| Ongoing | The developer feels it is a game good enough to play (the kill-switch trigger, rewritten 2026-11-14). |
 
 ---
 
