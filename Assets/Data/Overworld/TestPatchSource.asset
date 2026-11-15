@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e82b0b47c4eb6d546a915d68c988ef46, type: 3}
+  m_Name: TestPatchSource
+  m_EditorClassIdentifier: HunterSystem.Editor::HunterSystem.Editor.OverworldSourceAsset
+  outputName: TestPatch
+  origin: {x: -500, y: -500}
+  tileSize: 250
+  tilesX: 4
+  tilesZ: 4
+  heightmapResolution: 257
+  maxHeight: 120
+  heights:
+    baseHeight: 10
+    noiseAmplitude: 3
+    noiseScale: 140
+    noiseSeed: 7
+    paintedHeights: {fileID: 0}
+    paintedHeightScale: 60
+    stamps:
+    - label: Lookout Hill
+      kind: 0
+      points:
+      - {x: -180, y: 160}
+      radius: 170
+      height: 45
+      blend: 0
+    - label: Spine ridge
+      kind: 1
+      points:
+      - {x: 230, y: -250}
+      - {x: 230, y: 480}
+      radius: 45
+      height: 70
+      blend: 0
+    - label: Spine pass
+      kind: 2
+      points:
+      - {x: 230, y: 80}
+      radius: 30
+      height: 10
+      blend: 60
+    - label: South sea
+      kind: 3
+      points:
+      - {x: -500, y: -330}
+      - {x: 500, y: -330}
+      radius: 60
+      height: 12
+      blend: 0
+    - label: Climbable face
+      kind: 5
+      points:
+      - {x: 203, y: 300}
+      - {x: 203, y: 360}
+      radius: 14
+      height: 0
+      blend: 0
+    - label: Town square
+      kind: 4
+      points:
+      - {x: -400, y: -100}
+      radius: 40
+      height: 0
+      blend: 20
+    - label: East road
+      kind: 4
+      points:
+      - {x: -400, y: -100}
+      - {x: -250, y: -60}
+      - {x: -60, y: -20}
+      - {x: 120, y: 60}
+      - {x: 230, y: 80}
+      - {x: 330, y: 110}
+      - {x: 420, y: 250}
+      radius: 4
+      height: 0
+      blend: 6
+  rules:
+    maxWalkableSlopeDegrees: 40
+    seaLevel: 4
+  meshCellSize: 4
+  farMeshCellSize: 16

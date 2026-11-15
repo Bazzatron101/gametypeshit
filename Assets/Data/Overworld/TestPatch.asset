@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46db4e71ca22230478b296fb269b8762, type: 3}
+  m_Name: TestPatch
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.OverworldAsset
+  ground: {fileID: 4900000, guid: 2cace97fddffec34abdcfbf74727e50f, type: 3}
+  gates:
+  - gateId: goblin-warren
+    entrance: {x: -120, y: 9.5279255, z: -45}
+    region: greenmarch
+    knownFromStart: 1
+  - gateId: thornwood-hollow
+    entrance: {x: 360, y: 9.258189, z: 330}
+    region: greenmarch
+    knownFromStart: 0
+  hasTown: 1
+  townCentre: {x: -400, y: 10.17733, z: -100}
+  townRadius: 40
+  roads:
+  - halfWidth: 4
+    points:
+    - {x: -400, y: 10.17733, z: -100}
+    - {x: -250, y: 9.859, z: -60}
+    - {x: -60, y: 9.186637, z: -20}
+    - {x: 120, y: 10.646355, z: 60}
+    - {x: 230, y: 10.001831, z: 80}
+    - {x: 330, y: 10.34496, z: 110}
+    - {x: 420, y: 8.826221, z: 250}
+  landmarks:
+  - label: Lookout Hill
+    position: {x: -180, y: 52.837063, z: 160}
+  startingRegions:
+  - greenmarch
+  entranceRadius: 3
+  findRadius: 20
+  unopenedRegionXpPercent: 25
+  tileSize: 250
+  meshCellSize: 4
+  farMeshCellSize: 16
+  nearLodScreenHeight: 0.12
+  seaLevel: 4
+  sandAboveSea: 1.2

@@ -26,7 +26,7 @@ namespace HunterSystem.Editor
     /// Regenerate from the menu or with:
     /// Unity -batchmode -quit -projectPath . -executeMethod HunterSystem.Editor.GreyboxSceneBuilder.BuildAll
     /// </summary>
-    public static class GreyboxSceneBuilder
+    public static partial class GreyboxSceneBuilder
     {
         public const string ScenePath = "Assets/Scenes/Greybox.unity";
         public const string ArenaScenePath = "Assets/Scenes/Arena.unity";
@@ -384,7 +384,7 @@ namespace HunterSystem.Editor
         /// <summary>Greybox first (the default build scene), then the arena, then anything else.</summary>
         private static void RegisterScenes()
         {
-            var builtScenes = new[] { ScenePath, ArenaScenePath, CoopScenePath };
+            var builtScenes = new[] { ScenePath, ArenaScenePath, CoopScenePath, OverworldPatchScenePath };
             var existing = builtScenes.Where(p => AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null).Select(p => new EditorBuildSettingsScene(p, true));
             var others = EditorBuildSettings.scenes.Where(s => !builtScenes.Contains(s.path));
             EditorBuildSettings.scenes = existing.Concat(others).ToArray();
@@ -406,7 +406,7 @@ namespace HunterSystem.Editor
             var skills = SkillData.Select(data => GetOrCreateSkill(data, classes)).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
-            var gates = new[] { GetOrCreateGoblinWarren(modifiers) };
+            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() };
             var bosses = new[] { GetOrCreateGoblinWarlord() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
             var scenes = new[] { GetOrCreateArrivalScene() };

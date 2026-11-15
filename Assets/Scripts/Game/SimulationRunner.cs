@@ -168,6 +168,8 @@ namespace HunterSystem.Game
             if (GetComponent<Nameplates>() == null) gameObject.AddComponent<Nameplates>();
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
+            var overworldScene = FindAnyObjectByType<OverworldScene>(); // an overworld scene's ground and markers (ticket 39)
+            if (overworldScene != null && useHub) overworldScene.ApplyTo(_config);
             if (!useHub)
             {
                 _config.Hub = null;
