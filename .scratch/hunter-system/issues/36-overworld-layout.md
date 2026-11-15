@@ -328,3 +328,9 @@ New ground on the updated drawing:
 Still to settle: which crossed swords are which gate (the region table predates the new marks), and which ones appear through story events.
 
 **2026-11-15 (agent):** The crossed swords on the updated drawing are numbered **1 to 26** in `docs/maps/overworld-gates-numbered.png` (roughly top to bottom, west to east). The developer is to say which gate each number is and which ones appear through story events.
+
+**2026-11-15 (developer, recorded by agent):** **Why some gates spawn later.** The developer: "so that the world doesnt feel like its filled with monsters everywhere and itll feel like we are fighting back the monsters until a big story event happens".
+- **Pacing of the world's danger:** the world starts with few active gates. Clearing them quiets their leaks, so through the early and middle game the player visibly pushes the monsters back.
+- **Then a big story event** spawns new gates (the story-appearing kind) and the danger surges again.
+- So the overworld's danger follows the story: calm start → pushed back by the player → surge at the big event → (after the main game) gates slowly close.
+- Still to settle: which story event (or events) spawns them, and which numbered sites (1–26) are story-spawned.
