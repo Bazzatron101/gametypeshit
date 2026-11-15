@@ -302,8 +302,14 @@ Still the same count (about 25 gates) and every gate can be reopened harder. Som
 - **Confirmed:** a paused leak belongs to the host's world (everyone sees the road safe); closed gates look sealed after the main game but stay replayable; the first raid gate is the battlefield in the Ashen steppe.
 - **Rival guilds:** Stiltmoor (Fenward mire) and Ember crossing (Ashen steppe) are run by rival guilds, as is the best guild's north-west castle. Your own guild runs the other guild towns.
 - **Standing with rival guilds** sets their pay: it starts at **50 %** with low standing and rises as standing grows. Standing is raised by **their own quests only** (each rival guild has a quest line). Your own guild pays in full. This adds a standing per rival guild, which the earlier "no separate guild standing" did not have (that was about the XP cut for unlicensed clears, which stays on character XP).
-  - Still to settle: what full standing pays (100 %?), whether the rival's pay and the 25 % unlicensed rule stack (25 % × 50 %), and whether only your own guild promotes you.
+  - Settled below: the cuts stack, and any guild can promote you (rivals ask more). Still open: what full standing pays.
 - **Gate spots:** the crossed swords on the drawing are where the developer thinks gates can go ("the sword crossing and the places where I thinking gates can go"). There are 16 crossed swords; the region sketch has about 25 gates plus the demon king's hidden gate under Saltreach (not drawn, on purpose). The gates without crossed swords (Heron isle, the four specialty gates, and the hidden peat camp, riverbed, herd grounds and wreck cove) need spots from the developer.
 - **Names:** the developer will write them. Placeholders stay until then.
 
 **2026-11-15 (developer, recorded by agent):** The developer will **mark the nine missing gates on the drawing** (Heron isle; the four specialty gates; the peat camp, riverbed, herd grounds and wreck cove). Waiting on the updated `docs/maps/overworld-reference.webp`; the demon king's gate under Saltreach stays unmarked.
+
+**2026-11-15 (developer, recorded by agent):** **Rival pay and promotions.** The developer: "itll stack and you can be promoted by anyone itll just require more from other guilds".
+- **The cuts stack:** a clear beyond your licence at a rival's board pays 25 % × the rival's standing pay (12.5 % at low standing, 50 % × 25 %).
+- **Any guild can promote you,** your own or a rival. A rival guild asks more for the same promotion (for example more clears or a harder promotion quest). How much more is a configuration value.
+- Rank is one licence however you earned it: a promotion from a rival counts everywhere.
+- Still to settle: what full standing with a rival pays (100 %?).
