@@ -84,3 +84,5 @@ Follows from this, to settle with the premise:
 - Still to settle: how many princes, whether each holds a gate (or a region) in the Riftlands, and whether the final S-rank dungeon with the best guild is the strongest prince's. The Rift as "the one gate that does not close" is not confirmed; the princes may replace that idea.
 
 **2026-11-15 (developer, recorded by agent):** How many demon princes there are is **decided later.** Note for then: the Riftlands sketch has three S-rank gates (ticket 36), so three princes fit without new gates; each extra prince is another S-rank gate and handcrafted boss.
+
+**2026-11-15 (developer, recorded by agent):** From the map questions (ticket 36): the demon king's gate is hidden under Saltreach, the east-coast castle where the player does the B-rank specialty quests; the best guild's seat is the north-west castle near the start; other guilds are rivals with branches in a few towns.

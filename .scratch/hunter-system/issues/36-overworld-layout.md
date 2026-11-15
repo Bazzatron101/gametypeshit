@@ -269,3 +269,29 @@ Still the same count (about 25 gates) and every gate can be reopened harder. Som
 **2026-11-15 (developer, recorded by agent):** After the main campaign's end (the demon king's death, ticket 16), **the gates slowly close.** The overworld calms down: leaks stop as their gates close. A closed gate stops leaking but can still be replayed (ticket 16).
 
 **2026-11-15 (developer, recorded by agent):** After the demon king, **demon princes rise up** (the S story's enemies, ticket 16), and **other lands** with their own problems lie off this map (later content). The Riftlands' S gates are suggested to be the princes' gates.
+
+**2026-11-15 (developer, recorded by agent):** **Fast travel: free waystones.**
+- Touch a waystone once and it is yours; after that, travel between your waystones for free at any time.
+- Suggested, to confirm: one in each guild town and a few at crossroads and region edges; none inside dungeons.
+- Suggested: waystones are the host's world's progress (like found gates), and travelling moves the whole party, as the board does. Or each player travels alone; to settle.
+
+**2026-11-15 (developer, recorded by agent):** **Mountains: some are climbable.**
+- Most mountains are too steep and are crossed through passes and roads.
+- Marked cliffs and paths can be climbed, leading to hidden gates, viewpoints and shortcuts.
+- Only the climbable parts need to be playable on their slopes, which keeps the terrain work down. The marking should read clearly (ledges, vines, a different rock).
+
+**2026-11-15 (developer, recorded by agent):** **The sea: shallows only.**
+- Players can wade in shallow water near the shore; deep water turns them back. No swimming, no small boats.
+- The coast is the edge of the world. The bridge joins the west island to the mainland, and the ship to the south-east island is the only way across the sea (it sails when the S story says so).
+
+**2026-11-15 (developer, recorded by agent):** **The demon king's gate is hidden under Saltreach,** the castle on the east coast.
+- It is the main campaign's final dungeon (A-rank, story), the last stronghold before the sea and the Riftlands.
+- Players spend B-rank in Saltreach (the specialty quests) without knowing what is beneath it. The gate is hidden, and stays hidden until the A-rank story reveals it.
+- After the demon king dies, his gate closes like the others but stays replayable (ticket 16).
+
+**2026-11-15 (developer, recorded by agent):** **Guilds: yours, plus rivals.**
+- The player's guild has branches in most towns. A few towns belong to rival guilds, which have their own quests (and their own view of you).
+- The best guild on the continent has its seat in **the north-west castle** (developer, 2026-11-15), in the Greenmarch's north-west mountains near the start. You see them early and look up to them all game; at the S story you help them.
+- To settle: which towns are rivals', whether the 25 % rule for unlicensed clears and the "found and licensed" board rule apply the same at a rival's board, and whether rival guilds also hand out promotions.
+
+*Strongholds after these answers (the drawing's five castles):* the north-west castle (the best guild's seat, a rival guild), Westkeep (your guild), Quarrygate (your guild), Saltreach (your guild; the demon king's gate hidden beneath), Farwatch (on the south-east island, S story).
