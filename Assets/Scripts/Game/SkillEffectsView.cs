@@ -41,7 +41,11 @@ namespace HunterSystem.Game
             {
                 if (e is SkillUsed used && _runner.World.HasPlayer(used.Player))
                 {
-                    Flash(used);
+                    Flash(used.Player, used.Skill, used.Range, used.Radius);
+                }
+                else if (e is AttackPerformed swing && swing.Weapon != null && _runner.World.HasPlayer(swing.Player))
+                {
+                    Flash(swing.Player, swing.Weapon, swing.Range, swing.Radius); // a weapon's slash or blast (ticket 46); arrows and bolts are drawn in flight
                 }
                 else if (e is Explosion explosion)
                 {
@@ -53,27 +57,26 @@ namespace HunterSystem.Game
             AnimateFlashes();
         }
 
-        private void Flash(SkillUsed used)
+        private void Flash(PlayerId who, SkillDefinition skill, float range, float radius)
         {
-            var skill = used.Skill;
-            var player = _runner.World.GetPlayer(used.Player);
+            var player = _runner.World.GetPlayer(who);
             var origin = new Vector3(player.Position.X, 0.05f, player.Position.Z);
             var facing = new Vector3(player.Facing.X, 0f, player.Facing.Z);
 
             switch (skill.Effect)
             {
                 case SkillEffectKind.Area:
-                    FlashDisc(player.Position, used.Radius, areaMaterial, "Area Flash", SkillLook.SkillColor(skill));
+                    FlashDisc(player.Position, radius, areaMaterial, "Area Flash", SkillLook.SkillColor(skill));
                     break;
                 case SkillEffectKind.Cone:
                 {
                     // A flat slab as wide as the cone's far edge, out to its reach.
                     var halfArc = Mathf.Min(skill.ArcDegrees, 180f) * 0.5f * Mathf.Deg2Rad;
-                    var width = Mathf.Max(0.5f, 2f * used.Range * Mathf.Sin(halfArc));
+                    var width = Mathf.Max(0.5f, 2f * range * Mathf.Sin(halfArc));
                     var slab = Visual(PrimitiveType.Cube, coneMaterial, "Cone Flash");
                     slab.transform.rotation = Quaternion.LookRotation(facing, Vector3.up);
-                    slab.transform.position = origin + facing * (used.Range * 0.5f) + Vector3.up * EffectHeight * 0.5f;
-                    slab.transform.localScale = new Vector3(width, 0.05f, used.Range);
+                    slab.transform.position = origin + facing * (range * 0.5f) + Vector3.up * EffectHeight * 0.5f;
+                    slab.transform.localScale = new Vector3(width, 0.05f, range);
                     Tint(slab, SkillLook.SkillColor(skill));
                     _flashes.Add((slab.transform, slab.transform.localScale, Time.time));
                     break;

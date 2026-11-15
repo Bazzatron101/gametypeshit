@@ -69,6 +69,9 @@ namespace HunterSystem.Simulation
         /// <summary>Damage multiplier per Intelligence point for skills that scale with Intelligence (0.05 = +5%).</summary>
         public float DamagePerIntelligence { get; set; } = 0.05f;
 
+        /// <summary>Damage multiplier per Agility point for skills and weapon attacks that scale with Agility, such as the bow (0.05 = +5%).</summary>
+        public float DamagePerAgility { get; set; } = 0.05f;
+
         /// <summary>Max health gained per Vitality point.</summary>
         public int HealthPerVitality { get; set; } = 10;
 

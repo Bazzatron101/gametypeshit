@@ -15,10 +15,20 @@ namespace HunterSystem.Simulation
         public PlayerId Player { get; }
         public AttackKind Kind { get; }
 
-        public AttackPerformed(int tick, PlayerId player, AttackKind kind) : base(tick)
+        /// <summary>The worn weapon's hit (ticket 46), or null for the default attack.</summary>
+        public SkillDefinition Weapon { get; }
+
+        /// <summary>With a weapon: the hit's reach and radius after modifiers, as for <see cref="SkillUsed"/>. Otherwise 0.</summary>
+        public float Range { get; }
+        public float Radius { get; }
+
+        public AttackPerformed(int tick, PlayerId player, AttackKind kind, SkillDefinition weapon = null, float range = 0f, float radius = 0f) : base(tick)
         {
             Player = player;
             Kind = kind;
+            Weapon = weapon;
+            Range = range;
+            Radius = radius;
         }
     }
 

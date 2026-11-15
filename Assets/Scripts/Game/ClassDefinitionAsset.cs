@@ -23,6 +23,7 @@ namespace HunterSystem.Game
         [SerializeField, Min(0)] private int luck;
 
         [Header("Movement")]
+        [SerializeField, Tooltip("The weapon a character of this class is issued if it has none (ticket 46). Must be in the content's gear list.")] private GearDefinitionAsset startingWeapon;
         [SerializeField, Min(10), Tooltip("Jump height, % of the base jump. A jump higher than an enemy clears it (the Warlord stands 3.5 m; the base jump is 0.9 m).")]
         private int jumpHeightPercent = 100;
 
@@ -39,7 +40,8 @@ namespace HunterSystem.Game
             stats[(int)Stat.Intelligence] = intelligence;
             stats[(int)Stat.Sense] = sense;
             stats[(int)Stat.Luck] = luck;
-            return new ClassDefinition { Id = id, Name = displayName, Description = description, StatsPerLevel = stats, JumpHeightPercent = jumpHeightPercent };
+            return new ClassDefinition { Id = id, Name = displayName, Description = description, StatsPerLevel = stats, JumpHeightPercent = jumpHeightPercent,
+                StartingWeaponId = startingWeapon != null ? startingWeapon.Id : null };
         }
 
         /// <summary>For editor tooling that creates classes in code.</summary>

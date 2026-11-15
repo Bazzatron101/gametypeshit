@@ -158,7 +158,8 @@ namespace HunterSystem.Tests
                 string.Join(", ", DistanceToNearestEnemy.Keys.OrderBy(r => r).Select(r => $"{r} {MeanDistance(r):0.0} m"));
         }
 
-        private static Run PlayFirstGate(string leaderClass, Func<int, CompanionExperience> experience, int minutes = 10)
+        /// <param name="seed">0 for the usual fight; others play the same party with different dice.</param>
+        private static Run PlayFirstGate(string leaderClass, Func<int, CompanionExperience> experience, int minutes = 10, int seed = 0)
         {
             var config = RealConfig();
             var content = Content();
@@ -172,11 +173,11 @@ namespace HunterSystem.Tests
                 var id = new PlayerId(i + 2);
                 party[i].Experience = experience(i);
                 world.AddPlayer(id, Vec3.Zero, party[i].Character);
-                run.Teammates[id] = new CompanionBrain(party[i], seed: 7919 * (i + 1)) { Leader = leaderId };
+                run.Teammates[id] = new CompanionBrain(party[i], seed: 7919 * (i + 1) + 104729 * seed) { Leader = leaderId };
             }
             world.StartGate(content.Gates[0].Id);
 
-            var leader = new BotBrain(seed: 1);
+            var leader = new BotBrain(seed: 1 + seed);
             var commands = new Dictionary<PlayerId, PlayerCommand>();
             for (var tick = 0; tick < minutes * 60 * TickRate && !world.Gate.IsCleared; tick++)
             {
@@ -260,15 +261,18 @@ namespace HunterSystem.Tests
         [Test]
         public void ExperiencedTeammatesPlayBetterThanRookies()
         {
-            var rookies = PlayFirstGate("wizard", Rookies);
-            var elites = PlayFirstGate("wizard", Elites);
+            // Four fights each, with different dice: one fight is too few to say who holds the boss more.
+            var seeds = Enumerable.Range(0, 4).ToList();
+            var rookies = seeds.Select(s => PlayFirstGate("wizard", Rookies, seed: s)).ToList();
+            var elites = seeds.Select(s => PlayFirstGate("wizard", Elites, seed: s)).ToList();
 
-            TestContext.WriteLine("Rookies: " + rookies.Summary());
-            TestContext.WriteLine("Elites:  " + elites.Summary());
-            Assert.That(elites.World.Gate.IsCleared, Is.True, elites.Summary());
-            Assert.That(elites.TeammateDamageTaken, Is.LessThan(rookies.TeammateDamageTaken / 2), "they take far fewer hits");
-            Assert.That(elites.TankNearestBoss * rookies.BossTicks, Is.GreaterThan(rookies.TankNearestBoss * elites.BossTicks), "their tank holds the boss more of the time");
-            Assert.That(elites.World.Tick, Is.LessThanOrEqualTo(rookies.World.Tick * 21 / 20), "and playing safe does not slow the clear");
+            foreach (var run in rookies) TestContext.WriteLine("Rookies: " + run.Summary());
+            foreach (var run in elites) TestContext.WriteLine("Elites:  " + run.Summary());
+            foreach (var run in elites) Assert.That(run.World.Gate.IsCleared, Is.True, run.Summary());
+            Assert.That(elites.Sum(r => r.TeammateDamageTaken), Is.LessThan(rookies.Sum(r => r.TeammateDamageTaken) / 2), "they take far fewer hits");
+            Assert.That((long)elites.Sum(r => r.TankNearestBoss) * rookies.Sum(r => r.BossTicks), Is.GreaterThan((long)rookies.Sum(r => r.TankNearestBoss) * elites.Sum(r => r.BossTicks)),
+                "their tank holds the boss more of the time");
+            Assert.That(elites.Sum(r => r.World.Tick), Is.LessThanOrEqualTo(rookies.Sum(r => r.World.Tick) * 21 / 20), "and playing safe does not slow the clear");
         }
 
         // --- On the host -------------------------------------------------------------------

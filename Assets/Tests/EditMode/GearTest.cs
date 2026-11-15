@@ -479,7 +479,7 @@ namespace HunterSystem.Tests
                 world.AddPlayer(P1, Vec3.Zero, new CharacterRecord { IsNew = true, ClassId = "wizard" });
                 foreach (var id in worn) world.GiveGear(P1, id, equip: true);
                 Step(world);
-                Assert.That(world.GetPlayer(P1).Worn.Count(g => g != null), Is.EqualTo(worn.Length));
+                Assert.That(worn.All(id => world.GetPlayer(P1).Worn.Any(g => g?.Id == id)), Is.True, "every piece asked for is worn");
 
                 // Six dummies packed 6 m ahead, the way goblins crowd a tank.
                 foreach (var x in new[] { -1f, 0f, 1f })

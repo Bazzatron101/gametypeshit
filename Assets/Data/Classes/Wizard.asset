@@ -22,3 +22,4 @@ MonoBehaviour:
   sense: 1
   luck: 0
   jumpHeightPercent: 100
+  startingWeapon: {fileID: 11400000, guid: f02345fc0342474fb3a1c6ef1c7c3e02, type: 2}

@@ -65,7 +65,8 @@ namespace HunterSystem.Game
             {
                 switch (e)
                 {
-                    case AttackPerformed swing when swing.Player == PlayerId:
+                    case AttackPerformed swing when swing.Player == PlayerId && (swing.Weapon == null || swing.Weapon.Effect == SkillEffectKind.Cone):
+                        // The swing marker is for slashes; arrows, bolts and blasts are drawn by SkillEffectsView (ticket 46).
                         _swingUntil = Time.time + SwingShowSeconds;
                         if (swingMarker != null)
                             swingMarker.transform.localScale = swing.Kind == AttackKind.Heavy

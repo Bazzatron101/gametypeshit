@@ -21,7 +21,8 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>Content validation: every skill must be usable as written, or the world refuses to start.</summary>
-        private static void ValidateSkills(IReadOnlyList<SkillDefinition> skills, int levelCap, HashSet<string> knownTags, IReadOnlyList<ClassDefinition> classes)
+        /// <param name="weaponHits">True for weapons' attacks (ticket 46): they are never learned or put on the bar, so the bar check is skipped.</param>
+        private static void ValidateSkills(IReadOnlyList<SkillDefinition> skills, int levelCap, HashSet<string> knownTags, IReadOnlyList<ClassDefinition> classes, bool weaponHits = false)
         {
             if (skills == null) throw new ArgumentException("Skills must be set (it may be empty).", nameof(skills));
             var ids = new HashSet<string>();
@@ -67,6 +68,7 @@ namespace HunterSystem.Simulation
                     $"its class '{skill.ClassId}' is not one of the game's classes.");
             }
 
+            if (weaponHits) return;
             // Each class starts with its own starters plus the shared ones, and they must fit the bar.
             var shared = skills.Count(s => s.UnlockLevel <= 1 && s.ClassId == null);
             if (shared > SkillSlotCount)
@@ -233,6 +235,16 @@ namespace HunterSystem.Simulation
             player.SkillReadyAtTick[skill.Id] = tick + resolved.CooldownTicks;
             player.SkillCooldownTicks[skill.Id] = resolved.CooldownTicks;
             _events.Add(new SkillUsed(tick, player.Id, skill, slot, resolved.Range, resolved.Radius, chargeFraction, counter));
+            PerformHit(player, resolved, tick, counter);
+        }
+
+        /// <summary>
+        /// A skill's or a weapon attack's hit, already resolved: aim, then the shape (a cone, an area
+        /// round the player, or projectiles). A counter keeps its aim on the attacker.
+        /// </summary>
+        private void PerformHit(Player player, ResolvedSkill resolved, int tick, bool counter)
+        {
+            var skill = resolved.Definition;
             var damage = ScaledDamage(player, resolved.BaseDamage, skill.ScalingStat);
             // Where the camera looks, exactly: an aimed skill takes no soft lock-on (ADR 0013). Without an aim (bots) the assist still helps.
             var aimed = !counter && player.Aim.HasValue;
@@ -308,7 +320,20 @@ namespace HunterSystem.Simulation
 
                 var step = MathF.Min(p.Speed * TickDelta, p.Resolved.Range - p.Travelled);
                 var from = p.Position;
-                var hit = FirstEnemyAlong(from, p.Direction, step, p.Resolved.Radius, out var along);
+                if (p.Skill.Pierces)
+                {
+                    // Everything along this stretch that this use has not hit yet, nearest first; then on.
+                    Enemy pierced;
+                    while ((pierced = FirstEnemyAlong(from, p.Direction, step, p.Resolved.Radius, out _, p.Resolved.DirectlyHit)) != null)
+                    {
+                        p.Resolved.DirectlyHit.Add(pierced);
+                        DamageEnemy(p.Owner, pierced, p.Damage, tick, p.Skill);
+                        ExplodeIfModified(p.Owner, pierced, p.Damage, p.Resolved, tick);
+                    }
+                }
+                Enemy hit = null;
+                var along = 0f;
+                if (!p.Skill.Pierces) hit = FirstEnemyAlong(from, p.Direction, step, p.Resolved.Radius, out along);
                 if (hit != null)
                 {
                     p.Position = from + p.Direction * along;
@@ -335,13 +360,13 @@ namespace HunterSystem.Simulation
         /// The live enemy nearest the start of a straight segment whose point lies within
         /// <paramref name="radius"/> of it. <paramref name="along"/> is how far along the segment the contact is.
         /// </summary>
-        private Enemy FirstEnemyAlong(Vec3 from, Vec3 direction, float length, float radius, out float along)
+        private Enemy FirstEnemyAlong(Vec3 from, Vec3 direction, float length, float radius, out float along, HashSet<Enemy> skip = null)
         {
             Enemy first = null;
             along = float.MaxValue;
             foreach (var enemy in _enemies)
             {
-                if (enemy.Health <= 0) continue;
+                if (enemy.Health <= 0 || (skip != null && skip.Contains(enemy))) continue;
                 var offset = Flat(enemy.Position - from);
                 var t = Math.Clamp(offset.X * direction.X + offset.Z * direction.Z, 0f, length);
                 var closest = direction * t;

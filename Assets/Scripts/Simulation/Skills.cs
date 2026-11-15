@@ -57,6 +57,9 @@ namespace HunterSystem.Simulation
         /// <summary>Projectile speed in metres per second.</summary>
         public float ProjectileSpeed { get; set; } = 15f;
 
+        /// <summary>A projectile that flies on through enemies, hitting each one along its path once (ticket 46: the bow's drawn shot).</summary>
+        public bool Pierces { get; set; }
+
         /// <summary>
         /// Seconds of holding the key for a full charge, or 0 if the skill cannot be charged. A tap
         /// always fires the normal skill; holding charges it and releasing fires the charged version.

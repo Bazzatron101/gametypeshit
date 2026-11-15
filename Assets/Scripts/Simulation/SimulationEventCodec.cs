@@ -66,6 +66,7 @@ namespace HunterSystem.Simulation
             {
                 case AttackPerformed a:
                     Head(w, Code.AttackPerformed, e); w.Write(a.Player.Value); w.Write((byte)a.Kind);
+                    SimulationWorld.WriteNullable(w, a.Weapon?.Id); w.Write(a.Range); w.Write(a.Radius);
                     break;
                 case AttackWindupStarted a:
                     Head(w, Code.AttackWindupStarted, e); w.Write(a.Player.Value); w.Write((byte)a.Kind); w.Write(a.LandsAtTick);
@@ -224,7 +225,12 @@ namespace HunterSystem.Simulation
 
             switch (code)
             {
-                case Code.AttackPerformed: return new AttackPerformed(tick, Player(), Kind());
+                case Code.AttackPerformed:
+                {
+                    var player = Player();
+                    var kind = Kind();
+                    return new AttackPerformed(tick, player, kind, NullableSkill(), r.ReadSingle(), r.ReadSingle());
+                }
                 case Code.AttackWindupStarted: return new AttackWindupStarted(tick, Player(), Kind(), r.ReadInt32());
                 case Code.DamageDealt:
                 {
@@ -327,6 +333,6 @@ namespace HunterSystem.Simulation
             (config.Gear ?? Array.Empty<GearDefinition>()).FirstOrDefault(g => g != null && g.Id == id) ?? throw new FormatException($"Unknown gear '{id}'.");
 
         private static SkillDefinition SkillById(SimulationConfig config, string id) =>
-            config.Skills.FirstOrDefault(s => s.Id == id) ?? throw new FormatException($"Unknown skill '{id}'.");
+            config.FindSkill(id) ?? throw new FormatException($"Unknown skill '{id}'.");
     }
 }

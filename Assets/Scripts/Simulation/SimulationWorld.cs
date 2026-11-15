@@ -21,6 +21,7 @@ namespace HunterSystem.Simulation
         private readonly float _softLockMinCos;
         private readonly int _damagePerMillePerStrength;
         private readonly int _damagePerMillePerIntelligence;
+        private readonly int _damagePerMillePerAgility;
         private readonly List<Projectile> _projectiles = new List<Projectile>();
         private readonly HashSet<string> _knownTags;
         private int _nextProjectileId = 1;
@@ -58,6 +59,7 @@ namespace HunterSystem.Simulation
             // Per-mille integer so damage scaling is exact: 10 damage at +5% is 10.5, which rounds to 11.
             _damagePerMillePerStrength = (int)MathF.Round(config.StatEffects.DamagePerStrength * 1000f);
             _damagePerMillePerIntelligence = (int)MathF.Round(config.StatEffects.DamagePerIntelligence * 1000f);
+            _damagePerMillePerAgility = (int)MathF.Round(config.StatEffects.DamagePerAgility * 1000f);
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
             ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
             IndexLootAndValidateShops();
@@ -104,6 +106,7 @@ namespace HunterSystem.Simulation
             player.MaxHealth = ComputeMaxHealth(player);
             player.Health = player.MaxHealth;
             LearnStarterSkills(player);
+            IssueStartingWeapon(player);
             _players.Add(player);
             _playersById.Add(id, player);
             _playerIds.Add(id);
@@ -215,9 +218,8 @@ namespace HunterSystem.Simulation
                 {
                     if (tick >= player.PendingAttackLandsAtTick)
                     {
-                        var pending = _attacks[(int)player.PendingAttack];
                         player.PendingAttackLandsAtTick = 0;
-                        SwingAttack(player, pending, tick);
+                        SwingAttack(player, player.PendingAttack, tick);
                     }
                     continue; // committed: no steering or new attacks until it swings
                 }
@@ -236,8 +238,8 @@ namespace HunterSystem.Simulation
                 if (player.IsAirborne) continue; // no attacks or skills in the air (a jump keeps its run-up)
                 var eventsBefore = _events.Count;
                 if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, cmd.IsSkillHeld(cmd.UseSkillSlot.Value), tick)) { }
-                else if (cmd.HeavyAttack) TryStartAttack(player, _attacks[(int)AttackKind.Heavy], tick);
-                else if (cmd.LightAttack) TryStartAttack(player, _attacks[(int)AttackKind.Light], tick);
+                else if (cmd.HeavyAttack) TryStartAttack(player, AttackKind.Heavy, tick);
+                else if (cmd.LightAttack) TryStartAttack(player, AttackKind.Light, tick);
                 if (StartedFighting(player, eventsBefore))
                 {
                     player.Sprinting = false;

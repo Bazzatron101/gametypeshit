@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: IronSword
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: iron-sword
+  displayName: Iron Sword
+  description: Wide, quick slashes; the heavy attack is a long thrust that reaches past a shield.
+  slot: 0
+  tags:
+  - melee
+  - physical
+  modifiers: []
+  lightAttack:
+    id: sword-slash
+    displayName: Slash
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 12
+    range: 2.4
+    arcDegrees: 150
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.35
+    windupSeconds: 0
+  heavyAttack:
+    id: sword-thrust
+    displayName: Thrust
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 30
+    range: 3.6
+    arcDegrees: 35
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.9
+    windupSeconds: 0.3
+  sellValue: 60

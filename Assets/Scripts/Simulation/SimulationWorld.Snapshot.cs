@@ -558,7 +558,7 @@ namespace HunterSystem.Simulation
         };
 
         private SkillDefinition SkillById(string id) =>
-            _config.Skills.FirstOrDefault(s => s.Id == id) ?? throw new FormatException($"The snapshot names skill '{id}', which this world does not have.");
+            _config.FindSkill(id) ?? throw new FormatException($"The snapshot names skill '{id}', which this world does not have.");
 
         internal static Vec3 ReadVec(BinaryReader r) => new Vec3(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
 

@@ -33,4 +33,36 @@ MonoBehaviour:
     projectileSpreadDegrees: 15
     explosionRadius: 0
     explosionDamagePercent: 0
+  lightAttack:
+    id: cleaver-chop
+    displayName: Chop
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 15
+    range: 2.2
+    arcDegrees: 110
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: cleaver-cleave
+    displayName: Cleave
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 40
+    range: 2.8
+    arcDegrees: 180
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.3
+    windupSeconds: 0.5
   sellValue: 120

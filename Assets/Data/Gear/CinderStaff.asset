@@ -33,4 +33,38 @@ MonoBehaviour:
     projectileSpreadDegrees: 12
     explosionRadius: 0
     explosionDamagePercent: 0
+  lightAttack:
+    id: cinder-bolt
+    displayName: Cinder Bolt
+    effect: 2
+    tags:
+    - fire
+    - magic
+    - projectile
+    scalingStat: 3
+    damage: 13
+    range: 12
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 16
+    pierces: 0
+    cooldownSeconds: 0.55
+    windupSeconds: 0
+  heavyAttack:
+    id: cinder-blast
+    displayName: Cinder Blast
+    effect: 1
+    tags:
+    - fire
+    - magic
+    - area
+    scalingStat: 3
+    damage: 26
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.6
+    windupSeconds: 0.4
   sellValue: 150

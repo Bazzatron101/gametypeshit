@@ -62,6 +62,19 @@ namespace HunterSystem.Simulation
         /// <summary>The classes a character can be (ticket 24). Skills name their class by id.</summary>
         public IReadOnlyList<ClassDefinition> Classes { get; set; } = Array.Empty<ClassDefinition>();
 
+        /// <summary>A skill by id: one of <see cref="Skills"/>, or a weapon attack's hit (ticket 46). Null when there is none.</summary>
+        public SkillDefinition FindSkill(string id)
+        {
+            if (id == null) return null;
+            foreach (var s in Skills ?? Array.Empty<SkillDefinition>()) if (s != null && s.Id == id) return s;
+            foreach (var g in Gear ?? Array.Empty<GearDefinition>())
+            {
+                if (g?.LightAttack?.Hit?.Id == id) return g.LightAttack.Hit;
+                if (g?.HeavyAttack?.Hit?.Id == id) return g.HeavyAttack.Hit;
+            }
+            return null;
+        }
+
         /// <summary>The class with this id, or null (none given, or not one of the game's).</summary>
         public ClassDefinition ClassById(string id)
         {

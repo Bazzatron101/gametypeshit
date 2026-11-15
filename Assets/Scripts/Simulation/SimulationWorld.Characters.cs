@@ -122,6 +122,7 @@ namespace HunterSystem.Simulation
                 if (GearById(id) is { } gear && !player.Bag.Contains(gear)) player.Bag.Add(gear);
             for (var slot = 0; slot < GearDefinition.SlotCount && character.Worn != null && slot < character.Worn.Length; slot++)
                 if (player.Bag.FirstOrDefault(g => g.Id == character.Worn[slot]) is { } worn && (int)worn.Slot == slot) player.Worn[slot] = worn;
+            IssueStartingWeapon(player);
 
             player.MaxHealth = ComputeMaxHealth(player);
             player.Health = player.MaxHealth;

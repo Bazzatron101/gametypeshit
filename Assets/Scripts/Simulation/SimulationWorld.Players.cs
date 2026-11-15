@@ -38,25 +38,46 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>
-        /// Starts an attack if it is off cooldown: soft lock-on turns the player first, then the
-        /// attack swings now (no windup) or is held until its windup ends.
+        /// Starts an attack if it is off cooldown: the worn weapon's (ticket 46), or the default one.
+        /// The default attack turns the player with soft lock-on first; a weapon's hit aims as a skill
+        /// does, when it lands. The attack swings now (no windup) or is held until its windup ends.
         /// </summary>
-        private void TryStartAttack(Player player, ResolvedAttack attack, int tick)
+        private void TryStartAttack(Player player, AttackKind kind, int tick)
         {
-            if (tick < player.AttackReadyAtTick[(int)attack.Kind]) return;
-            player.AttackReadyAtTick[(int)attack.Kind] = tick + attack.CooldownTicks;
-
-            ApplySoftLockOn(player, attack.Definition.Range);
-
-            if (attack.WindupTicks == 0)
+            if (tick < player.AttackReadyAtTick[(int)kind]) return;
+            var weapon = WeaponAttackOf(player, kind);
+            int cooldownTicks, windupTicks;
+            if (weapon != null)
             {
-                SwingAttack(player, attack, tick);
+                cooldownTicks = Resolve(player, weapon.Hit).CooldownTicks;
+                windupTicks = SecondsToTicks(weapon.WindupSeconds);
+            }
+            else
+            {
+                var attack = _attacks[(int)kind];
+                cooldownTicks = attack.CooldownTicks;
+                windupTicks = attack.WindupTicks;
+                ApplySoftLockOn(player, attack.Definition.Range);
+            }
+            player.AttackReadyAtTick[(int)kind] = tick + cooldownTicks;
+
+            if (windupTicks == 0)
+            {
+                SwingAttack(player, kind, tick);
                 return;
             }
 
-            player.PendingAttack = attack.Kind;
-            player.PendingAttackLandsAtTick = tick + attack.WindupTicks;
-            _events.Add(new AttackWindupStarted(tick, player.Id, attack.Kind, player.PendingAttackLandsAtTick));
+            player.PendingAttack = kind;
+            player.PendingAttackLandsAtTick = tick + windupTicks;
+            _events.Add(new AttackWindupStarted(tick, player.Id, kind, player.PendingAttackLandsAtTick));
+        }
+
+        /// <summary>The worn weapon's attack of this kind, or null for the default one.</summary>
+        private static WeaponAttack WeaponAttackOf(Player player, AttackKind kind)
+        {
+            var weapon = player.Worn[(int)GearSlot.Weapon];
+            if (weapon == null) return null;
+            return kind == AttackKind.Heavy ? weapon.HeavyAttack : weapon.LightAttack;
         }
 
         /// <summary>
@@ -88,8 +109,19 @@ namespace HunterSystem.Simulation
             if (best.HasValue) player.Facing = best.Value;
         }
 
-        private void SwingAttack(Player player, ResolvedAttack attack, int tick)
+        /// <summary>The attack's hit frame: the weapon's hit, as resolved for this player now, or the default swing.</summary>
+        private void SwingAttack(Player player, AttackKind kind, int tick)
         {
+            var weapon = WeaponAttackOf(player, kind);
+            if (weapon != null)
+            {
+                var resolved = Resolve(player, weapon.Hit);
+                _events.Add(new AttackPerformed(tick, player.Id, kind, weapon.Hit, resolved.Range, resolved.Radius));
+                PerformHit(player, resolved, tick, counter: false);
+                return;
+            }
+
+            var attack = _attacks[(int)kind];
             _events.Add(new AttackPerformed(tick, player.Id, attack.Kind));
             var damage = ScaledDamage(player, attack.Definition.Damage, Stat.Strength);
 

@@ -20,6 +20,12 @@ namespace HunterSystem.Simulation
         /// <summary>Jump height as a percentage of the base jump (above an enemy's height, a jump clears it).</summary>
         public int JumpHeightPercent { get; set; } = 100;
 
+        /// <summary>
+        /// The weapon a character of this class is issued (ticket 46), by gear id, or null. A
+        /// character gets it when it has no weapon at all: worn or in the bag.
+        /// </summary>
+        public string StartingWeaponId { get; set; }
+
         public int StatPerLevel(int stat) => StatsPerLevel != null && stat < StatsPerLevel.Length ? StatsPerLevel[stat] : 0;
     }
 

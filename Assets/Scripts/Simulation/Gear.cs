@@ -33,7 +33,27 @@ namespace HunterSystem.Simulation
         /// <summary>What the piece does while worn. Each is an ordinary modifier, aimed at a tag or one skill.</summary>
         public List<ModifierDefinition> Modifiers { get; } = new List<ModifierDefinition>();
 
+        /// <summary>A weapon's light attack (ticket 46), or null to keep the default one. Only weapons have attacks.</summary>
+        public WeaponAttack LightAttack { get; set; }
+
+        /// <summary>A weapon's heavy attack, or null to keep the default one.</summary>
+        public WeaponAttack HeavyAttack { get; set; }
+
         public bool HasTag(string tag) => Tags != null && Tags.Contains(tag, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// One of a weapon's attacks (ticket 46). <see cref="Hit"/> is shaped like a skill (a cone, an
+    /// area round the player or a projectile, with its damage, reach, tags, scaling stat and
+    /// cooldown), so it goes through the same path as skills: modifiers by tag or by id, bursts and
+    /// extra bolts. It is never learned or put on the bar. The windup is the attack's own.
+    /// </summary>
+    public sealed class WeaponAttack
+    {
+        public SkillDefinition Hit { get; set; }
+
+        /// <summary>Time from pressing to the hit. 0 hits on the press. A dodge cancels a windup.</summary>
+        public float WindupSeconds { get; set; }
     }
 
     /// <summary>A player put on a piece of gear. Anything it replaced went back to the bag (<see cref="GearUnequipped"/> first).</summary>

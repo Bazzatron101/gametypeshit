@@ -73,7 +73,7 @@ namespace HunterSystem.Simulation
             Require(!string.IsNullOrWhiteSpace(m.Name), "has no Name.");
             Require((m.AppliesToTag == null) != (m.AppliesToSkillId == null), "must set exactly one of AppliesToTag or AppliesToSkillId.");
             if (m.AppliesToTag != null) Require(_knownTags.Contains(m.AppliesToTag), $"tag '{m.AppliesToTag}' is not a known tag.");
-            if (m.AppliesToSkillId != null) Require(_config.Skills.Any(s => s.Id == m.AppliesToSkillId), $"no skill has the id '{m.AppliesToSkillId}'.");
+            if (m.AppliesToSkillId != null) Require(_config.FindSkill(m.AppliesToSkillId) != null, $"no skill has the id '{m.AppliesToSkillId}'.");
             if (m.PerWornTag != null) Require(_knownTags.Contains(m.PerWornTag), $"PerWornTag '{m.PerWornTag}' is not a known tag.");
             Require(m.ExtraProjectiles >= 0, "ExtraProjectiles is negative.");
             Require(m.ExplosionRadius >= 0f, "ExplosionRadius is negative.");

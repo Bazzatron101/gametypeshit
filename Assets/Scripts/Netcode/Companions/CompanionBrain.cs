@@ -226,14 +226,26 @@ namespace HunterSystem.Netcode
             }
 
             var distance = Flat(target.Position - self.Position).Length;
-            if (distance <= LightAttackRange)
+            if (distance <= AttackReach(self, AttackKind.Light))
             {
                 var beat = tick + _phase;
-                if (WantsHeavy(target, tick, p, beat)) return Command(Vec3.Zero, heavy: true, aim: aim);
+                if (distance <= AttackReach(self, AttackKind.Heavy) && WantsHeavy(target, tick, p, beat)) return Command(Vec3.Zero, heavy: true, aim: aim);
                 var every = Math.Max(1, (int)MathF.Round(Lerp(18f, 1f, p)));
                 if (beat % every == 0) return Command(move, light: true, aim: aim);
             }
             return Command(move, sprint: sprint, aim: aim);
+        }
+
+        /// <summary>
+        /// How close it must be to attack: the worn weapon's reach (ticket 46: a bow from range, a
+        /// staff's blast round itself), a little short of the edge; the default swing's otherwise.
+        /// </summary>
+        private static float AttackReach(PlayerState self, AttackKind kind)
+        {
+            var weapon = self.Worn[(int)GearSlot.Weapon];
+            var hit = (kind == AttackKind.Heavy ? weapon?.HeavyAttack : weapon?.LightAttack)?.Hit;
+            if (hit == null) return LightAttackRange;
+            return 0.9f * (hit.Effect == SkillEffectKind.Area ? hit.Radius : hit.Range);
         }
 
         /// <summary>The leader if it is in the world and standing; null otherwise.</summary>

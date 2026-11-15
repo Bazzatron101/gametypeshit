@@ -13,6 +13,7 @@ namespace HunterSystem.Simulation
         private void IndexAndValidateGear()
         {
             _gearById = new Dictionary<string, GearDefinition>(StringComparer.Ordinal);
+            var weaponHits = new List<SkillDefinition>();
             foreach (var gear in _config.Gear ?? Array.Empty<GearDefinition>())
             {
                 if (gear == null) throw new ArgumentException("A piece of gear is missing (null).", nameof(_config));
@@ -33,8 +34,21 @@ namespace HunterSystem.Simulation
                     try { ValidateModifier(modifier); }
                     catch (ArgumentException e) { throw new ArgumentException($"Gear '{gear.Id}': {e.Message}", nameof(_config), e); }
                 }
+                foreach (var attack in new[] { gear.LightAttack, gear.HeavyAttack })
+                {
+                    if (attack == null) continue;
+                    Require(gear.Slot == GearSlot.Weapon, "only a weapon has attacks.");
+                    Require(attack.Hit != null, "an attack has no hit.");
+                    Require(attack.WindupSeconds >= 0f, "an attack's WindupSeconds is negative.");
+                    Require(_config.Skills.All(s => s.Id != attack.Hit.Id), $"its attack '{attack.Hit.Id}' shares its Id with a skill.");
+                    weaponHits.Add(attack.Hit);
+                }
                 _gearById[gear.Id] = gear;
             }
+            foreach (var c in _config.Classes ?? Array.Empty<ClassDefinition>())
+                if (c?.StartingWeaponId != null && GearById(c.StartingWeaponId)?.Slot != GearSlot.Weapon)
+                    throw new ArgumentException($"Class '{c.Id}': starting weapon '{c.StartingWeaponId}' is not a weapon in the game's gear list.", nameof(_config));
+            ValidateSkills(weaponHits, _config.Progression.LevelCap, _knownTags, _config.Classes, weaponHits: true);
 
             // A gate's pool names the game's own gear, so a drop and a save mean the same piece.
             foreach (var gate in _config.Gates ?? Array.Empty<GateDefinition>())
@@ -85,6 +99,18 @@ namespace HunterSystem.Simulation
             if (worn == null) return;
             player.Worn[(int)slot] = null;
             _events.Add(new GearUnequipped(tick, player.Id, slot, worn.Id));
+        }
+
+        /// <summary>
+        /// A character with no weapon at all, worn or in the bag, is issued its class's (ticket 46),
+        /// and wears it. Quietly, like starter skills: it comes with the character.
+        /// </summary>
+        private void IssueStartingWeapon(Player player)
+        {
+            var weapon = GearById(player.Class?.StartingWeaponId);
+            if (weapon == null || player.Worn[(int)GearSlot.Weapon] != null || player.Bag.Any(g => g.Slot == GearSlot.Weapon)) return;
+            player.Bag.Add(weapon);
+            player.Worn[(int)GearSlot.Weapon] = weapon;
         }
 
         /// <summary>A new piece from a gate goes on at once if its slot is empty, so a first find is felt straight away.</summary>

@@ -19,6 +19,7 @@ namespace HunterSystem.Game
         [Header("Stat effects, per point above the starting value")]
         [SerializeField, Tooltip("0.05 = +5% damage per Strength point (attacks and Strength skills)")] private float damagePerStrength = 0.05f;
         [SerializeField, Tooltip("0.05 = +5% damage per Intelligence point (Intelligence skills)")] private float damagePerIntelligence = 0.05f;
+        [SerializeField, Tooltip("0.05 = +5% damage per Agility point (Agility skills and the bow)")] private float damagePerAgility = 0.05f;
         [SerializeField, Tooltip("Max health per Vitality point")] private int healthPerVitality = 10;
         [SerializeField, Tooltip("0.02 = +2% move speed per Agility point")] private float moveSpeedPerAgility = 0.02f;
 
@@ -34,6 +35,7 @@ namespace HunterSystem.Game
         {
             DamagePerStrength = damagePerStrength,
             DamagePerIntelligence = damagePerIntelligence,
+            DamagePerAgility = damagePerAgility,
             HealthPerVitality = healthPerVitality,
             MoveSpeedPerAgility = moveSpeedPerAgility,
         };
