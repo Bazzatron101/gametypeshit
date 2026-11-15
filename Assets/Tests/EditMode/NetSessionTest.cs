@@ -16,10 +16,11 @@ namespace HunterSystem.Tests
     {
         private const int Latency = 6; // ticks each way: 100 ms at 60 Hz
 
-        private static SimulationConfig Config(float moveSpeed = 5f) => new SimulationConfig
+        private static SimulationConfig Config(float moveSpeed = 5f, IGround ground = null) => new SimulationConfig
         {
             TickRate = 60,
             PlayerMoveSpeed = moveSpeed,
+            Ground = ground,
             Progression = new ProgressionDefinition
             {
                 LevelCap = 10, XpToNextLevel = new[] { 50, 100, 150, 200, 250, 300, 350, 400, 450 }, FreePointsPerLevel = 3, StartingStatValue = 10,
@@ -114,6 +115,33 @@ namespace HunterSystem.Tests
             var authoritative = rig.HostView(client).Position;
             Assert.That(authoritative.X, Is.EqualTo(5f).Within(1e-3f), "60 ticks of movement, all processed by the host");
             Assert.That(predicted.X, Is.EqualTo(authoritative.X).Within(1e-4f));
+        }
+
+        [Test]
+        public void OnSlopedGroundTheClientsPredictionMatchesTheHost()
+        {
+            // Ticket 37: up a hill, into a cliff and along it, with a jump on the way.
+            var rig = new Rig(hostConfig: Config(ground: GroundTest.Hill()));
+            var client = rig.Join("alice", clientConfig: Config(ground: GroundTest.Hill()));
+            rig.Tick(Latency * 2 + 2);
+
+            rig.Input[client] = new PlayerCommand(1f, 0.5f);
+            rig.Tick(30);
+            rig.Input[client] = new PlayerCommand(1f, 0.5f, jump: true);
+            rig.Tick(1);
+            rig.Input[client] = new PlayerCommand(1f, 0.5f);
+            rig.Tick(90);
+            rig.Input[client] = PlayerCommand.None;
+            rig.Tick(Latency * 3);
+
+            var predicted = client.World.GetPlayer(client.PlayerId.Value).Position;
+            var authoritative = rig.HostView(client).Position;
+            Assert.That(authoritative.X, Is.LessThan(5f).And.GreaterThan(4.8f), "the host stopped them at the cliff");
+            Assert.That(authoritative.Y, Is.GreaterThan(2.9f), "up the hill");
+            Assert.That(predicted.X, Is.EqualTo(authoritative.X).Within(1e-4f));
+            Assert.That(predicted.Y, Is.EqualTo(authoritative.Y).Within(1e-4f));
+            Assert.That(predicted.Z, Is.EqualTo(authoritative.Z).Within(1e-4f));
+            Assert.That(client.LargestCorrection, Is.LessThan(1e-3f), "the prediction never had to be pulled back");
         }
 
         [Test]

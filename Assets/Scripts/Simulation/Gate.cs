@@ -149,30 +149,20 @@ namespace HunterSystem.Simulation
                 z += room.Length;
             }
             Rooms = rooms;
+            Ground = new FloorGround(rooms);
             Checkpoints = checkpoints;
             Entrance = new Vec3(0f, 0f, Math.Min(EntranceInset, definition.Rooms[0].Length / 2f));
         }
+
+        /// <summary>The rooms' floors as ground (ticket 37): flat, and walled round the outside.</summary>
+        public FloorGround Ground { get; }
 
         /// <summary>
         /// The nearest point that is on some room's floor: <paramref name="p"/> itself when it is on
         /// one. Rooms share edges, so this is what makes the outer walls and keeps the ways between
         /// rooms open.
         /// </summary>
-        public Vec3 Confine(Vec3 p)
-        {
-            var best = p;
-            var bestDistance = float.MaxValue;
-            foreach (var room in Rooms)
-            {
-                if (room.Contains(p)) return p;
-                var nearest = room.Nearest(p);
-                var distance = (nearest - p).Length;
-                if (distance >= bestDistance) continue;
-                best = nearest;
-                bestDistance = distance;
-            }
-            return best;
-        }
+        public Vec3 Confine(Vec3 p) => Ground.Nearest(p);
     }
 
     /// <summary>

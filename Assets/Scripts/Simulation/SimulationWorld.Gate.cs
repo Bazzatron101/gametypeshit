@@ -382,14 +382,6 @@ namespace HunterSystem.Simulation
             return count;
         }
 
-        /// <summary>Walls: nobody leaves the gate's floor.</summary>
-        private void ConfineToGate()
-        {
-            if (_gate == null) return;
-            foreach (var player in _players) player.Position = _gate.Layout.Confine(player.Position);
-            foreach (var enemy in _enemies) enemy.Position = _gate.Layout.Confine(enemy.Position);
-        }
-
         /// <summary>After everyone has moved and fought: rooms reached and cleared, checkpoints reached, teammates brought back, wipes.</summary>
         private void UpdateGate(int tick)
         {

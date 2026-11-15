@@ -92,18 +92,8 @@ namespace HunterSystem.Simulation
             _events.Add(new BossAttackStarted(tick, boss.Id, attack.Kind, boss.AttackOrigin, boss.AttackDirection, boss.AttackLandsAtTick));
         }
 
-        /// <summary>How far along <paramref name="direction"/> from <paramref name="origin"/> the gate's floor goes, up to <paramref name="range"/>.</summary>
-        private float ReachBeforeWall(Vec3 origin, Vec3 direction, float range)
-        {
-            if (_gate == null) return range;
-            const float StepLength = 0.1f;
-            for (var travelled = StepLength; travelled <= range; travelled += StepLength)
-            {
-                var point = origin + direction * travelled;
-                if (Flat(_gate.Layout.Confine(point) - point).Length > 1e-3f) return travelled - StepLength;
-            }
-            return range;
-        }
+        /// <summary>How far along <paramref name="direction"/> from <paramref name="origin"/> the ground can be walked, up to <paramref name="range"/>.</summary>
+        private float ReachBeforeWall(Vec3 origin, Vec3 direction, float range) => Ground.ReachAlong(origin, direction, range);
 
         private int BossTicks(Enemy boss, float seconds)
         {
@@ -150,13 +140,9 @@ namespace HunterSystem.Simulation
             }
             var step = MathF.Min(attack.Speed * TickDelta, boss.ChargeReach - boss.ChargeTravelled);
             var next = boss.Position + boss.AttackDirection * step;
-            var blocked = false;
-            if (_gate != null)
-            {
-                var confined = _gate.Layout.Confine(next);
-                blocked = Flat(confined - next).Length > 1e-3f;
-                next = confined;
-            }
+            var confined = Ground.Confine(boss.Position, next);
+            var blocked = Flat(confined - next).Length > 1e-3f;
+            next = confined;
             boss.ChargeTravelled += Flat(next - boss.Position).Length;
             boss.Position = next;
 

@@ -37,6 +37,7 @@ namespace HunterSystem.Simulation
         private readonly List<EnemyId> _enemyIds = new List<EnemyId>();
         private readonly List<SimulationEvent> _events = new List<SimulationEvent>();
         private int _nextEnemyId = 1;
+        private readonly FloorGround _hubGround;
 
         public SimulationWorld(SimulationConfig config)
         {
@@ -69,6 +70,7 @@ namespace HunterSystem.Simulation
             _dodgeTicks = Math.Max(1, SecondsToTicks(config.Dodge.DurationSeconds));
             _dodgeInvulnerableTicks = SecondsToTicks(config.Dodge.InvulnerabilitySeconds);
             _dodgeCooldownTicks = SecondsToTicks(config.Dodge.CooldownSeconds);
+            _hubGround = config.Hub != null ? new FloorGround(new[] { config.Hub.Floor }) : null;
         }
 
         /// <summary>Number of ticks simulated so far.</summary>
@@ -91,11 +93,12 @@ namespace HunterSystem.Simulation
         private void AddPlayer(PlayerId id, Vec3 spawnPosition, ClassDefinition characterClass)
         {
             if (_playersById.ContainsKey(id)) throw new ArgumentException($"{id} is already in the simulation.", nameof(id));
+            spawnPosition = OnGround(spawnPosition); // standing on the ground from the start, so a client's first prediction agrees
             var stats = new int[PlayerStats.Count];
             for (var i = 0; i < stats.Length; i++) stats[i] = _config.Progression.StartingStatValue;
             var player = new Player
             {
-                Id = id, Position = spawnPosition, Facing = DefaultFacing, Stats = stats,
+                Id = id, Position = spawnPosition, SetOffFrom = spawnPosition, Facing = DefaultFacing, Stats = stats,
                 Class = characterClass, JumpHeightPercent = characterClass?.JumpHeightPercent ?? 100,
             };
             player.MaxHealth = ComputeMaxHealth(player);
@@ -126,6 +129,7 @@ namespace HunterSystem.Simulation
         private EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position, PartyTier tier)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
+            position = OnGround(position);
             var id = new EnemyId(_nextEnemyId++);
             var enemy = new Enemy
             {
@@ -134,6 +138,7 @@ namespace HunterSystem.Simulation
                 WindupTicks = Math.Max(1, SecondsToTicks(definition.AttackWindupSeconds)),
                 AttackCooldownTicks = SecondsToTicks(definition.AttackCooldownSeconds),
                 Position = position,
+                SetOffFrom = position,
                 MaxHealth = Math.Max(1, PartyScalingDefinition.Scale(definition.MaxHealth, tier?.HealthPercent ?? 100)),
                 DamagePercent = tier?.DamagePercent ?? 100,
             };
@@ -174,6 +179,7 @@ namespace HunterSystem.Simulation
             var tick = Tick + 1;
 
             ApplyPendingOperations(tick);
+            NoteWhereEveryoneSetsOff();
 
             foreach (var player in _players)
             {
@@ -246,8 +252,7 @@ namespace HunterSystem.Simulation
                 if (enemy.Health > 0) UpdateEnemy(enemy, tick);
             ApplyEnrages(tick);
 
-            ConfineToGate();
-            ConfineToHub();
+            SettleOnGround();
             UpdateGate(tick);
             UpdateStory(tick);
 

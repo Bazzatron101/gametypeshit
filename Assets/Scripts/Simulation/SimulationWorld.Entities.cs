@@ -10,6 +10,8 @@ namespace HunterSystem.Simulation
         {
             public PlayerId Id;
             public Vec3 Position;
+            /// <summary>Where they stood when this tick began: walls and steep ground slide them back from here (ticket 37). Not in snapshots: it is always the position between ticks.</summary>
+            public Vec3 SetOffFrom;
             public Vec3 Facing;
             public int Health;
             public int MaxHealth;
@@ -127,6 +129,8 @@ namespace HunterSystem.Simulation
             public int WindupTicks;
             public int AttackCooldownTicks;
             public Vec3 Position;
+            /// <summary>Where they stood when this tick began: walls and steep ground slide them back from here (ticket 37). Not in snapshots: it is always the position between ticks.</summary>
+            public Vec3 SetOffFrom;
             public int Health;
 
             /// <summary>Its health when full: the definition's, scaled for the party size when it spawned.</summary>

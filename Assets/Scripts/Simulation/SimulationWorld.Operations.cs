@@ -90,7 +90,7 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>Full health and back on their feet, not mid-swing, mid-charge or mid-dodge.</summary>
-        private static void GetUp(Player player)
+        private void GetUp(Player player)
         {
             player.Health = player.MaxHealth;
             player.LifeState = PlayerLifeState.Alive;
@@ -109,8 +109,8 @@ namespace HunterSystem.Simulation
         public void PlacePlayer(PlayerId id, Vec3 position)
         {
             if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
-            Land(player); // placed on the ground, not mid-jump
             player.Position = position;
+            Land(player); // placed on the ground, not mid-jump
         }
 
         public bool HasEnemy(EnemyId id) => _enemiesById.ContainsKey(id);

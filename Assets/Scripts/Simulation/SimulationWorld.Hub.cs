@@ -119,15 +119,6 @@ namespace HunterSystem.Simulation
             _events.Add(new ReadyChanged(tick, player.Id, ready));
         }
 
-        /// <summary>Walls: in the hub, nobody leaves its floor.</summary>
-        private void ConfineToHub()
-        {
-            if (!InHub) return;
-            var floor = _config.Hub.Floor;
-            foreach (var player in _players) player.Position = floor.Nearest(player.Position);
-            foreach (var enemy in _enemies) enemy.Position = floor.Nearest(enemy.Position);
-        }
-
         /// <summary>Where the return portal stands once the gate is cleared: the middle of the boss's room, or of the last room.</summary>
         internal Vec3 GatePortalPosition()
         {

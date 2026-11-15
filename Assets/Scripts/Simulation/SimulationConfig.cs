@@ -73,6 +73,12 @@ namespace HunterSystem.Simulation
         /// <summary>Every gate in the game. Like skills, gates are named by id in snapshots, so host and clients must hold the same list.</summary>
         public IReadOnlyList<GateDefinition> Gates { get; set; } = Array.Empty<GateDefinition>();
 
+        /// <summary>
+        /// The ground outside the hub and gates (ticket 37): the overworld's heightmap, or null for flat
+        /// open ground (the arena, tests). Host and clients must hold the same ground, like skills and gates.
+        /// </summary>
+        public IGround Ground { get; set; }
+
         /// <summary>The hub the party gathers in between gates, or null for a game without one (tests, the arena).</summary>
         public HubDefinition Hub { get; set; }
 

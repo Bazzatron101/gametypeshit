@@ -51,17 +51,21 @@ namespace HunterSystem.Simulation
             }
             var t = elapsed / (float)JumpTicks;
             var peak = _config.JumpHeight * player.JumpHeightPercent / 100f;
-            player.Position = new Vec3(player.Position.X, 4f * peak * t * (1f - t), player.Position.Z);
+            player.Position = new Vec3(player.Position.X, Ground.HeightAt(player.Position) + 4f * peak * t * (1f - t), player.Position.Z);
         }
 
-        private static void Land(Player player)
+        /// <summary>Ends any jump and puts the player on the ground where they stand.</summary>
+        private void Land(Player player)
         {
             player.JumpStartTick = 0;
-            player.Position = new Vec3(player.Position.X, 0f, player.Position.Z);
+            player.Position = OnGround(player.Position);
         }
 
+        /// <summary>How high <paramref name="player"/> is above the ground under them: 0 unless jumping.</summary>
+        private float HeightAboveGround(Player player) => player.IsAirborne ? MathF.Max(0f, player.Position.Y - Ground.HeightAt(player.Position)) : 0f;
+
         /// <summary>Whether <paramref name="player"/> is high enough in a jump to pass over <paramref name="enemy"/>.</summary>
-        private static bool AboveEnemy(Player player, Enemy enemy) => player.IsAirborne && player.Position.Y >= enemy.Definition.Height;
+        private bool AboveEnemy(Player player, Enemy enemy) => player.IsAirborne && HeightAboveGround(player) >= enemy.Definition.Height;
 
         /// <summary>
         /// Sets how high this player jumps, as a percentage of the base jump: the hook for classes
