@@ -7,7 +7,7 @@
 **Status:** ready-for-human
 
 - [ ] Premise written in a few sentences, with the mystery or hook that makes it original
-- [ ] Tone for the first gate and the System's voice noted
+- [x] Tone for the first gate noted (the System and its voice were removed; see the 2026-11-15 note)
 
 ## Comments
 
@@ -86,3 +86,11 @@ Follows from this, to settle with the premise:
 **2026-11-15 (developer, recorded by agent):** How many demon princes there are is **decided later.** Note for then: the Riftlands sketch has three S-rank gates (ticket 36), so three princes fit without new gates; each extra prince is another S-rank gate and handcrafted boss.
 
 **2026-11-15 (developer, recorded by agent):** From the map questions (ticket 36): the demon king's gate is hidden under Saltreach, the east-coast castle where the player does the B-rank specialty quests; the best guild's seat is the north-west castle near the start; other guilds are rivals with branches in a few towns.
+
+**2026-11-15 (developer, recorded by agent):** **There is no System.** The developer removed the System, and with it the System's voice.
+- Nobody has a System. This replaces the 2026-11-13 note that "everyone has a System". Levels, stats, skills and ranks stay as game rules; they no longer need an in-world explanation. Rank is still a guild licence.
+- Nothing speaks as the System: no voice to write, and no System lines in scenes, toasts or the gate board.
+- Box 2 is ticked: the first gate's tone was already decided ("uneasy and small"), and the voice is no longer needed.
+- The hook no longer asks why the world has a System; it is about the gates. The demon king who controls them already answers much of it.
+- Box 1 stays open: write the premise in a few sentences, with its hook. Still to decide: does the player know about the demon king from the start, or is he revealed?
+- Changed to match: the spec (stories 2 and 59, the art notes and the open questions), ticket 20, the arrival scene (its System line is gone), and the level-up toast (no "[ SYSTEM ]" label).

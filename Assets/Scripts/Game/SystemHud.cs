@@ -163,7 +163,7 @@ namespace HunterSystem.Game
             Fill(box, PanelColor);
             Outline(box, SystemBlue);
             _toastTitle.normal.textColor = SystemBlue;
-            GUI.Label(new Rect(box.x, box.y + 10, box.width, 30), $"[ SYSTEM ]   {announcement.Title}", _toastTitle);
+            GUI.Label(new Rect(box.x, box.y + 10, box.width, 30), announcement.Title, _toastTitle);
             _toastBody.normal.textColor = Color.white;
             GUI.Label(new Rect(box.x, box.y + 46, box.width, 26), announcement.Body, _toastBody);
             GUI.color = previous;

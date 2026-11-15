@@ -20,7 +20,7 @@ From the player's perspective, the problem is: existing power-fantasy games eith
 
 A premium PC game with a finite main campaign and an endgame built around deliberately broken builds.
 
-- The player is a hunter who starts at E-rank and climbs to A-rank in the main game, with an S-rank end story and a possible SS-rank DLC. A "System" interface (levels, stats, skill unlocks, missions, promotions) makes the growth visible and celebrated.
+- The player is a hunter who starts at E-rank and climbs to A-rank in the main game, with an S-rank end story and a possible SS-rank DLC. The interface (levels, stats, skill unlocks, missions, promotions) makes the growth visible and celebrated. There is no in-world System (removed 2026-11-15, ticket 16).
 - From a guild town on the edge of a walkable overworld, the player walks out to find gates (dungeons); the gate board then sends the party into any gate already found and licensed for. (ADR 0015) Gates are long, checkpointed, and built from a modular room kit, ending in handcrafted bosses.
 - Combat is third-person hack-and-slash with six cooldown skills, a dodge, and soft lock-on, played keyboard and mouse first.
 - Power is never scaled down. Over-leveled players can trivialize low gates, and that is a feature, so coasting versus challenge is the player's choice.
@@ -34,7 +34,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 ### Core fantasy and progression
 
 1. As a player, I want to begin as a weak E-rank hunter, so that the climb to power feels earned.
-2. As a player, I want to see a level-up clearly announced by the System interface, so that every gain is celebrated.
+2. As a player, I want to see a level-up clearly announced on screen, so that every gain is celebrated.
 3. As a player, I want a visible stat screen with six stats (Strength, Agility, Vitality, Intelligence, Sense, Luck), so that I understand what makes my hunter strong.
 4. As a player, I want to spend a few free stat points each level on top of class bonuses, so that my build is my own choice but I cannot easily ruin the character.
 5. As a player, I want a level cap with ranks tied to level bands, so that the climb has a clear structure.
@@ -112,7 +112,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 ### Story and presentation
 
 58. As a player, I want a heavy authored story told through in-engine, text-only scenes, so that the story is rich without costing an animation budget.
-59. As a player, I want the System to speak in a consistent voice through messages, quests, and mission text, so that it carries tone and story.
+59. ~~As a player, I want the System to speak in a consistent voice through messages, quests, and mission text, so that it carries tone and story.~~ Removed 2026-11-15: there is no System (ticket 16).
 60. As a player, I want to create my character with a simple creator, so that I can express myself.
 61. As a player, I want a fixed NPC cast to carry the story, so that the story works for any number of players.
 62. As a player, I want a flat-shaded low-poly look with strong lighting, so that the game has a consistent identity that is feasible for a solo developer.
@@ -203,9 +203,9 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 
 ### Presentation
 
-- Flat-shaded low-poly art with simple lighting. The genre's identity is carried by the System UI, lighting, and text-only in-engine story scenes.
+- Flat-shaded low-poly art with simple lighting. The genre's identity is carried by the UI, lighting, and text-only in-engine story scenes.
 - A simple character creator. A fixed NPC cast carries the heavy story.
-- The System UI ships in stages: level-up and skill unlock prompts at M1, the mission board at M3, rank promotion screens at M4, and a friends' clear leaderboard last. Rank is in-fiction only, with no backend.
+- The progression UI ships in stages: level-up and skill unlock prompts at M1, the mission board at M3, rank promotion screens at M4, and a friends' clear leaderboard last. Rank is in-fiction only, with no backend.
 
 ### Tooling and project health
 
@@ -228,7 +228,7 @@ In the developer's words (2026-11-14, ticket 21): "we will keep on adding things
 
 | Decision | Decide by |
 |---|---|
-| Story premise: drama about the people, or about the world and why it is the way it is. Candidate framing: the System itself as the mystery. | Before M3 |
+| Story premise: drama about the people, or about the world and why it is the way it is. (No System: removed 2026-11-15, ticket 16.) | Before M3 |
 | Mid-gate joining: gates lock, or join at checkpoints | Decided 2026-11-13: join and rejoin at checkpoints (ADR 0003) |
 | Blacksmith class and crafting | M4 or later |
 | Hidden class details | After the main game exists |
@@ -298,6 +298,6 @@ Feel and enjoyment, which are checked by hand with the milestone feel tests belo
 - **Scope risk.** Three of the most expensive options were chosen together: 3D action combat, fully server-authoritative co-op with prediction, and a heavy story. This was a deliberate choice. The milestone ladder exists to surface any problem early, and the first things to cut if the project stalls are procedural farming gates, the full class tree, and raid complexity.
 - **Co-op audience.** The developer expects six to ten regular players, so 10-player raids are a core feature, not a stretch goal. The 10-bot stress test at M2 protects against discovering a scaling problem late.
 - **Co-op and the power fantasy.** Because there is no power scaling, a strong friend can trivialize a weaker host's gate. This was accepted as the player's choice, in the manner of Monster Hunter. Guests earn personal loot and XP but story progress stays with the host.
-- **Art identity.** Without cel shading, manhwa flavor must come from the System UI, lighting, and key art. Commissioning music and key art first fits this.
+- **Art identity.** Without cel shading, manhwa flavor must come from the UI, lighting, and key art. Commissioning music and key art first fits this.
 - **Unverified items.** Netcode library comparisons, the current long-term-support engine version, and the render pipeline choice came from quick research or recommendation and should be checked at the start of the project and again at M2.
 - **Tracker.** No issue tracker was configured when this was written. To publish it, run the setup skill for the project's repo and file this spec with the `ready-for-agent` label.

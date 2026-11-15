@@ -1,12 +1,12 @@
 # 20: Mission board and text-only story scenes
 
-**What to build:** A mission board in the hub gives intel about gates in the System's voice, and one scripted in-engine, text-only story scene plays.
+**What to build:** A mission board in the hub gives intel about gates as the guild's notices, and one scripted in-engine, text-only story scene plays.
 
 **Blocked by:** 16: Decide the story premise, 19: Hub
 
 **Status:** ready-for-human (write the intel and the arrival scene; settle ticket 16)
 
-- [ ] Mission board shows intel for available gates in the System's voice
+- [ ] Mission board shows intel for available gates, written as the guild's notices
 - [x] A scripted text scene plays in-engine with no cutscene animation
 - [ ] Tone follows the premise decision
 
@@ -48,3 +48,5 @@ Boxes left open:
   - Scenes are off in scenes without the hub.
 - **Evidence:** 408 EditMode and 24 PlayMode tests pass.
 
+
+**2026-11-15 (developer, recorded by agent):** The System is gone (ticket 16), so the board's intel is no longer in its voice; it reads as the guild's own notices. The arrival scene's System line is removed. The words are still the developer's to write.

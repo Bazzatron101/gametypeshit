@@ -579,7 +579,6 @@ namespace HunterSystem.Editor
             {
                 Blank("", "Narration: arriving at the guild hall"),
                 Blank("[Guild NPC]", "A guild member greets the new E-rank hunter"),
-                Blank("System", "The System's first words"),
                 Blank("[Guild NPC]", "Points the hunter to the gate board"),
             }));
         }

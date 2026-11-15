@@ -20,7 +20,5 @@ MonoBehaviour:
     text: '[Narration: arriving at the guild hall: write me]'
   - speaker: '[Guild NPC]'
     text: '[A guild member greets the new E-rank hunter: write me]'
-  - speaker: System
-    text: '[The System''s first words: write me]'
   - speaker: '[Guild NPC]'
     text: '[Points the hunter to the gate board: write me]'
