@@ -326,3 +326,5 @@ New ground on the updated drawing:
 - **More gates along the north coast and in the far north-east.**
 
 Still to settle: which crossed swords are which gate (the region table predates the new marks), and which ones appear through story events.
+
+**2026-11-15 (agent):** The crossed swords on the updated drawing are numbered **1 to 26** in `docs/maps/overworld-gates-numbered.png` (roughly top to bottom, west to east). The developer is to say which gate each number is and which ones appear through story events.
