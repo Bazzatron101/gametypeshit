@@ -32,7 +32,7 @@ namespace HunterSystem.Simulation
         /// <summary>Every player gets the full reward: no splitting, no reduction for guests or carried players.</summary>
         private void AwardXp(Enemy enemy, int tick)
         {
-            var reward = enemy.Definition.XpReward;
+            var reward = PartyScalingDefinition.Scale(enemy.Definition.XpReward, _gate?.XpPercent ?? 100);
             if (reward <= 0) return;
             foreach (var player in _players) GainXp(player, reward, enemy.Id, tick);
         }

@@ -53,9 +53,14 @@ namespace HunterSystem.Simulation
             return hub.Floor.Nearest(place);
         }
 
-        /// <summary>Where a joining or returning player appears: the latest checkpoint of a running gate (ADR 0003), else the hub; null in an open field.</summary>
+        /// <summary>
+        /// Where a joining or returning player appears: the latest checkpoint of a running gate (ADR 0003), else the hub;
+        /// null in an open field or out in the overworld, where they appear beside the party (the host, ADR 0015).
+        /// </summary>
         public Vec3? JoinPosition(PlayerId player) =>
-            _gate != null ? _gate.View.JoinPosition(player) : _config.Hub != null ? HubJoinPosition(player) : (Vec3?)null;
+            _gate != null ? _gate.View.JoinPosition(player)
+            : _config.Overworld != null ? (Vec3?)null
+            : _config.Hub != null ? HubJoinPosition(player) : (Vec3?)null;
 
         /// <summary>
         /// The gates the host's world has cleared (ADR 0005: host-world progress), oldest first. The
@@ -94,9 +99,22 @@ namespace HunterSystem.Simulation
             return waiting.Count == 0;
         }
 
-        /// <summary>The gate board's start: takes the party into <paramref name="gateId"/> if everyone present is ready. Host only; immediate.</summary>
+        /// <summary>
+        /// The gate board's start: takes the party into <paramref name="gateId"/> if everyone present is ready.
+        /// With an overworld, only a found gate in an open region (ADR 0015). Host only; immediate.
+        /// </summary>
         public bool TryStartGateFromHub(string gateId, out string reason)
         {
+            if (!IsGateFound(gateId))
+            {
+                reason = "Nobody has found that gate yet.";
+                return false;
+            }
+            if (!IsGateLicensed(gateId))
+            {
+                reason = "The guild gives no work in that region yet.";
+                return false;
+            }
             if (!CanStartGate(out reason)) return false;
             StartGate(gateId);
             return true;
@@ -157,10 +175,14 @@ namespace HunterSystem.Simulation
         /// <summary>When the party goes home if the countdown starts at <paramref name="tick"/>.</summary>
         private int ReturnTick(int tick) => tick + Math.Max(1, SecondsToTicks(_config.Hub.ReturnCountdownSeconds));
 
-        /// <summary>The party comes home: the gate and everything in it is gone, and everyone stands in the hub, on their feet.</summary>
+        /// <summary>
+        /// The party comes home: the gate and everything in it is gone, and everyone stands on their feet in the hub,
+        /// or, with an overworld, round the gate's entrance in the world (in the town for a gate not on the map).
+        /// </summary>
         private void ReturnToHub(int tick)
         {
             var gateId = _gate.Definition.Id;
+            var site = _config.Overworld?.SiteOf(gateId);
             var cleared = _gate.ClearAnnounced;
             foreach (var id in _enemyIds.ToList()) DespawnEnemy(id);
             _projectiles.Clear();
@@ -168,7 +190,7 @@ namespace HunterSystem.Simulation
             foreach (var player in _players)
             {
                 GetUp(player);
-                player.Position = HubJoinPosition(player.Id);
+                player.Position = site != null ? ComingOutPosition(player.Id, site) : HubJoinPosition(player.Id);
                 player.Ready = false;
             }
             _events.Add(new ReturnedToHub(tick, gateId, cleared));

@@ -544,4 +544,17 @@ namespace HunterSystem.Simulation
             DefeatedBy = defeatedBy;
         }
     }
+
+    /// <summary>Out in the world, <see cref="Player"/> came near a hidden gate and found it (ticket 38). It is the host's world's from now on.</summary>
+    public sealed class GateFound : SimulationEvent
+    {
+        public string GateId { get; }
+        public PlayerId Player { get; }
+
+        public GateFound(int tick, string gateId, PlayerId player) : base(tick)
+        {
+            GateId = gateId;
+            Player = player;
+        }
+    }
 }

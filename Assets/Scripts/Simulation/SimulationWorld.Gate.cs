@@ -53,6 +53,9 @@ namespace HunterSystem.Simulation
 
             /// <summary>After the clear (in a game with a hub): when the party is brought home. 0 until then.</summary>
             public int ReturnAtTick;
+
+            /// <summary>XP from this run's enemies, as a percentage: cut for a gate in a region that is not open (ADR 0015).</summary>
+            public int XpPercent = 100;
         }
 
         private GateRun _gate;
@@ -74,6 +77,7 @@ namespace HunterSystem.Simulation
                              ?? throw new ArgumentException($"There is no gate '{gateId}' in the game's content.", nameof(gateId));
             foreach (var id in _enemyIds.ToList()) DespawnEnemy(id);
             _gate = NewRun(definition);
+            if (_config.Overworld != null) _gate.XpPercent = XpPercentFor(definition);
             foreach (var player in _players)
             {
                 StandUp(player, _gate.Layout.Entrance);
@@ -522,6 +526,7 @@ namespace HunterSystem.Simulation
             w.Write(_gate.WipeAtTick);
             w.Write(_gate.ClearAnnounced);
             w.Write(_gate.ReturnAtTick);
+            w.Write(_gate.XpPercent);
             w.Write(_gate.Rooms.Length);
             for (var room = 0; room < _gate.Rooms.Length; room++)
             {
@@ -561,6 +566,7 @@ namespace HunterSystem.Simulation
                 WipeAtTick = r.ReadInt32(),
                 ClearAnnounced = r.ReadBoolean(),
                 ReturnAtTick = r.ReadInt32(),
+                XpPercent = r.ReadInt32(),
             };
             run.View = new GateState(this, definition, layout);
 

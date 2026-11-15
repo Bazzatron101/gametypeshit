@@ -10,6 +10,8 @@ namespace HunterSystem.Game
     /// (with the ones this host's world has cleared) and the System's intel on each, shows who in the
     /// party is ready, and lets each player mark themselves ready. The host takes the party in once everyone present is ready.
     /// Readiness goes to the simulation as a command, like any input; starting is the host's.
+    /// With an overworld (ticket 38) the board lists only found gates in open regions, and the same
+    /// panel opens at a gate's entrance out in the world, for that gate alone.
     /// </summary>
     public sealed class GateBoard : MonoBehaviour
     {
@@ -22,8 +24,13 @@ namespace HunterSystem.Game
         /// <summary>True while the board's panel is open (for tests).</summary>
         public bool IsOpen { get; private set; }
 
-        /// <summary>True when the local player stands close enough to read the board.</summary>
-        public bool InReach
+        /// <summary>The gate whose entrance the panel was opened at, out in the world; null at the board.</summary>
+        private GateSite _site;
+
+        /// <summary>True when the local player stands close enough to read the board, or at a gate's entrance in the world.</summary>
+        public bool InReach => BoardInReach || EntranceInReach != null;
+
+        private bool BoardInReach
         {
             get
             {
@@ -31,6 +38,18 @@ namespace HunterSystem.Game
                 var me = _runner != null ? _runner.LocalPlayerId : null;
                 if (world == null || !world.InHub || !me.HasValue || !world.HasPlayer(me.Value)) return false;
                 return world.IsNearBoard(me.Value);
+            }
+        }
+
+        /// <summary>The gate whose entrance the local player stands at, out in the world; null when none.</summary>
+        private GateSite EntranceInReach
+        {
+            get
+            {
+                var world = _runner != null ? _runner.World : null;
+                var me = _runner != null ? _runner.LocalPlayerId : null;
+                if (world == null || !me.HasValue || !world.HasPlayer(me.Value)) return null;
+                return world.GateEntranceNear(me.Value);
             }
         }
 
@@ -42,7 +61,7 @@ namespace HunterSystem.Game
 
         private void Update()
         {
-            if (IsOpen && !InReach) SetOpen(false); // walked away, or the party left the hub
+            if (IsOpen && (_site != null ? EntranceInReach != _site : !BoardInReach)) SetOpen(false); // walked away, or the party left the hub
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
             if (_scenes == null) _scenes = FindAnyObjectByType<TextScenePlayer>();
@@ -56,6 +75,7 @@ namespace HunterSystem.Game
             if (open == IsOpen) return;
             IsOpen = open;
             _message = null;
+            _site = open && !BoardInReach ? EntranceInReach : null;
             if (_camera == null) return;
             if (open) _camera.ReleaseCursorForMenu(this);
             else _camera.EndMenu(this, recapture: true);
@@ -72,7 +92,12 @@ namespace HunterSystem.Game
         public bool StartGate(string gateId)
         {
             if (_runner.Host == null) return false;
-            if (_runner.World.TryStartGateFromHub(gateId, out var reason))
+            var me = _runner.LocalPlayerId;
+            string reason = null;
+            var started = _site != null
+                ? me.HasValue && _runner.World.TryStartGateAtEntrance(me.Value, out reason)
+                : _runner.World.TryStartGateFromHub(gateId, out reason);
+            if (started)
             {
                 SetOpen(false);
                 return true;
@@ -88,14 +113,15 @@ namespace HunterSystem.Game
             EnsureStyles();
             if (!IsOpen)
             {
-                if (InReach) GUI.Label(new Rect(0, Screen.height - 120, Screen.width, 24), "Press E to read the gate board", _title);
+                if (BoardInReach) GUI.Label(new Rect(0, Screen.height - 120, Screen.width, 24), "Press E to read the gate board", _title);
+                else if (EntranceInReach != null) GUI.Label(new Rect(0, Screen.height - 120, Screen.width, 24), "Press E at the gate", _title);
                 return;
             }
 
             var me = _runner.LocalPlayerId;
             var area = new Rect(Screen.width / 2f - 280, Screen.height / 2f - 230, 560, 460);
             GUILayout.BeginArea(area, GUI.skin.box);
-            GUILayout.Label("GATE BOARD", _title);
+            GUILayout.Label(_site != null ? "GATE" : "GATE BOARD", _title);
             GUILayout.Space(6);
 
             GUILayout.Label("The party", _label);
@@ -111,6 +137,9 @@ namespace HunterSystem.Game
             GUILayout.Space(10);
             GUILayout.Label("Gates", _label);
             var gates = _runner.Content != null ? _runner.Content.Gates.Where(g => g != null).ToList() : new System.Collections.Generic.List<GateDefinitionAsset>();
+            gates = _site != null
+                ? gates.Where(g => g.Id == _site.GateId).ToList() // at an entrance: this gate alone, licensed or not
+                : gates.Where(g => world.IsOnBoard(g.Id)).ToList(); // the board: found gates in open regions
             var cleared = world.ClearedGates; // the host's world's clears, as every player's world knows them
             var canStart = world.CanStartGate(out var waiting);
             foreach (var gate in gates)
@@ -126,6 +155,8 @@ namespace HunterSystem.Game
                 }
                 GUILayout.EndHorizontal();
                 if (!string.IsNullOrEmpty(gate.Intel)) GUILayout.Label("      " + gate.Intel, _intel);
+                if (_site != null && !world.IsGateLicensed(gate.Id))
+                    GUILayout.Label($"      The guild gives no work here yet: XP inside is {world.Overworld.UnopenedRegionXpPercent} %.", _intel);
             }
 
             GUILayout.FlexibleSpace();

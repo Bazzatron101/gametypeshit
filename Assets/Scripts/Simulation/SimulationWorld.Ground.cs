@@ -8,10 +8,13 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        /// <summary>The ground the party is on: a running gate's rooms, else the hub's floor, else the world's ground (open and flat when the config has none).</summary>
+        /// <summary>
+        /// The ground the party is on: a running gate's rooms; else the world's ground when there is an
+        /// overworld (the town is part of it); else the hub's walled floor; else the world's ground (open and flat when the config has none).
+        /// </summary>
         public IGround Ground =>
             _gate != null ? _gate.Layout.Ground
-            : _hubGround != null ? _hubGround
+            : _config.Overworld == null && _hubGround != null ? _hubGround
             : _config.Ground ?? OpenGround.Instance;
 
         private void NoteWhereEveryoneSetsOff()

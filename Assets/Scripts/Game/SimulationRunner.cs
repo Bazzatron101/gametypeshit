@@ -187,6 +187,8 @@ namespace HunterSystem.Game
             HostWorld = _savesDisabled ? new WorldRecord() : new WorldSaves(_saveRoot).LoadOrNew();
             Host.World.SetClearedGates(HostWorld.ClearedGates); // so the board, and guests, see them
             Host.World.SetSeenStoryScenes(HostWorld.SeenStoryScenes); // so a scene plays once per world
+            Host.World.SetFoundGates(HostWorld.FoundGates); // the overworld's found gates and open regions are the host's world's (ticket 38)
+            Host.World.SetOpenRegions(HostWorld.OpenRegions);
             AddCompanions(Math.Clamp(companions, 0, CompanionParty.Size));
             StartLocalInput();
         }
@@ -477,6 +479,12 @@ namespace HunterSystem.Game
             if (HostWorld == null) return;
             foreach (var e in events)
             {
+                if (e is GateFound found && found.GateId != null && !HostWorld.FoundGates.Contains(found.GateId))
+                {
+                    HostWorld.FoundGates.Add(found.GateId);
+                    SaveHostWorld();
+                    continue;
+                }
                 if (e is StorySceneStarted scene && !HostWorld.SeenStoryScenes.Contains(scene.SceneId))
                 {
                     HostWorld.SeenStoryScenes.Add(scene.SceneId);

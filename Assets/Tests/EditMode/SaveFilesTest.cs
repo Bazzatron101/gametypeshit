@@ -316,5 +316,46 @@ namespace HunterSystem.Tests
             characters.Save(Hunter(level: 4));
             Assert.That(new WorldSaves(_root).LoadOrNew().ClearedGates, Is.EqualTo(new[] { "e-rank-goblin-den" }), "and the other way round");
         }
+
+        [Test]
+        public void TheHostsWorldKeepsFoundGatesAndOpenRegions()
+        {
+            var saves = new WorldSaves(_root);
+            var world = saves.LoadOrNew();
+            world.SeenStoryScenes.Add("arrival");
+            world.FoundGates.Add("bridge");
+            world.OpenRegions.Add("fenward");
+            saves.Save(world);
+
+            var loaded = new WorldSaves(_root).LoadOrNew();
+
+            Assert.That(loaded.SeenStoryScenes, Is.EqualTo(new[] { "arrival" }));
+            Assert.That(loaded.FoundGates, Is.EqualTo(new[] { "bridge" }));
+            Assert.That(loaded.OpenRegions, Is.EqualTo(new[] { "fenward" }));
+        }
+
+        [Test]
+        public void AWorldSavedBeforeTheOverworldStillLoads()
+        {
+            // Format 2, as ticket 20 wrote it: magic, version 2, cleared gates, scenes seen.
+            var path = new WorldSaves(_root).FilePath;
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            using (var w = new BinaryWriter(File.Create(path)))
+            {
+                w.Write(System.Text.Encoding.ASCII.GetBytes("HSWD"));
+                w.Write((byte)2);
+                w.Write(1);
+                w.Write("small");
+                w.Write(1);
+                w.Write("arrival");
+            }
+
+            var loaded = new WorldSaves(_root).LoadOrNew();
+
+            Assert.That(loaded.ClearedGates, Is.EqualTo(new[] { "small" }));
+            Assert.That(loaded.SeenStoryScenes, Is.EqualTo(new[] { "arrival" }));
+            Assert.That(loaded.FoundGates, Is.Empty);
+            Assert.That(loaded.OpenRegions, Is.Empty);
+        }
     }
 }

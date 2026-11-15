@@ -24,7 +24,8 @@ namespace HunterSystem.Netcode
 
         /// <summary>
         /// Beside the first standing player other than <paramref name="joiner"/> (the host's, in
-        /// practice), each joiner at its own angle so nobody lands on anyone else. With nobody to
+        /// practice), each joiner at its own angle so nobody lands on anyone else; on the anchor's own
+        /// spot when the ground beside them cannot be stood on (a cliff, the sea). With nobody to
         /// stand beside, <paramref name="fallback"/>.
         /// </summary>
         public static Vec3 BesideParty(SimulationWorld world, PlayerId joiner, Vec3 fallback)
@@ -36,7 +37,8 @@ namespace HunterSystem.Netcode
                 var anchor = world.GetPlayer(id);
                 if (anchor.IsDefeated) continue;
                 var angle = joiner.Value * GoldenAngleRadians;
-                return anchor.Position + new Vec3((float)Math.Cos(angle) * Distance, 0f, (float)Math.Sin(angle) * Distance);
+                var beside = anchor.Position + new Vec3((float)Math.Cos(angle) * Distance, 0f, (float)Math.Sin(angle) * Distance);
+                return world.Ground.IsWalkable(beside) ? beside : anchor.Position;
             }
             return fallback;
         }

@@ -26,6 +26,7 @@ namespace HunterSystem.Simulation
             PlayerJumped, AttackJumped,
             ItemSold,
             GearEquipped, GearUnequipped,
+            GateFound,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -196,6 +197,9 @@ namespace HunterSystem.Simulation
                 case GearUnequipped x:
                     Head(w, Code.GearUnequipped, e); w.Write(x.Player.Value); w.Write((byte)x.Slot); w.Write(x.GearId);
                     break;
+                case GateFound x:
+                    Head(w, Code.GateFound, e); SimulationWorld.WriteNullable(w, x.GateId); w.Write(x.Player.Value);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -324,6 +328,11 @@ namespace HunterSystem.Simulation
                     var player = Player();
                     var slot = Slot();
                     return new GearUnequipped(tick, player, slot, GearById(config, r.ReadString()).Id);
+                }
+                case Code.GateFound:
+                {
+                    var gateId = SimulationWorld.ReadNullable(r);
+                    return new GateFound(tick, gateId, Player());
                 }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }

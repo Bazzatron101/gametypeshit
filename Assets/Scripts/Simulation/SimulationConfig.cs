@@ -92,6 +92,12 @@ namespace HunterSystem.Simulation
         /// </summary>
         public IGround Ground { get; set; }
 
+        /// <summary>
+        /// The walkable world (ticket 38), or null for a game without one. With it, the hub is the guild
+        /// town in the world rather than a walled room, so a game with an overworld needs a hub.
+        /// </summary>
+        public OverworldDefinition Overworld { get; set; }
+
         /// <summary>The hub the party gathers in between gates, or null for a game without one (tests, the arena).</summary>
         public HubDefinition Hub { get; set; }
 

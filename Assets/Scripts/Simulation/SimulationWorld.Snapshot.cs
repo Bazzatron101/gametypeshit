@@ -111,6 +111,10 @@ namespace HunterSystem.Simulation
             foreach (var id in _clearedGates) w.Write(id);
             w.Write(_seenStoryScenes.Count);
             foreach (var id in _seenStoryScenes) w.Write(id);
+            w.Write(_foundGates.Count);
+            foreach (var id in _foundGates) w.Write(id);
+            w.Write(_openRegions.Count);
+            foreach (var id in _openRegions) w.Write(id);
 
             w.Flush();
             return stream.ToArray();
@@ -162,6 +166,10 @@ namespace HunterSystem.Simulation
             _clearedGates.AddRange(parsed.ClearedGates);
             _seenStoryScenes.Clear();
             _seenStoryScenes.AddRange(parsed.SeenStoryScenes);
+            _foundGates.Clear();
+            _foundGates.AddRange(parsed.FoundGates);
+            _openRegions.Clear();
+            _openRegions.AddRange(parsed.OpenRegions);
             _events.Clear();
             _pendingOperations.Clear();
         }
@@ -325,6 +333,8 @@ namespace HunterSystem.Simulation
             public GateRun Gate;
             public readonly List<string> ClearedGates = new List<string>();
             public readonly List<string> SeenStoryScenes = new List<string>();
+            public readonly List<string> FoundGates = new List<string>();
+            public readonly List<string> OpenRegions = new List<string>();
         }
 
         private ParsedSnapshot Parse(byte[] snapshot)
@@ -421,6 +431,8 @@ namespace HunterSystem.Simulation
             parsed.Gate = ReadGate(r);
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.ClearedGates.Add(r.ReadString());
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.SeenStoryScenes.Add(r.ReadString());
+            for (int i = 0, n = ReadCount(r); i < n; i++) parsed.FoundGates.Add(r.ReadString());
+            for (int i = 0, n = ReadCount(r); i < n; i++) parsed.OpenRegions.Add(r.ReadString());
 
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");
             return parsed;

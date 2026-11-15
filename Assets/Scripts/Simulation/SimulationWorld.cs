@@ -49,6 +49,7 @@ namespace HunterSystem.Simulation
             if (config.SoftLockOn == null) throw new ArgumentException("SoftLockOn must be set.", nameof(config));
             if (config.Dodge == null) throw new ArgumentException("Dodge must be set.", nameof(config));
             if (config.StatEffects == null) throw new ArgumentException("StatEffects must be set.", nameof(config));
+            if (config.Overworld != null && config.Hub == null) throw new ArgumentException("An overworld needs a hub: the guild town in it.", nameof(config));
             var progression = config.Progression ?? throw new ArgumentException("Progression must be set.", nameof(config));
             if (progression.LevelCap < 1) throw new ArgumentException("LevelCap must be at least 1.", nameof(config));
             if (progression.XpToNextLevel == null || progression.XpToNextLevel.Length < progression.LevelCap - 1)
@@ -255,6 +256,7 @@ namespace HunterSystem.Simulation
             ApplyEnrages(tick);
 
             SettleOnGround();
+            FindGates(tick);
             UpdateGate(tick);
             UpdateStory(tick);
 
