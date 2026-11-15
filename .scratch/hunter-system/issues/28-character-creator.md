@@ -27,7 +27,7 @@
 - **Automated runs** (`-coop`) take `-name NAME`, else "Bot SEED" for `-bot` runs, else "Hunter".
 
 Evidence:
-- EditMode `CharacterCreatorTest` covers names, looks, saves (and format 4 loading), snapshots, the hub-only command, the wire, the event codec, the autosave, the command buffer, nameplates and bot teammates. The full EditMode suite passes, except `SimulationEventCodecTest.EveryEventTypeIsCovered`, which fails on `GateFound`: that event belongs to overworld work still in progress in the working tree, not to this ticket.
+- EditMode `CharacterCreatorTest` covers names, looks, saves (and format 4 loading), snapshots, the hub-only command, the wire, the event codec, the autosave, the command buffer, nameplates and bot teammates. The full EditMode suite passes (597/597, on top of the overworld commit for ticket 38).
 - PlayMode `CharacterCreatorSceneTest`: in the Greybox scene, a new hunter is named and dressed, then picks a class, and it is all there after a reload. A hunter from before names is asked once and keeps its level and class. In the Coop hub, looks change and two bot teammates' names show while yours does not. The full PlayMode suite passes (31/31).
 
 Not checked by playing: how the creator, swatches and nameplates look on screen, and nameplates between two real players over Steam.
