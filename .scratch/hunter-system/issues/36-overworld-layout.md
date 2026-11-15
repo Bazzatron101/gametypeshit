@@ -295,3 +295,13 @@ Still the same count (about 25 gates) and every gate can be reopened harder. Som
 - To settle: which towns are rivals', whether the 25 % rule for unlicensed clears and the "found and licensed" board rule apply the same at a rival's board, and whether rival guilds also hand out promotions.
 
 *Strongholds after these answers (the drawing's five castles):* the north-west castle (the best guild's seat, a rival guild), Westkeep (your guild), Quarrygate (your guild), Saltreach (your guild; the demon king's gate hidden beneath), Farwatch (on the south-east island, S story).
+
+**2026-11-15 (developer, recorded by agent):** **The smaller map questions.**
+- **Waystones:** each player travels alone (matches free roam; the gate's ready check regroups the party). Placement: one in each guild town plus a few at crossroads and region edges; none in dungeons.
+- **Villages:** each of the ~23 villages has an inn and one quest giver with a small quest.
+- **Confirmed:** a paused leak belongs to the host's world (everyone sees the road safe); closed gates look sealed after the main game but stay replayable; the first raid gate is the battlefield in the Ashen steppe.
+- **Rival guilds:** Stiltmoor (Fenward mire) and Ember crossing (Ashen steppe) are run by rival guilds, as is the best guild's north-west castle. Your own guild runs the other guild towns.
+- **Standing with rival guilds** sets their pay: it starts at **50 %** with low standing and rises as standing grows. Standing is raised by **their own quests only** (each rival guild has a quest line). Your own guild pays in full. This adds a standing per rival guild, which the earlier "no separate guild standing" did not have (that was about the XP cut for unlicensed clears, which stays on character XP).
+  - Still to settle: what full standing pays (100 %?), whether the rival's pay and the 25 % unlicensed rule stack (25 % × 50 %), and whether only your own guild promotes you.
+- **Gate spots:** the crossed swords on the drawing are where the developer thinks gates can go ("the sword crossing and the places where I thinking gates can go"). There are 16 crossed swords; the region sketch has about 25 gates plus the demon king's hidden gate under Saltreach (not drawn, on purpose). The gates without crossed swords (Heron isle, the four specialty gates, and the hidden peat camp, riverbed, herd grounds and wreck cove) need spots from the developer.
+- **Names:** the developer will write them. Placeholders stay until then.
