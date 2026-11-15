@@ -78,13 +78,21 @@ namespace HunterSystem.Simulation
         /// <summary>How high this player jumps, as a percentage of the base jump.</summary>
         public readonly int JumpHeightPercent;
 
+        /// <summary>Gold from selling duplicates.</summary>
+        public readonly int Gold;
+
+        /// <summary>Duplicates to sell, one entry per copy.</summary>
+        public readonly IReadOnlyList<ModifierDefinition> Duplicates;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
             IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false,
-            ClassDefinition characterClass = null, int jumpHeightPercent = 100)
+            ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<ModifierDefinition> duplicates = null)
         {
+            Gold = gold;
+            Duplicates = duplicates ?? System.Array.Empty<ModifierDefinition>();
             Class = characterClass;
             JumpHeightPercent = jumpHeightPercent;
             IsAirborne = isAirborne;

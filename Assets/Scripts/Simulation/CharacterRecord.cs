@@ -35,6 +35,12 @@ namespace HunterSystem.Simulation
 
         public List<ModifierDefinition> Modifiers = new List<ModifierDefinition>();
 
+        /// <summary>Gold from selling duplicates.</summary>
+        public int Gold;
+
+        /// <summary>Duplicates to sell, by item id, one entry per copy.</summary>
+        public List<string> Duplicates = new List<string>();
+
         /// <summary>
         /// True for a character that has never been played. Bringing one in gives exactly what a
         /// player with no save gets: level 1, starting stats, the starter skills on the bar.
@@ -65,13 +71,16 @@ namespace HunterSystem.Simulation
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSCH");
 
-        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class.</summary>
-        public const byte Version = 2;
+        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates.</summary>
+        public const byte Version = 3;
 
         public static byte[] Encode(CharacterRecord c) => Encode(c, Version);
 
         /// <summary>Writes a character as an older game would have (for tests of loading old saves).</summary>
         public static byte[] EncodeVersion1ForTests(CharacterRecord c) => Encode(c, 1);
+
+        /// <summary>Writes a character as the game before gold did (for tests of loading old saves).</summary>
+        public static byte[] EncodeVersion2ForTests(CharacterRecord c) => Encode(c, 2);
 
         private static byte[] Encode(CharacterRecord c, byte version)
         {
@@ -94,6 +103,12 @@ namespace HunterSystem.Simulation
             foreach (var id in c.SkillBar) SimulationWorld.WriteNullable(w, id);
             w.Write(c.Modifiers.Count);
             foreach (var m in c.Modifiers) SimulationWorld.WriteModifier(w, m);
+            if (version >= 3)
+            {
+                w.Write(c.Gold);
+                w.Write(c.Duplicates.Count);
+                foreach (var id in c.Duplicates) w.Write(id ?? "");
+            }
             w.Flush();
             return stream.ToArray();
         }
@@ -128,6 +143,11 @@ namespace HunterSystem.Simulation
                 c.SkillBar = new string[Count(r, bytes)];
                 for (var i = 0; i < c.SkillBar.Length; i++) c.SkillBar[i] = SimulationWorld.ReadNullable(r);
                 for (int i = 0, n = Count(r, bytes); i < n; i++) c.Modifiers.Add(SimulationWorld.ReadModifier(r));
+                if (version >= 3)
+                {
+                    c.Gold = r.ReadInt32();
+                    for (int i = 0, n = Count(r, bytes); i < n; i++) c.Duplicates.Add(r.ReadString());
+                }
                 return c;
             }
             catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException)

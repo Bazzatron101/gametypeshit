@@ -14,7 +14,7 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -48,6 +48,9 @@ namespace HunterSystem.Simulation
         /// <summary>The sprint key is held.</summary>
         public readonly bool Sprint;
 
+        /// <summary>At a store: sell one duplicate of this item (a press), or null for none (ticket 22).</summary>
+        public readonly string SellItemId;
+
         /// <summary>Steps of the aim's yaw in a full turn. The aim is stored in these steps, so it is exactly the same after the wire.</summary>
         public const int AimSteps = 65536;
 
@@ -74,8 +77,9 @@ namespace HunterSystem.Simulation
 
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
             Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
-            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null)
+            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null, string sellItemId = null)
         {
+            SellItemId = sellItemId;
             HasAim = aimYawDegrees.HasValue && !float.IsNaN(aimYawDegrees.Value) && !float.IsInfinity(aimYawDegrees.Value);
             AimYaw = HasAim ? ToAimSteps(aimYawDegrees.Value) : (ushort)0;
             Jump = jump;

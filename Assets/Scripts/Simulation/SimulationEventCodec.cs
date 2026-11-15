@@ -24,6 +24,7 @@ namespace HunterSystem.Simulation
             BossAttackStarted, BossEnraged, GateRewardGranted,
             ReadyChanged, ReturnedToHub, StorySceneStarted,
             PlayerJumped, AttackJumped,
+            ItemSold,
         }
 
         public static byte[] Encode(IEnumerable<SimulationEvent> events)
@@ -172,6 +173,11 @@ namespace HunterSystem.Simulation
                 case GateRewardGranted g:
                     Head(w, Code.GateRewardGranted, e); w.Write(g.Player.Value); w.Write(g.Modifier != null);
                     if (g.Modifier != null) SimulationWorld.WriteModifier(w, g.Modifier);
+                    w.Write(g.IsDuplicate);
+                    break;
+                case ItemSold x:
+                    Head(w, Code.ItemSold, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.ItemId);
+                    SimulationWorld.WriteNullable(w, x.ShopId); w.Write(x.Gold);
                     break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
@@ -265,7 +271,13 @@ namespace HunterSystem.Simulation
                 case Code.GateRewardGranted:
                 {
                     var player = Player();
-                    return new GateRewardGranted(tick, player, r.ReadBoolean() ? SimulationWorld.ReadModifier(r) : null);
+                    var modifier = r.ReadBoolean() ? SimulationWorld.ReadModifier(r) : null;
+                    return new GateRewardGranted(tick, player, modifier, r.ReadBoolean());
+                }
+                case Code.ItemSold:
+                {
+                    var player = Player();
+                    return new ItemSold(tick, player, SimulationWorld.ReadNullable(r), SimulationWorld.ReadNullable(r), r.ReadInt32());
                 }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }

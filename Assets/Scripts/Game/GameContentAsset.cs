@@ -24,6 +24,7 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("The hub the party gathers in between gates (used by scenes that ask for it)")] private HubAsset hub;
         [SerializeField, Tooltip("Text-only story scenes and what makes each play")] private TextSceneAsset[] scenes = new TextSceneAsset[0];
         [SerializeField, Tooltip("How gates' enemies scale with party size")] private PartyScalingAsset partyScaling;
+        [SerializeField, Tooltip("Stores that buy duplicates, wherever they stand")] private ShopAsset[] shops = new ShopAsset[0];
 
         public PlayerTuningAsset PlayerTuning => playerTuning;
         public ProgressionAsset Progression => progression;
@@ -36,6 +37,7 @@ namespace HunterSystem.Game
         public HubAsset Hub => hub;
         public IReadOnlyList<TextSceneAsset> Scenes => scenes;
         public PartyScalingAsset PartyScaling => partyScaling;
+        public IReadOnlyList<ShopAsset> Shops => shops;
 
         /// <summary>
         /// Fills the content parts of a simulation config. The runner and the content tests both go
@@ -82,12 +84,21 @@ namespace HunterSystem.Game
                 sceneList.Add(scene.ToDefinition());
             }
             config.StoryScenes = sceneList.ToArray();
+
+            var shopList = new List<ShopDefinition>();
+            foreach (var shop in shops)
+            {
+                if (shop == null) { Debug.LogWarning($"{name}: an empty entry in the shops list was skipped.", this); continue; }
+                shopList.Add(shop.ToDefinition());
+            }
+            config.Shops = shopList.ToArray();
         }
 
         /// <summary>For editor tooling: replaces the whole content list.</summary>
         public void ReplaceContent(PlayerTuningAsset tuningAsset, ProgressionAsset progressionAsset, ClassDefinitionAsset[] classAssets, SkillDefinitionAsset[] skillAssets,
-            ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets, HubAsset hubAsset, TextSceneAsset[] sceneAssets, PartyScalingAsset scalingAsset)
+            ModifierDefinitionAsset[] modifierAssets, EnemyDefinitionAsset[] enemyAssets, GateDefinitionAsset[] gateAssets, BossDefinitionAsset[] bossAssets, HubAsset hubAsset, TextSceneAsset[] sceneAssets, PartyScalingAsset scalingAsset, ShopAsset[] shopAssets)
         {
+            shops = shopAssets;
             classes = classAssets;
             partyScaling = scalingAsset;
             scenes = sceneAssets;

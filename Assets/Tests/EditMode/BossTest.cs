@@ -378,11 +378,11 @@ namespace HunterSystem.Tests
                 world.StartGate("warlord-gate");
                 HitBoss(world, EnterBossChamber(world), 100);
                 var reward = Step(world).OfType<GateRewardGranted>().Single();
-                got.Add(reward.Modifier?.Id);
+                got.Add(reward.IsDuplicate ? "duplicate" : reward.Modifier.Id);
             }
 
             Assert.That(got.Take(3), Is.EquivalentTo(new[] { "ember", "frost", "storm" }), "the whole pool, no repeats");
-            Assert.That(got[3], Is.Null, "the pool is owned: nothing more (duplicates arrive with loot)");
+            Assert.That(got[3], Is.EqualTo("duplicate"), "the pool is owned: a duplicate to sell (ticket 22)");
         }
 
         [Test]

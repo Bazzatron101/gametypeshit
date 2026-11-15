@@ -61,6 +61,12 @@ namespace HunterSystem.Simulation
 
         public int ExplosionDamagePercent { get; set; }
 
+        /// <summary>
+        /// Gold for a duplicate at a store paying full value, at least 1; each store pays its own share
+        /// (ticket 22). Not carried in snapshots or events: prices are looked up by the item's id in the gates' pools.
+        /// </summary>
+        public int SellValue { get; set; } = 100;
+
         public bool AppliesTo(SkillDefinition skill) =>
             (AppliesToTag != null && skill.HasTag(AppliesToTag)) ||
             (AppliesToSkillId != null && string.Equals(AppliesToSkillId, skill.Id, StringComparison.Ordinal));

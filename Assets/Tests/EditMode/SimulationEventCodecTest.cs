@@ -70,6 +70,8 @@ namespace HunterSystem.Tests
             new StorySceneStarted(44, "arrival"),
             new PlayerJumped(45, P),
             new AttackJumped(46, E, P),
+            new GateRewardGranted(47, P, Ember, isDuplicate: true),
+            new ItemSold(48, P, "ember", "guild", 50),
         };
 
         [Test]

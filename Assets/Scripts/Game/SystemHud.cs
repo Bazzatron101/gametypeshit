@@ -132,7 +132,7 @@ namespace HunterSystem.Game
             Outline(box, SystemBlue);
 
             _title.normal.textColor = SystemBlue;
-            GUI.Label(new Rect(box.x + 12, box.y + 6, 280, 24), $"HUNTER    Lv {state.Level}", _title);
+            GUI.Label(new Rect(box.x + 12, box.y + 6, 280, 24), $"HUNTER    Lv {state.Level}    {state.Gold} gold", _title);
 
             if (state.IsDefeated)
             {

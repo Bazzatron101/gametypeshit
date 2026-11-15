@@ -18,7 +18,7 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class SimulationWorld
     {
-        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSWA");
+        private static readonly byte[] SnapshotMagic = Encoding.ASCII.GetBytes("HSWB");
 
         public static SimulationWorld FromSnapshot(SimulationConfig config, byte[] snapshot)
         {
@@ -211,6 +211,9 @@ namespace HunterSystem.Simulation
             w.Write(p.Sprinting);
             w.Write(p.SprintResumesAtTick);
             WriteNullable(w, p.Class?.Id);
+            w.Write(p.Gold);
+            w.Write(p.Duplicates.Count);
+            foreach (var d in p.Duplicates) w.Write(d.Id);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -466,6 +469,12 @@ namespace HunterSystem.Simulation
             var classId = ReadNullable(r);
             if (classId != null)
                 p.Class = _config.ClassById(classId) ?? throw new FormatException($"The snapshot names class '{classId}', which this world does not have.");
+            p.Gold = r.ReadInt32();
+            for (int i = 0, n = ReadCount(r); i < n; i++)
+            {
+                var id = r.ReadString();
+                p.Duplicates.Add(LootById(id) ?? throw new FormatException($"The snapshot names item '{id}', which no gate in this world drops."));
+            }
             return p;
         }
 

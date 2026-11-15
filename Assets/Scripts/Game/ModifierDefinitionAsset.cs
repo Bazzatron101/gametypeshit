@@ -33,6 +33,9 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Above 0: every hit bursts onto other enemies this close")] private float explosionRadius;
         [SerializeField, Min(0), Tooltip("Burst damage as a percentage of the hit")] private int explosionDamagePercent;
 
+        [Header("Selling")]
+        [SerializeField, Min(0), Tooltip("Gold for a duplicate at a store paying full value; each store pays its own share")] private int sellValue = 100;
+
         public string Id => id;
         public string DisplayName => displayName;
 
@@ -51,6 +54,7 @@ namespace HunterSystem.Game
             ProjectileSpreadDegrees = projectileSpreadDegrees,
             ExplosionRadius = explosionRadius,
             ExplosionDamagePercent = explosionDamagePercent,
+            SellValue = sellValue,
         };
 
         /// <summary>For editor tooling that creates modifiers in code.</summary>
@@ -69,6 +73,7 @@ namespace HunterSystem.Game
             projectileSpreadDegrees = d.ProjectileSpreadDegrees;
             explosionRadius = d.ExplosionRadius;
             explosionDamagePercent = d.ExplosionDamagePercent;
+            sellValue = d.SellValue;
         }
     }
 }

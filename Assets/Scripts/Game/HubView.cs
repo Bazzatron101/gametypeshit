@@ -15,6 +15,7 @@ namespace HunterSystem.Game
         [SerializeField] private Material floorMaterial;
         [SerializeField] private Material wallMaterial;
         [SerializeField] private Material boardMaterial;
+        [SerializeField] private Material shopMaterial;
 
         private SimulationRunner _runner;
         private GameObject _root;
@@ -45,6 +46,9 @@ namespace HunterSystem.Game
             Box("Hub far wall", new Vector3(c.X, WallHeight / 2f, floor.MaxZ), new Vector3(hub.Width, WallHeight, WallThickness), wallMaterial);
             var board = hub.Board;
             Box("Gate board", new Vector3(board.X, 1.4f, board.Z + 0.6f), new Vector3(3f, 2.8f, 0.3f), boardMaterial);
+            // The stores that stand in the hub (the guild's); stores elsewhere are drawn where they stand.
+            foreach (var shop in _runner.World.Shops)
+                if (floor.Contains(shop.Position)) Box(shop.Name, new Vector3(shop.Position.X, 0.55f, shop.Position.Z), new Vector3(2.4f, 1.1f, 1f), shopMaterial);
         }
 
         private void Box(string boxName, Vector3 position, Vector3 size, Material material)

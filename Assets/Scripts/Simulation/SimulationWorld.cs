@@ -59,6 +59,7 @@ namespace HunterSystem.Simulation
             _damagePerMillePerIntelligence = (int)MathF.Round(config.StatEffects.DamagePerIntelligence * 1000f);
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
             ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
+            IndexLootAndValidateShops();
             TickDelta = 1f / config.TickRate;
             _attacks = new ResolvedAttack[AttackKindCount];
             _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
@@ -114,7 +115,7 @@ namespace HunterSystem.Simulation
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
-                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent);
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray());
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
@@ -186,6 +187,7 @@ namespace HunterSystem.Simulation
                 if (!player.IsAlive) continue;
                 commands.TryGetValue(player.Id, out var cmd);
                 player.Aim = cmd.HasAim ? cmd.AimDirection : (Vec3?)null;
+                if (cmd.SellItemId != null) TrySell(player, cmd.SellItemId, tick);
                 player.Sprinting = false;
 
                 if (cmd.Dodge && !player.IsAirborne) TryDodge(player, cmd, tick); // a dodge keeps any charge going

@@ -4,10 +4,10 @@
 
 **Blocked by:** 18: Handcrafted boss and gate clear reward, 19: Hub, 21: M3 feel review and kill-switch
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Gate pools are data definitions, with a guaranteed reward on clear
-- [ ] Draws exclude owned items until the pool is complete
-- [ ] Duplicates sell for currency at a minimal hub shop
-- [ ] In co-op every player receives their own drop
-- [ ] Headless tests cover no-duplicate-until-complete and personal drops
+- [x] Gate pools are data definitions, with a guaranteed reward on clear
+- [x] Draws exclude owned items until the pool is complete
+- [x] Duplicates sell for currency at a minimal hub shop (gold; the guild's store pays least, town stores more: ADR 0016)
+- [x] In co-op every player receives their own drop
+- [x] Headless tests cover no-duplicate-until-complete and personal drops (LootTest, BossTest)

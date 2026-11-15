@@ -55,6 +55,8 @@ namespace HunterSystem.Simulation
                 KnownSkills = new List<string>(KnownSkills ?? new List<string>()),
                 SkillBar = (string[])(SkillBar ?? new string[SimulationWorld.SkillSlotCount]).Clone(),
                 Modifiers = new List<ModifierDefinition>(Modifiers ?? new List<ModifierDefinition>()),
+                Gold = Gold,
+                Duplicates = new List<string>(Duplicates ?? new List<string>()),
             };
         }
     }

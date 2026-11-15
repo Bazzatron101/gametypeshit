@@ -274,8 +274,10 @@ namespace HunterSystem.Editor
             Wire(simulation.AddComponent<HubView>(),
                 ("floorMaterial", GetOrCreateMaterial("Greybox_HubFloor", new Color(0.5f, 0.47f, 0.42f))),
                 ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
-                ("boardMaterial", GetOrCreateMaterial("Greybox_GateBoard", new Color(0.25f, 0.4f, 0.75f))));
+                ("boardMaterial", GetOrCreateMaterial("Greybox_GateBoard", new Color(0.25f, 0.4f, 0.75f))),
+                ("shopMaterial", GetOrCreateMaterial("Greybox_Shop", new Color(0.75f, 0.6f, 0.25f))));
             simulation.AddComponent<GateBoard>();
+            simulation.AddComponent<ShopPanel>();
             simulation.AddComponent<TextScenePlayer>();
 
             Wire(simulation.AddComponent<BossTelegraphView>(),
@@ -426,7 +428,8 @@ namespace HunterSystem.Editor
                 WithEveryProjectAsset(content.Bosses, bosses),
                 hub,
                 WithEveryProjectAsset(content.Scenes, scenes),
-                scaling);
+                scaling,
+                WithEveryProjectAsset(content.Shops, new[] { GetOrCreateGuildStore(hub) }));
             EditorUtility.SetDirty(content);
             AssetDatabase.SaveAssets();
             // Saving re-imports the asset; hand back the reloaded object, or scene references to it come out empty.
@@ -450,6 +453,17 @@ namespace HunterSystem.Editor
             var so = new SerializedObject(target);
             foreach (var (field, value) in fields) so.FindProperty(field).objectReferenceValue = value;
             so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// The guild's store, in the hub beside the gate board (ticket 22). It is the easiest store
+        /// to reach and pays the least: half an item's value. Stores in the towns pay more.
+        /// </summary>
+        private static ShopAsset GetOrCreateGuildStore(HubAsset hub)
+        {
+            var centre = hub.ToDefinition().Centre;
+            return GetOrCreate<ShopAsset>("Shops", "Guild Exchange", a =>
+                a.Set("guild-exchange", "Guild Exchange", new Vector3(centre.X - 7f, 0f, centre.Z + 5f), 2.5f, 50));
         }
 
         private static ClassDefinitionAsset GetOrCreateClass(ClassDefinition data) =>

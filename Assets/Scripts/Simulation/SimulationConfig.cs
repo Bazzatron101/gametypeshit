@@ -53,6 +53,9 @@ namespace HunterSystem.Simulation
         /// <summary>Every skill in the game. Starters (unlock level 1) fill the bar in this order.</summary>
         public IReadOnlyList<SkillDefinition> Skills { get; set; } = Array.Empty<SkillDefinition>();
 
+        /// <summary>Stores that buy duplicates, wherever they stand in the world (ticket 22).</summary>
+        public IReadOnlyList<ShopDefinition> Shops { get; set; } = Array.Empty<ShopDefinition>();
+
         /// <summary>The classes a character can be (ticket 24). Skills name their class by id.</summary>
         public IReadOnlyList<ClassDefinition> Classes { get; set; } = Array.Empty<ClassDefinition>();
 

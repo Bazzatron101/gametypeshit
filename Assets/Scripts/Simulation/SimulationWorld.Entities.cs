@@ -24,6 +24,12 @@ namespace HunterSystem.Simulation
             /// <summary>The character's class, or null.</summary>
             public ClassDefinition Class;
 
+            /// <summary>Gold from selling duplicates.</summary>
+            public int Gold;
+
+            /// <summary>Rewards drawn again once the pool was owned, one entry per copy, to sell.</summary>
+            public readonly List<ModifierDefinition> Duplicates = new List<ModifierDefinition>();
+
             /// <summary>Where this tick's command aims skills (the camera), or null to use the facing. Set each tick the player is standing, before any skill; never saved.</summary>
             public Vec3? Aim;
 

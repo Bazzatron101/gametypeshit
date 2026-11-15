@@ -1,3 +1,4 @@
+using System.Linq;
 using HunterSystem.Simulation;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -116,9 +117,9 @@ namespace HunterSystem.Game
                         if (!_rewardShown) Notify(home.Cleared ? "Back in the hub." : "You left the gate. Back in the hub.");
                         break;
                     case GateRewardGranted r when r.Player == me:
-                        Notify(r.Modifier != null
-                            ? $"{_gateName} cleared.  Reward: {r.Modifier.Name}, kept on your hunter."
-                            : $"{_gateName} cleared.  You already hold every reward this gate offers.");
+                        Notify(r.Modifier == null ? $"{_gateName} cleared."
+                            : r.IsDuplicate ? $"{_gateName} cleared.  A duplicate {r.Modifier.Name}: sell it at a store, such as the {CheapestStoreName()} in the hub."
+                            : $"{_gateName} cleared.  Reward: {r.Modifier.Name}, kept on your hunter.");
                         _rewardShown = true;
                         break;
                 }
@@ -126,6 +127,14 @@ namespace HunterSystem.Game
         }
 
         private string _gateName = "The gate";
+
+        /// <summary>The store a new player is sure to find: the one in the hub that pays least (the guild's).</summary>
+        private string CheapestStoreName()
+        {
+            var world = _runner.World;
+            var store = world.Shops.Where(s => world.Hub != null && world.Hub.Floor.Contains(s.Position)).OrderBy(s => s.SellPercent).FirstOrDefault();
+            return store != null ? store.Name : "guild's store";
+        }
         private bool _rewardShown;
 
         private void Notify(string text)

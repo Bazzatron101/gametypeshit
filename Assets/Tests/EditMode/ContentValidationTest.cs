@@ -52,6 +52,7 @@ namespace HunterSystem.Tests
             var content = Content();
 
             Assert.That(All<ClassDefinitionAsset>(), Is.SubsetOf(content.Classes));
+            Assert.That(All<ShopAsset>(), Is.SubsetOf(content.Shops));
             Assert.That(All<SkillDefinitionAsset>(), Is.SubsetOf(content.Skills));
             Assert.That(All<ModifierDefinitionAsset>(), Is.SubsetOf(content.Modifiers));
             Assert.That(All<EnemyDefinitionAsset>(), Is.SubsetOf(content.Enemies));
@@ -263,6 +264,24 @@ namespace HunterSystem.Tests
                 var clears = config.JumpHeight * c.JumpHeightPercent / 100f >= tallest;
                 Assert.That(clears, Is.EqualTo(c.Id == "rogue"), $"{c.Id} {(clears ? "clears" : "does not clear")} a {tallest} m boss");
             }
+        }
+
+        [Test]
+        public void TheGuildsStoreIsInTheHubAndEveryRewardSells()
+        {
+            var config = new SimulationConfig();
+            Content().ApplyTo(config);
+            var world = new SimulationWorld(config);
+
+            var guild = config.Shops.SingleOrDefault(s => s.Id == "guild-exchange");
+            Assert.That(guild, Is.Not.Null, "the guild has a store");
+            Assert.That(config.Hub.Floor.Contains(guild.Position), Is.True, "in the hub");
+            Assert.That((guild.Position - config.Hub.Board).Length, Is.GreaterThan(guild.Radius + config.Hub.BoardRadius), "clear of the board, so E opens one or the other");
+            Assert.That(config.Shops.Where(s => s != guild).Select(s => s.SellPercent), Has.All.GreaterThan(guild.SellPercent), "the guild pays the least");
+            foreach (var gate in config.Gates)
+            foreach (var item in gate.RewardPool)
+                Assert.That(item.SellValue, Is.GreaterThan(0), $"{item.Id} in {gate.Id} sells for something");
+            Assert.That(world.Shops.Count, Is.EqualTo(config.Shops.Count));
         }
 
         [Test]

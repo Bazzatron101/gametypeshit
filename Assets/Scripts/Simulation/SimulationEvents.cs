@@ -443,12 +443,18 @@ namespace HunterSystem.Simulation
     public sealed class GateRewardGranted : SimulationEvent
     {
         public PlayerId Player { get; }
+
+        /// <summary>The reward drawn.</summary>
         public ModifierDefinition Modifier { get; }
 
-        public GateRewardGranted(int tick, PlayerId player, ModifierDefinition modifier) : base(tick)
+        /// <summary>True when the player already owned the whole pool: a duplicate, kept to sell (ticket 22).</summary>
+        public bool IsDuplicate { get; }
+
+        public GateRewardGranted(int tick, PlayerId player, ModifierDefinition modifier, bool isDuplicate = false) : base(tick)
         {
             Player = player;
             Modifier = modifier;
+            IsDuplicate = isDuplicate;
         }
     }
 

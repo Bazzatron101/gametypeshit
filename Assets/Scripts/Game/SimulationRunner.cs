@@ -372,6 +372,9 @@ namespace HunterSystem.Game
         /// <summary>In the hub: marks the player ready (or not) for the next gate, as a command on the next tick.</summary>
         public void RequestReady(PlayerId id, bool ready) => BufferFor(id).QueueSetReady(ready);
 
+        /// <summary>Sells one duplicate at the store the player stands at (the store's menu).</summary>
+        public void RequestSale(PlayerId id, string itemId) => BufferFor(id).QueueSale(itemId);
+
         /// <summary>Replaces where a player's commands come from (tests, bots).</summary>
         public void SetCommandSource(PlayerId id, IPlayerCommandSource source)
         {
