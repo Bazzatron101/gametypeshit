@@ -334,3 +334,8 @@ Still to settle: which crossed swords are which gate (the region table predates 
 - **Then a big story event** spawns new gates (the story-appearing kind) and the danger surges again.
 - So the overworld's danger follows the story: calm start → pushed back by the player → surge at the big event → (after the main game) gates slowly close.
 - Still to settle: which story event (or events) spawns them, and which numbered sites (1–26) are story-spawned.
+
+**2026-11-15 (developer, recorded by agent):** Story-spawned gates come from **several smaller story events,** not one big one.
+- Each event spawns a few new gates (with their leaks), so danger rises in steps: the player pushes back, an event brings a new wave, the player pushes back again.
+- This replaces "a big story event" above. Each event's gates are listed with the event when the story beats are written (ticket 16).
+- Still to settle: which numbered sites (1–26) are story-spawned, and which event spawns each.
