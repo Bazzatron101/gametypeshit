@@ -243,7 +243,9 @@ namespace HunterSystem.Online
             var steam = Arg("-transport") == "steam";
             var connect = Arg("+connect");
             if ((steam || connect != null) && !_steamReady) return; // the status already says Steam is unavailable
-            // Automated runs (-coop) play a class without asking: -class ID, or the first class.
+            // Automated runs (-coop) make their hunter without asking: -name NAME (or "Hunter"), and -class ID or the first class.
+            if (Arg("-coop") != null && _runner.NeedsCreation)
+                _runner.CreateCharacter(HunterNames.Clean(Arg("-name")) ?? (Array.IndexOf(args, "-bot") >= 0 ? $"Bot {Arg("-bot")}" : "Hunter"), default);
             if (Arg("-coop") != null && _runner.NeedsClass)
             {
                 var wanted = Arg("-class");
@@ -283,7 +285,7 @@ namespace HunterSystem.Online
 
         private IEnumerator JoinOnceClassChosen(string hostSteamId)
         {
-            while (_runner.NeedsClass) yield return null;
+            while (_runner.NeedsSetup) yield return null;
             if (_network == null) Join(steam: true, hostSteamId);
         }
 
@@ -431,15 +433,15 @@ namespace HunterSystem.Online
             if (_network == null)
             {
                 DrawCharacterAndSaves();
-                if (_runner.NeedsClass) GUILayout.Label("Choose your class to play.", _label);
-                GUI.enabled = !_runner.NeedsClass;
+                if (_runner.NeedsSetup) GUILayout.Label(_runner.NeedsCreation ? "Make your hunter to play." : "Choose your class to play.", _label);
+                GUI.enabled = !_runner.NeedsSetup;
                 var bring = GUILayout.Toggle(_companions > 0, $" Bring {CompanionParty.Size} bot teammates (they learn as they play)");
                 _companions = bring ? CompanionParty.Size : 0;
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Play solo / host locally")) Host(steam: false);
                 if (GUILayout.Button("Join locally")) Join(steam: false, "localhost");
                 GUILayout.EndHorizontal();
-                GUI.enabled = _steamReady && !_runner.NeedsClass;
+                GUI.enabled = _steamReady && !_runner.NeedsSetup;
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("Host on Steam")) Host(steam: true);
                 GUILayout.EndHorizontal();
@@ -506,7 +508,8 @@ namespace HunterSystem.Online
             var saves = _runner.Saves;
             var character = _runner.Character;
             var className = _runner.ClassById(character.ClassId)?.Name ?? "no class yet";
-            GUILayout.Label(character.IsNew ? $"Your hunter: new {className} (level 1)" : $"Your hunter: level {character.Level} {className}", _label);
+            var name = character.Name ?? "Unnamed";
+            GUILayout.Label(character.IsNew ? $"Your hunter: {name}, new {className} (level 1)" : $"Your hunter: {name}, level {character.Level} {className}", _label);
             if (saves.LastProblemOnLoad != null) GUILayout.Label(saves.LastProblemOnLoad, _label);
 
             GUI.enabled = saves.CloudAvailable;

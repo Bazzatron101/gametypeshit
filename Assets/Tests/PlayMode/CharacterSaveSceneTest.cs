@@ -75,7 +75,7 @@ namespace HunterSystem.Tests
             var after = Runner.World.GetPlayer(LocalPlayer);
             Assert.That(after.KnownSkills.Select(s => s.Id), Is.EqualTo(before.KnownSkills.Select(s => s.Id)));
             Assert.That(after.SkillSlots.Select(s => s.Skill?.Id), Is.EqualTo(before.SkillSlots.Select(s => s.Skill?.Id)));
-            Assert.That(after.Bag.Select(g => g.Id), Is.EquivalentTo(new[] { "cinder-staff", "cinder-hood" }));
+            Assert.That(after.Bag.Select(g => g.Id), Is.EquivalentTo(before.Bag.Select(g => g.Id)).And.SupersetOf(new[] { "cinder-staff", "cinder-hood" })); // and the class's starting weapon (ticket 46)
             Assert.That(after.Worn.Select(g => g?.Id), Is.EqualTo(before.Worn.Select(g => g?.Id)));
             Assert.That(after.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("cinder-staff"));
             Assert.That(after.Worn[(int)GearSlot.Head], Is.Null, "the hood stayed in the bag");
@@ -102,7 +102,7 @@ namespace HunterSystem.Tests
         public IEnumerator TheTestArenaUsesYourCharacterButKeepsNothing()
         {
             var root = TestSaves.UseFreshFolder();
-            new CharacterSaves(root).Save(new CharacterRecord { Level = 3, Xp = 10, ClassId = "warrior" });
+            new CharacterSaves(root).Save(new CharacterRecord { Level = 3, Xp = 10, ClassId = "warrior", Name = "Tester" });
             var saved = File.ReadAllBytes(new CharacterSaves(root).FilePath);
 
             yield return Load("Arena");

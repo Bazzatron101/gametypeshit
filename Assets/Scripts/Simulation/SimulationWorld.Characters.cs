@@ -12,6 +12,8 @@ namespace HunterSystem.Simulation
             if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
             var record = new CharacterRecord
             {
+                Name = player.Name,
+                Look = player.Look,
                 ClassId = player.Class?.Id,
                 Level = player.Level,
                 Xp = player.Xp,
@@ -43,7 +45,29 @@ namespace HunterSystem.Simulation
         {
             if (character == null) throw new ArgumentNullException(nameof(character));
             AddPlayer(id, spawnPosition, ClassOf(character));
-            if (!character.IsNew) Apply(_playersById[id], character);
+            var player = _playersById[id];
+            player.Name = HunterNames.Clean(character.Name);
+            player.Look = new CharacterLook(character.Look.Colour, character.Look.Build);
+            if (!character.IsNew) Apply(player, character);
+        }
+
+        /// <summary>
+        /// Gives a player the name and look chosen in the character creator (ticket 28), at once. Made
+        /// at the menu or offline, before play, like the class; in play, looks change by a command in the hub.
+        /// </summary>
+        public void SetNameAndLook(PlayerId id, string name, CharacterLook look)
+        {
+            var player = FindPlayer(id);
+            player.Name = HunterNames.Clean(name);
+            player.Look = look;
+        }
+
+        /// <summary>In the hub: change how the player looks (ticket 28). Elsewhere it does nothing.</summary>
+        private void TryChangeLook(Player player, CharacterLook look, int tick)
+        {
+            if (!InHub || player.Look == look) return;
+            player.Look = look;
+            _events.Add(new LookChanged(tick, player.Id, look));
         }
 
         /// <summary>The record's class in this game, or null (none chosen, or one the game does not have).</summary>
@@ -59,6 +83,8 @@ namespace HunterSystem.Simulation
         {
             if (character == null) throw new ArgumentNullException(nameof(character));
             if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
+            player.Name = HunterNames.Clean(character.Name);
+            player.Look = new CharacterLook(character.Look.Colour, character.Look.Build);
             if (character.IsNew) return;
             player.ClearCharge();
             player.SkillReadyAtTick.Clear();

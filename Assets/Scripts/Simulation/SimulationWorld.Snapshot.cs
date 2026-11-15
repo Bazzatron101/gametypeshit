@@ -225,6 +225,9 @@ namespace HunterSystem.Simulation
             w.Write(p.Bag.Count);
             foreach (var g in p.Bag) w.Write(g.Id);
             foreach (var g in p.Worn) WriteNullable(w, g?.Id);
+            WriteNullable(w, p.Name);
+            w.Write(p.Look.Colour);
+            w.Write((byte)p.Look.Build);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -501,6 +504,8 @@ namespace HunterSystem.Simulation
                 if ((int)gear.Slot != slot || !p.Bag.Contains(gear)) throw new FormatException($"The snapshot wears '{id}' where it cannot be worn.");
                 p.Worn[slot] = gear;
             }
+            p.Name = HunterNames.Clean(ReadNullable(r));
+            p.Look = new CharacterLook(r.ReadByte(), (Build)r.ReadByte());
             return p;
         }
 

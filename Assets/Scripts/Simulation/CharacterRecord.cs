@@ -17,6 +17,12 @@ namespace HunterSystem.Simulation
     /// </summary>
     public sealed partial class CharacterRecord
     {
+        /// <summary>The hunter's name, chosen once when the character is made (ticket 28); null for a character made before names.</summary>
+        public string Name;
+
+        /// <summary>How the hunter looks (ticket 28): changeable later in the hub.</summary>
+        public CharacterLook Look;
+
         /// <summary>The class chosen when the character was made, or null (a character from before classes).</summary>
         public string ClassId;
 
@@ -76,8 +82,8 @@ namespace HunterSystem.Simulation
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSCH");
 
-        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates. Version 4: and gear, and modifiers that count worn gear.</summary>
-        public const byte Version = 4;
+        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates. Version 4: and gear, and modifiers that count worn gear. Version 5: and the name and look.</summary>
+        public const byte Version = 5;
 
         public static byte[] Encode(CharacterRecord c) => Encode(c, Version);
 
@@ -89,6 +95,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>Writes a character as the game before gear did (for tests of loading old saves).</summary>
         public static byte[] EncodeVersion3ForTests(CharacterRecord c) => Encode(c, 3);
+
+        /// <summary>Writes a character as the game before names and looks did (for tests of loading old saves).</summary>
+        public static byte[] EncodeVersion4ForTests(CharacterRecord c) => Encode(c, 4);
 
         private static byte[] Encode(CharacterRecord c, byte version)
         {
@@ -124,6 +133,12 @@ namespace HunterSystem.Simulation
                 var worn = c.Worn ?? new string[GearDefinition.SlotCount];
                 w.Write(worn.Length);
                 foreach (var id in worn) SimulationWorld.WriteNullable(w, id);
+            }
+            if (version >= 5)
+            {
+                SimulationWorld.WriteNullable(w, c.Name);
+                w.Write(c.Look.Colour);
+                w.Write((byte)c.Look.Build);
             }
             w.Flush();
             return stream.ToArray();
@@ -169,6 +184,11 @@ namespace HunterSystem.Simulation
                     for (int i = 0, n = Count(r, bytes); i < n; i++) c.Gear.Add(r.ReadString());
                     c.Worn = new string[Count(r, bytes)];
                     for (var i = 0; i < c.Worn.Length; i++) c.Worn[i] = SimulationWorld.ReadNullable(r);
+                }
+                if (version >= 5)
+                {
+                    c.Name = HunterNames.Clean(SimulationWorld.ReadNullable(r));
+                    c.Look = new CharacterLook(r.ReadByte(), (Build)r.ReadByte());
                 }
                 return c;
             }

@@ -53,6 +53,8 @@ namespace HunterSystem.Simulation
             return new CharacterRecord
             {
                 IsNew = IsNew,
+                Name = Name,
+                Look = Look,
                 ClassId = chosen.Id,
                 Level = Level,
                 Xp = Xp,

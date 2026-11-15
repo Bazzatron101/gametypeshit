@@ -102,6 +102,12 @@ namespace HunterSystem.Netcode
             w.Write(command.EquipGearId != null);
             if (command.EquipGearId != null) w.Write(command.EquipGearId);
             w.Write((sbyte)(command.UnequipSlot.HasValue ? (int)command.UnequipSlot.Value : -1));
+            w.Write(command.ChangeLook.HasValue);
+            if (command.ChangeLook.HasValue)
+            {
+                w.Write(command.ChangeLook.Value.Colour);
+                w.Write((byte)command.ChangeLook.Value.Build);
+            }
         });
 
         public static byte[] Refused(string reason) => Write(MessageType.Refused, w => w.Write(reason));
@@ -131,6 +137,7 @@ namespace HunterSystem.Netcode
             var sell = r.ReadBoolean() ? r.ReadString() : null;
             var equip = r.ReadBoolean() ? r.ReadString() : null;
             var unequip = r.ReadSByte();
+            CharacterLook? look = r.ReadBoolean() ? new CharacterLook(r.ReadByte(), (Build)r.ReadByte()) : (CharacterLook?)null;
             return (sequence, new PlayerCommand(moveX, moveZ,
                 lightAttack: (buttons & LightAttackBit) != 0, dodge: (buttons & DodgeBit) != 0, heavyAttack: (buttons & HeavyAttackBit) != 0,
                 allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
@@ -138,7 +145,8 @@ namespace HunterSystem.Netcode
                 assignSkill: assign, heldSkillSlots: held, respawn: (buttons & RespawnBit) != 0,
                 setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null,
                 jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0, aimYawDegrees: aim, sellItemId: sell,
-                equipGearId: equip, unequipSlot: unequip >= 0 && unequip < GearDefinition.SlotCount ? (GearSlot)unequip : (GearSlot?)null));
+                equipGearId: equip, unequipSlot: unequip >= 0 && unequip < GearDefinition.SlotCount ? (GearSlot)unequip : (GearSlot?)null,
+                changeLook: look));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;

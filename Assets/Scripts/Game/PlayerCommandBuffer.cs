@@ -23,6 +23,7 @@ namespace HunterSystem.Game
         private readonly Queue<string> _sales = new Queue<string>();
         private readonly Queue<(string equip, GearSlot? unequip)> _gearChanges = new Queue<(string, GearSlot?)>();
         private bool? _setReadyPending;
+        private CharacterLook? _lookPending;
         private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
         private readonly Queue<SkillAssignment> _skillAssignments = new Queue<SkillAssignment>();
@@ -48,7 +49,11 @@ namespace HunterSystem.Game
             if (sampled.AssignSkill.HasValue) _skillAssignments.Enqueue(sampled.AssignSkill.Value);
             if (sampled.SellItemId != null) _sales.Enqueue(sampled.SellItemId);
             if (sampled.EquipGearId != null || sampled.UnequipSlot.HasValue) _gearChanges.Enqueue((sampled.EquipGearId, sampled.UnequipSlot));
+            if (sampled.ChangeLook.HasValue) _lookPending = sampled.ChangeLook;
         }
+
+        /// <summary>In the hub: change looks (the creator's restyle). The latest choice wins; it goes out with the next tick.</summary>
+        public void QueueLook(CharacterLook look) => _lookPending = look;
 
         /// <summary>Queues one sale at a store (from the store's menu). Commands carry one per tick, in click order.</summary>
         public void QueueSale(string itemId) => _sales.Enqueue(itemId);
@@ -81,7 +86,8 @@ namespace HunterSystem.Game
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
                 allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld, aimYawDegrees: _aimYawDegrees, sellItemId: sell,
-                equipGearId: gear.equip, unequipSlot: gear.unequip);
+                equipGearId: gear.equip, unequipSlot: gear.unequip, changeLook: _lookPending);
+            _lookPending = null;
             _jumpPending = false;
             _respawnPending = false;
             _setReadyPending = null;

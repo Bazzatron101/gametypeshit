@@ -81,6 +81,7 @@ namespace HunterSystem.Game
             ItemSold s => s.Player == me,
             GearEquipped g => g.Player == me,
             GearUnequipped g => g.Player == me,
+            LookChanged l => l.Player == me,
             _ => false,
         };
     }

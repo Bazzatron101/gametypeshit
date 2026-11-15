@@ -27,6 +27,7 @@ namespace HunterSystem.Simulation
             ItemSold,
             GearEquipped, GearUnequipped,
             GateFound,
+            LookChanged,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -191,6 +192,9 @@ namespace HunterSystem.Simulation
                     Head(w, Code.ItemSold, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.ItemId);
                     SimulationWorld.WriteNullable(w, x.ShopId); w.Write(x.Gold);
                     break;
+                case LookChanged x:
+                    Head(w, Code.LookChanged, e); w.Write(x.Player.Value); w.Write(x.Look.Colour); w.Write((byte)x.Look.Build);
+                    break;
                 case GearEquipped x:
                     Head(w, Code.GearEquipped, e); w.Write(x.Player.Value); w.Write((byte)x.Slot); w.Write(x.GearId);
                     break;
@@ -316,6 +320,11 @@ namespace HunterSystem.Simulation
                 {
                     var player = Player();
                     return new ItemSold(tick, player, SimulationWorld.ReadNullable(r), SimulationWorld.ReadNullable(r), r.ReadInt32());
+                }
+                case Code.LookChanged:
+                {
+                    var player = Player();
+                    return new LookChanged(tick, player, new CharacterLook(r.ReadByte(), (Build)r.ReadByte()));
                 }
                 case Code.GearEquipped:
                 {

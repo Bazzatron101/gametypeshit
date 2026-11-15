@@ -89,22 +89,26 @@ namespace HunterSystem.Game
         private void PoseBody(PlayerState state)
         {
             var t = body.transform;
+            var build = CharacterLooks.Scale(state.Look.Build); // ticket 28: slim, average or broad
+            var bodyScale = Vector3.Scale(_bodyScale, build);
+            var bodyPosition = new Vector3(_bodyPosition.x, _bodyPosition.y * build.y, _bodyPosition.z);
             if (state.IsDefeated)
             {
                 t.localRotation = Quaternion.Euler(90f, 0f, 0f); // lying on the floor
-                t.localPosition = new Vector3(0f, _bodyScale.x * 0.5f, 0f);
-                t.localScale = _bodyScale;
+                t.localPosition = new Vector3(0f, bodyScale.x * 0.5f, 0f);
+                t.localScale = bodyScale;
             }
             else
             {
                 t.localRotation = Quaternion.identity;
-                t.localPosition = state.IsDodging ? new Vector3(0f, _bodyPosition.y * 0.55f, 0f) : _bodyPosition;
-                t.localScale = state.IsDodging ? Vector3.Scale(_bodyScale, new Vector3(1.15f, 0.55f, 1.15f)) : _bodyScale;
+                t.localPosition = state.IsDodging ? new Vector3(0f, bodyPosition.y * 0.55f, 0f) : bodyPosition;
+                t.localScale = state.IsDodging ? Vector3.Scale(bodyScale, new Vector3(1.15f, 0.55f, 1.15f)) : bodyScale;
             }
 
-            Color? bodyTint = null;
+            var own = CharacterLooks.Colour(state.Look); // the colour chosen in the creator (ticket 28)
+            Color? bodyTint = own;
             if (state.IsWindingUp) bodyTint = windupColor;
-            else if (state.ChargingSlot.HasValue) bodyTint = Color.Lerp(Color.white, chargeColor, state.ChargeFraction);
+            else if (state.ChargingSlot.HasValue) bodyTint = Color.Lerp(own, chargeColor, state.ChargeFraction);
             _tint.Apply(body, bodyTint);
         }
     }

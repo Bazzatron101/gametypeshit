@@ -70,6 +70,7 @@ namespace HunterSystem.Tests
             new GateRewardGranted(41, P, Staff),
             new GearEquipped(48, P, GearSlot.Weapon, "staff"),
             new GearUnequipped(49, P, GearSlot.Weapon, "staff"),
+            new LookChanged(50, P, new CharacterLook(3, Build.Slim)),
             new GateFound(51, "bridge", P),
             new ReadyChanged(42, P, true),
             new ReturnedToHub(43, "goblin-warren", true),

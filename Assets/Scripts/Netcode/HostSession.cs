@@ -108,7 +108,14 @@ namespace HunterSystem.Netcode
             if (record == null) throw new ArgumentNullException(nameof(record));
             if (World.PlayerIds.Count >= MaxPlayers) throw new InvalidOperationException($"The session is full ({MaxPlayers} players).");
             var id = new PlayerId(_nextPlayerId++);
-            World.AddPlayer(id, _spawnPoint(id), record.Character ?? CharacterRecord.New());
+            var character = record.Character ?? CharacterRecord.New();
+            if (character.Name == null)
+            {
+                // A teammate saved before names (ticket 28) is named and dressed from its record.
+                character.Name = record.Name;
+                character.Look = CompanionParty.LookFor(_companions.Count, character.ClassId);
+            }
+            World.AddPlayer(id, _spawnPoint(id), character);
             _companions.Add((id, new CompanionBrain(record, seed) { Leader = LocalPlayerId }));
             return id;
         }

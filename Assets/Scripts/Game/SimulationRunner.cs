@@ -81,6 +81,39 @@ namespace HunterSystem.Game
         /// </summary>
         public bool NeedsClass => !IsOnline && _config.Classes.Count > 0 && Character != null && ClassOf(Character) == null;
 
+        /// <summary>
+        /// True while the local character has no name (ticket 28): a new character, or one saved before
+        /// names. The character creator asks for a name and looks first; the class picker comes after.
+        /// </summary>
+        public bool NeedsCreation => !IsOnline && Character != null && Character.Name == null;
+
+        /// <summary>True until the local character is made: named, dressed and given a class. Play and going online wait for it.</summary>
+        public bool NeedsSetup => NeedsCreation || NeedsClass;
+
+        /// <summary>The player on this machine: the online one, or the scene's local player offline; null if none.</summary>
+        public PlayerId? MyPlayerId => SavedPlayerId;
+
+        /// <summary>
+        /// Names the local character and sets its looks (the character creator, ticket 28), and saves
+        /// it at once. The name is permanent. Only at the menu or offline, before the class is picked.
+        /// </summary>
+        public void CreateCharacter(string name, CharacterLook look)
+        {
+            if (IsOnline) throw new InvalidOperationException("Make your hunter at the menu, before going online.");
+            if (!NeedsCreation) throw new InvalidOperationException("This hunter already has a name; it is permanent.");
+            var clean = HunterNames.Clean(name) ?? throw new ArgumentException("A hunter needs a name.", nameof(name));
+            var record = CharacterCodec.Decode(CharacterCodec.Encode(Character)); // a copy; the loaded record is left alone
+            record.IsNew = Character.IsNew;
+            record.Name = clean;
+            record.Look = look;
+            if (_offlineLocalId is { } me && _offlineWorld.HasPlayer(me)) _offlineWorld.SetNameAndLook(me, clean, look);
+            Character = record;
+            Autosave.SaveNow(record);
+        }
+
+        /// <summary>In the hub: change how the player looks (ticket 28). A command like any other, so the host decides.</summary>
+        public void RequestLook(PlayerId id, CharacterLook look) => BufferFor(id).QueueLook(look);
+
         /// <summary>True when the scene has its own local player playing offline (the greybox, the arena).</summary>
         public bool PlaysOffline => _offlineLocalId.HasValue;
 
@@ -131,6 +164,8 @@ namespace HunterSystem.Game
         private void Awake()
         {
             if (GetComponent<GearPanel>() == null) gameObject.AddComponent<GearPanel>(); // every scene with a runner can change gear (ticket 23)
+            if (GetComponent<CharacterCreator>() == null) gameObject.AddComponent<CharacterCreator>(); // and make a hunter, and restyle in the hub (ticket 28)
+            if (GetComponent<Nameplates>() == null) gameObject.AddComponent<Nameplates>();
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
             if (!useHub)
@@ -436,7 +471,7 @@ namespace HunterSystem.Game
 
         private void UpdateOffline()
         {
-            if (NeedsClass && _offlineLocalId.HasValue) return; // the world waits for the class pick
+            if (NeedsSetup && _offlineLocalId.HasValue) return; // the world waits for the hunter to be made (name, looks, class)
             foreach (var pair in _sources) _buffers[pair.Key].Add(pair.Value.Sample());
 
             var ticks = _clock.Advance(Time.deltaTime);

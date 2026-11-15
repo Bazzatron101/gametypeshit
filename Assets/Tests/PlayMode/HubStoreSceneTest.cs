@@ -26,7 +26,7 @@ namespace HunterSystem.Tests
             var root = TestSaves.UseFreshFolder();
             var content = Resources.FindObjectsOfTypeAll<GameContentAsset>().Single();
             _item = content.Gates[0].ToDefinition(new System.Collections.Generic.Dictionary<ScriptableObject, EnemyDefinition>()).RewardPool[0].Id;
-            var character = new CharacterRecord { ClassId = "warrior" };
+            var character = new CharacterRecord { ClassId = "warrior", Name = "Tester" };
             character.Duplicates.Add(_item);
             new CharacterSaves(root).Save(character);
 

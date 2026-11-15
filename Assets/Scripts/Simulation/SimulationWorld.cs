@@ -124,7 +124,7 @@ namespace HunterSystem.Simulation
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
                 p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray(),
-                p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone());
+                p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone(), p.Name, p.Look);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
@@ -191,6 +191,7 @@ namespace HunterSystem.Simulation
                 if (cmd.AssignSkill.HasValue) TryAssignSkill(player, cmd.AssignSkill.Value, tick);
                 if (cmd.UnequipSlot.HasValue) TryUnequip(player, cmd.UnequipSlot.Value, tick);
                 if (cmd.EquipGearId != null) TryEquip(player, cmd.EquipGearId, tick);
+                if (cmd.ChangeLook.HasValue) TryChangeLook(player, cmd.ChangeLook.Value, tick);
                 if (cmd.AllocateStat.HasValue) TryAllocateStat(player, cmd.AllocateStat.Value, tick);
                 if (cmd.Respawn) TryRespawn(player, tick);
                 if (cmd.SetReady.HasValue) TrySetReady(player, cmd.SetReady.Value, tick);

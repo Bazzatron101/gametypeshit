@@ -55,6 +55,17 @@ namespace HunterSystem.Netcode
             return roster;
         }
 
+        /// <summary>
+        /// A teammate's look (ticket 28): each of the five a different colour, and a build that suits
+        /// the role (the tank broad, the rogue slim). A record from before looks keeps its own, which is the default.
+        /// </summary>
+        public static CharacterLook LookFor(int index, string classId)
+        {
+            var role = CompanionRoles.ForClass(classId);
+            var build = role == CompanionRole.Tank ? Build.Broad : role == CompanionRole.Skirmisher ? Build.Slim : Build.Average;
+            return new CharacterLook(1 + index % (CharacterLook.ColourCount - 1), build); // colour 0 is left for the player's default
+        }
+
         /// <summary>Five new rookie teammates for a player of <paramref name="playerClassId"/>, at level 1.</summary>
         public static List<CompanionRecord> NewParty(string playerClassId, SimulationConfig config)
         {
@@ -69,7 +80,7 @@ namespace HunterSystem.Netcode
                 party.Add(new CompanionRecord
                 {
                     Name = name,
-                    Character = new CharacterRecord { IsNew = true, ClassId = classId },
+                    Character = new CharacterRecord { IsNew = true, ClassId = classId, Name = name, Look = LookFor(party.Count, classId) },
                 });
             }
             return party;
@@ -100,6 +111,8 @@ namespace HunterSystem.Netcode
             return new CharacterRecord
             {
                 IsNew = false,
+                Name = character.Name,
+                Look = character.Look,
                 ClassId = character.ClassId,
                 Level = level,
                 Xp = 0,

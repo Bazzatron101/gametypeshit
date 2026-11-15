@@ -90,14 +90,22 @@ namespace HunterSystem.Simulation
         /// <summary>The piece worn in each <see cref="GearSlot"/> (index by slot), or null.</summary>
         public readonly IReadOnlyList<GearDefinition> Worn;
 
+        /// <summary>The hunter's name (ticket 28), or null.</summary>
+        public readonly string Name;
+
+        /// <summary>How the hunter looks (ticket 28).</summary>
+        public readonly CharacterLook Look;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
             IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false,
             ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<LootDefinition> duplicates = null,
-            IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null)
+            IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null, string name = null, CharacterLook look = default)
         {
+            Name = name;
+            Look = look;
             Gold = gold;
             Duplicates = duplicates ?? System.Array.Empty<LootDefinition>();
             Bag = bag ?? System.Array.Empty<GearDefinition>();

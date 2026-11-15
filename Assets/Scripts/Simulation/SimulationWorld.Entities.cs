@@ -9,6 +9,10 @@ namespace HunterSystem.Simulation
         private sealed class Player
         {
             public PlayerId Id;
+            /// <summary>The hunter's name (ticket 28), or null for one with none (a bare test player).</summary>
+            public string Name;
+            /// <summary>How the hunter looks (ticket 28). Changes nothing in play.</summary>
+            public CharacterLook Look;
             public Vec3 Position;
             /// <summary>Where they stood when this tick began: walls and steep ground slide them back from here (ticket 37). Not in snapshots: it is always the position between ticks.</summary>
             public Vec3 SetOffFrom;
