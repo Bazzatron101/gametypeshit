@@ -10,7 +10,7 @@
 - [x] Region list, order and what opens each one settled (first sketch, 2026-11-14; region sketch 2026-11-15)
 - [x] Gate placement per region sketched (story gates and farming gates): gates sit at each region's important places; region sketch kept 2026-11-15
 - [x] What physically stops a player entering a region that is not open yet: nothing physical; danger and no guild work there (see Comments)
-- [ ] Mounts: when you get one and how fast it is
+- [x] Mounts: when you get one and how fast it is: at the D-rank promotion; 2× sprint, 16 m/s (2026-11-15)
 - [x] ADR 0015 accepted, and the spec's non-goal and stories 40 and 48 rewritten (2026-11-15)
 
 ## Decided (developer, 2026-11-14)
@@ -50,7 +50,7 @@ West to east:
 | walking (5 m/s) | ~18 km | ~12 × 7 km (~85 km²) | About the size of the biggest open-world games |
 | sprinting (8 m/s) | ~29 km | ~19 × 10 km (~190 km²) | Over twice that |
 
-A mount at 3× sprint (24 m/s) crosses the walking-size map in about 12 minutes.
+~~A mount at 3× sprint (24 m/s) crosses the walking-size map in about 12 minutes.~~ Settled at 2× sprint (16 m/s), about 19 minutes (see Comments).
 
 Either size is far more ground than can be built by hand at ~250 hours a year (spec, "Capacity reality"). It is only possible with generated terrain, hand-placed points of interest (gates, camps, landmarks, the road), and a lot of plain land between them. Worth deciding before any terrain is built.
 
@@ -229,3 +229,31 @@ Either size is far more ground than can be built by hand at ~250 hours a year (s
 Still to settle: names, which places carry which story beats (waits partly on the hook, ticket 16), and the raid gate's place.
 
 **2026-11-15 (developer, recorded by agent):** The region sketch is **kept** as the starting layout. More towns may be added later ("we may add more towns in the end"), so the layout should leave room for them: one town per region is the minimum, not a rule.
+
+**2026-11-15 (developer, recorded by agent):** A mount runs at **2× sprint: 16 m/s.** The ~18 km road takes about 19 minutes mounted (an hour walking, ~38 minutes sprinting). This replaces the 3× (24 m/s, ~12 minutes) used in the earlier notes. Kept as a configuration value, like walking and sprint speed.
+
+**2026-11-15 (agent, for the developer):** **Region sketch redone on the developer's map** (`docs/maps/overworld-reference.webp`). This replaces the rectangle sketch's geography; every rule above stays. Positions are given as places on the drawing. Crossed swords on the drawing are gate sites; the in-game map would only show gates that are found.
+
+*Map changes that come with the drawing:*
+- **Shape and size:** the land is about 4:3, so about **10.5 × 7.5 km** keeps the area and the hour on foot (the roads wind).
+- **The hub is on the west island,** joined to the mainland by the bridge. Still the west edge; a small, safe start with the world across the bridge.
+- **The Riftlands are the south-east island,** reached by ship from the south port. The ship sails when the S story says so.
+- **More towns:** the drawing has about 25 settlements and 6 castles. About 8 are guild towns (listed below); the rest start as villages and landmarks and can be upgraded later.
+- **New ground:** the snowy mountains (centre-south) and the south peninsula with its port. Put with the Riftlands for now, as the way to the ship (see the open question at the end).
+
+| Region | Where on the map | Opens | Guild town(s) | Gates (known / hidden) |
+| --- | --- | --- | --- | --- |
+| **Greenmarch** | West island, the bridge, the north-west lobe and the west-central plain | Start | **Guild town** (the hub: the blue-spired town on the west island); **Westkeep** (the castle on the west-central plain) | Mill cellar: island crossed swords, first gate, known, story. Barrow: crossed swords in the north-west mountains, known, story (to D). Bridge gate: crossed swords at the bridge, hidden, leaks onto the bridge road (first cart attacks). Thornwood hollow: crossed swords on the north-west coast, hidden, farming. |
+| **Fenward mire** | South-west lobe, inside the west-coast mountain range | D promotion | **Stiltmoor** (the town in the middle of the south-west lobe) | Drowned chapel: crossed swords at the far south-west, first, known. Heron isle: known, story (not drawn yet). Peat camp: hidden, near Stiltmoor, leaks to its entrance. Causeway gate: crossed swords where the road leaves the west-central plain, hidden, leaks onto the road. |
+| **Brokenstone hills** | The diagonal mountain range across the middle | Story beat during C | **Quarrygate** (the castle north-east of the range) | Great quarry: crossed swords in the middle of the range, first, known. Deep mine: crossed swords at the range's north end, known, story. Watchtower: crossed swords at the Quarrygate castle, hidden, leaks to its entrance. Cairns: crossed swords at the range's south end, hidden, farming. |
+| **Ashen steppe** | Eastern plains, south of the north-east mountains | B promotion | **Ember crossing** (the town in the south-east of the plains) | Stone ring: crossed swords in the east plains, first, known. Battlefield: crossed swords below the north-east mountains, known, story; the raid gate (ticket 29). Riverbed gate and herd grounds: hidden. |
+| **Saltreach coast** | North-east lobe and the east coast | B specialty quests | **Saltreach** (the castle on the east coast) | Lighthouse: crossed swords in the far north-east, first, known. Four specialty quest gates (one per class), known, story: in the north-east mountains and along the coast (not drawn yet). Wreck cove: hidden. |
+| **Riftlands** | Snowy mountains, the south peninsula, and the south-east island | S story | **Southport** (the port town with the ship); **Farwatch** (the castle on the south-east island) | Snow pass: crossed swords in the snowy mountains, known, story. South gate: crossed swords south of the snow, hidden. The Rift: Farwatch's crossed swords on the island, known, story (the end). |
+
+*A-rank:* still no new region; the guild reopens found gates across the map, harder.
+
+Still the same count (about 25 gates) and every gate can be reopened harder. Some known gates are not on the drawing yet (Heron isle, the four specialty gates); they need crossed swords added.
+
+**Settled (kept for S, see below):** the snowy mountains and south peninsula are a lot of ground to leave to the S story. Alternative: they open with a story beat during A, so A-rank gets one region after all, and only the island stays for S.
+
+**2026-11-15 (developer, recorded by agent):** The snowy mountains and the south peninsula are **kept for the S story**, with the south-east island: the Riftlands are all three. A-rank still opens no new region. Like everywhere else they have no walls; until the S story they are simply too dangerous and the guild gives no work there.
