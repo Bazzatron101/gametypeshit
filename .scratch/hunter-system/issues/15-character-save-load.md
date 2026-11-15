@@ -4,9 +4,9 @@
 
 **Blocked by:** 06: XP, levels, six stats and the level-up UI, 13: Two-player Steam co-op
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Character stats, level, skills, and gear save and load correctly
+- [x] Character stats, level, skills, and gear save and load correctly
 - [x] Steam Cloud backup is optional and restorable
 - [x] A guest joins a host's session with their own character and keeps XP and progress earned there
 - [x] Host-world progress is stored separately from guest characters
@@ -58,3 +58,9 @@ Boxes left open:
 
 **2026-11-13 (developer test, recorded by agent):** Steam Cloud tried against real Steam (test app 480): the cloud save worked, and the level and stat points came back correctly. Box 2 is ticked on that report. Box 1 stays open only for gear, which does not exist yet.
 
+
+**2026-11-15 (agent):** Box 1 ticked; the ticket is done.
+- **Gear in the save:** ticket 23 added it (character format 4: the bag and what is worn in each slot; ADR 0017). Gear changes trigger the autosave. Saves from before gear load with an empty bag.
+- **Proof in the real scene:** the new `CharacterSaveSceneTest.SkillsAndGearInTheGreyboxAreThereNextTime` raises the character to level 5, puts a skill on the last bar slot, gives the Cinder Staff and Cinder Hood, and wears the staff. After the autosave and a scene reload, the known skills, the bar, the bag and what is worn all match, and the hood is still in the bag, not worn.
+- **Tests:** PlayMode `CharacterSaveSceneTest` 4/4 passing. EditMode `GearTest`, `CharacterRecordTest`, `SaveFilesTest` and `CharacterAutosaveTest` 52/52 passing.
+- **Unblocks:** 28 (character creator).

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using System.Linq;
 using HunterSystem.Game;
 using HunterSystem.Simulation;
 using NUnit.Framework;
@@ -47,6 +48,37 @@ namespace HunterSystem.Tests
             Assert.That(after.Xp, Is.EqualTo(before.Xp));
             Assert.That(after.Stats[Stat.Vitality], Is.EqualTo(before.Stats[Stat.Vitality]));
             Assert.That(after.UnspentStatPoints, Is.EqualTo(before.UnspentStatPoints));
+        }
+
+        [UnityTest]
+        public IEnumerator SkillsAndGearInTheGreyboxAreThereNextTime()
+        {
+            TestSaves.UseFreshFolder();
+            yield return Load("Greybox");
+            var runner = Runner;
+            runner.World.RaiseToLevel(LocalPlayer, 5);
+            runner.World.GiveGear(LocalPlayer, "cinder-staff");
+            runner.World.GiveGear(LocalPlayer, "cinder-hood");
+            yield return new WaitForSeconds(0.1f);
+            var known = runner.World.GetPlayer(LocalPlayer).KnownSkills;
+            Assert.That(known, Is.Not.Empty, "a level-5 character knows a skill");
+            var lastSlot = SimulationWorld.SkillSlotCount - 1;
+            runner.RequestSkillAssignment(LocalPlayer, new SkillAssignment(lastSlot, known[0].Id));
+            runner.RequestEquip(LocalPlayer, "cinder-staff");
+            yield return new WaitForSeconds(1.5f); // longer than the autosave interval
+            var before = runner.World.GetPlayer(LocalPlayer);
+            Assert.That(before.SkillSlots[lastSlot].Skill?.Id, Is.EqualTo(known[0].Id), "the skill went on the bar");
+            Assert.That(before.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("cinder-staff"), "the staff is worn");
+
+            yield return Load("Greybox");
+
+            var after = Runner.World.GetPlayer(LocalPlayer);
+            Assert.That(after.KnownSkills.Select(s => s.Id), Is.EqualTo(before.KnownSkills.Select(s => s.Id)));
+            Assert.That(after.SkillSlots.Select(s => s.Skill?.Id), Is.EqualTo(before.SkillSlots.Select(s => s.Skill?.Id)));
+            Assert.That(after.Bag.Select(g => g.Id), Is.EquivalentTo(new[] { "cinder-staff", "cinder-hood" }));
+            Assert.That(after.Worn.Select(g => g?.Id), Is.EqualTo(before.Worn.Select(g => g?.Id)));
+            Assert.That(after.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("cinder-staff"));
+            Assert.That(after.Worn[(int)GearSlot.Head], Is.Null, "the hood stayed in the bag");
         }
 
         [UnityTest]
