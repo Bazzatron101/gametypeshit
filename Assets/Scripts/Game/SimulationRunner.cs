@@ -130,6 +130,7 @@ namespace HunterSystem.Game
 
         private void Awake()
         {
+            if (GetComponent<GearPanel>() == null) gameObject.AddComponent<GearPanel>(); // every scene with a runner can change gear (ticket 23)
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
             if (!useHub)
@@ -374,6 +375,12 @@ namespace HunterSystem.Game
 
         /// <summary>Sells one duplicate at the store the player stands at (the store's menu).</summary>
         public void RequestSale(PlayerId id, string itemId) => BufferFor(id).QueueSale(itemId);
+
+        /// <summary>Wears a piece from the player's bag (the gear panel).</summary>
+        public void RequestEquip(PlayerId id, string gearId) => BufferFor(id).QueueEquip(gearId);
+
+        /// <summary>Takes off whatever the player wears in a slot (the gear panel).</summary>
+        public void RequestUnequip(PlayerId id, GearSlot slot) => BufferFor(id).QueueUnequip(slot);
 
         /// <summary>Replaces where a player's commands come from (tests, bots).</summary>
         public void SetCommandSource(PlayerId id, IPlayerCommandSource source)

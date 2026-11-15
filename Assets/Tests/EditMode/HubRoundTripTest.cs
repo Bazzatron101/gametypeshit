@@ -78,7 +78,7 @@ namespace HunterSystem.Tests
             Assert.That(host.World.InHub, Is.True);
             foreach (var (session, _) in clients) Assert.That(session.World.InHub, Is.True, "every guest is home too");
             foreach (var id in host.World.PlayerIds)
-                Assert.That(host.World.GetPlayer(id).ActiveModifiers, Is.Not.Empty, $"player {id.Value} took a reward home");
+                Assert.That(host.World.GetPlayer(id).ActiveModifiers.Count + host.World.GetPlayer(id).Bag.Count, Is.GreaterThan(0), $"player {id.Value} took a reward home");
         }
     }
 }

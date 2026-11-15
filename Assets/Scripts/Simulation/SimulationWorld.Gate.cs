@@ -180,8 +180,8 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>
-        /// The clear reward: every player present draws a modifier from the gate's pool that they
-        /// do not have, kept on their character. Once they own the whole pool, the draw is from the
+        /// The clear reward: every player present draws an item from the gate's pool that they do
+        /// not have, kept on their character: a modifier for good, or gear for the bag (ticket 23). Once they own the whole pool, the draw is from the
         /// whole pool and is a duplicate, kept to sell (ticket 22). The draw is a fixed function of
         /// the tick, the player and the attempt, so every machine that steps this tick draws the same.
         /// </summary>
@@ -192,7 +192,7 @@ namespace HunterSystem.Simulation
             foreach (var player in _players)
             {
                 if (player.Away) continue;
-                var candidates = pool.Where(m => player.Modifiers.All(owned => owned.Id != m.Id)).ToList();
+                var candidates = pool.Where(item => !Owns(player, item)).ToList();
                 var duplicate = candidates.Count == 0;
                 if (duplicate) candidates = pool.ToList();
                 var reward = candidates[(int)(Mix((uint)tick, (uint)player.Id.Value, (uint)_gate.Attempt) % (uint)candidates.Count)];
@@ -200,10 +200,14 @@ namespace HunterSystem.Simulation
                 {
                     player.Duplicates.Add(reward);
                 }
-                else
+                else if (reward is GearDefinition gear)
                 {
-                    player.Modifiers.Add(reward);
-                    _events.Add(new ModifierGranted(tick, player.Id, reward));
+                    GainGear(player, gear, tick);
+                }
+                else if (reward is ModifierDefinition modifier)
+                {
+                    player.Modifiers.Add(modifier);
+                    _events.Add(new ModifierGranted(tick, player.Id, modifier));
                 }
                 _events.Add(new GateRewardGranted(tick, player.Id, reward, duplicate));
             }

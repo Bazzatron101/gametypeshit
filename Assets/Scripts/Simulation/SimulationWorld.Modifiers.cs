@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace HunterSystem.Simulation
 {
-    /// <summary>Modifiers: granting, revoking, and resolving a player's view of a skill.</summary>
+    /// <summary>Modifiers: granting, revoking, and resolving a player's view of a skill (their own modifiers and their worn gear's).</summary>
     public sealed partial class SimulationWorld
     {
         /// <summary>
@@ -74,6 +74,7 @@ namespace HunterSystem.Simulation
             Require((m.AppliesToTag == null) != (m.AppliesToSkillId == null), "must set exactly one of AppliesToTag or AppliesToSkillId.");
             if (m.AppliesToTag != null) Require(_knownTags.Contains(m.AppliesToTag), $"tag '{m.AppliesToTag}' is not a known tag.");
             if (m.AppliesToSkillId != null) Require(_config.Skills.Any(s => s.Id == m.AppliesToSkillId), $"no skill has the id '{m.AppliesToSkillId}'.");
+            if (m.PerWornTag != null) Require(_knownTags.Contains(m.PerWornTag), $"PerWornTag '{m.PerWornTag}' is not a known tag.");
             Require(m.ExtraProjectiles >= 0, "ExtraProjectiles is negative.");
             Require(m.ExplosionRadius >= 0f, "ExplosionRadius is negative.");
             Require(m.ExplosionDamagePercent >= 0, "ExplosionDamagePercent is negative.");
@@ -85,22 +86,25 @@ namespace HunterSystem.Simulation
             int damagePercent = 0, cooldownPercent = 0, extraProjectiles = 0, explosionPercent = 0;
             float rangeAdd = 0f, radiusAdd = 0f, spread = 0f, explosionRadius = 0f;
 
-            foreach (var m in player.Modifiers)
+            foreach (var m in ModifiersInEffect(player))
             {
                 if (!m.AppliesTo(skill)) continue;
-                damagePercent += m.DamagePercent;
-                cooldownPercent += m.CooldownPercent;
-                rangeAdd += m.RangeAdd;
-                radiusAdd += m.RadiusAdd;
+                // A modifier that scales with worn gear counts once per matching piece (ticket 23).
+                var times = m.PerWornTag == null ? 1 : WornWithTag(player, m.PerWornTag);
+                if (times == 0) continue;
+                damagePercent += m.DamagePercent * times;
+                cooldownPercent += m.CooldownPercent * times;
+                rangeAdd += m.RangeAdd * times;
+                radiusAdd += m.RadiusAdd * times;
                 if (m.ExtraProjectiles > 0)
                 {
-                    extraProjectiles += m.ExtraProjectiles;
+                    extraProjectiles += m.ExtraProjectiles * times;
                     spread = MathF.Max(spread, m.ProjectileSpreadDegrees);
                 }
                 if (m.ExplosionRadius > 0f)
                 {
                     explosionRadius = MathF.Max(explosionRadius, m.ExplosionRadius);
-                    explosionPercent += m.ExplosionDamagePercent;
+                    explosionPercent += m.ExplosionDamagePercent * times;
                 }
             }
 

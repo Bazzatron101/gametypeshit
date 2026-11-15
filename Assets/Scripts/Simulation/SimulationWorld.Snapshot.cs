@@ -11,8 +11,8 @@ namespace HunterSystem.Simulation
     /// player joining or rejoining a gate, and to clients correcting their prediction. A world
     /// restored from a snapshot continues exactly as the original would, given the same commands.
     /// <para>
-    /// Skills are written by id and must exist in the restoring world's config (both sides run the
-    /// same build). Enemy and modifier definitions are written in full. Queued operations are not
+    /// Skills and gear are written by id and must exist in the restoring world's config (both sides
+    /// run the same build). Enemy and modifier definitions are written in full. Queued operations are not
     /// included: they belong to the host, which applies them and sends the result in a later snapshot.
     /// </para>
     /// </summary>
@@ -214,6 +214,9 @@ namespace HunterSystem.Simulation
             w.Write(p.Gold);
             w.Write(p.Duplicates.Count);
             foreach (var d in p.Duplicates) w.Write(d.Id);
+            w.Write(p.Bag.Count);
+            foreach (var g in p.Bag) w.Write(g.Id);
+            foreach (var g in p.Worn) WriteNullable(w, g?.Id);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -254,7 +257,8 @@ namespace HunterSystem.Simulation
             }
         }
 
-        internal static void WriteModifier(BinaryWriter w, ModifierDefinition m)
+        /// <param name="withWornTag">False only to write a character as a game from before gear would (save format 3 and older).</param>
+        internal static void WriteModifier(BinaryWriter w, ModifierDefinition m, bool withWornTag = true)
         {
             WriteNullable(w, m.Id);
             WriteNullable(w, m.Name);
@@ -269,6 +273,7 @@ namespace HunterSystem.Simulation
             w.Write(m.ProjectileSpreadDegrees);
             w.Write(m.ExplosionRadius);
             w.Write(m.ExplosionDamagePercent);
+            if (withWornTag) WriteNullable(w, m.PerWornTag);
         }
 
         internal static void WriteVec(BinaryWriter w, Vec3 v)
@@ -475,6 +480,15 @@ namespace HunterSystem.Simulation
                 var id = r.ReadString();
                 p.Duplicates.Add(LootById(id) ?? throw new FormatException($"The snapshot names item '{id}', which no gate in this world drops."));
             }
+            for (int i = 0, n = ReadCount(r); i < n; i++) p.Bag.Add(SnapshotGear(r.ReadString()));
+            for (var slot = 0; slot < GearDefinition.SlotCount; slot++)
+            {
+                var id = ReadNullable(r);
+                if (id == null) continue;
+                var gear = SnapshotGear(id);
+                if ((int)gear.Slot != slot || !p.Bag.Contains(gear)) throw new FormatException($"The snapshot wears '{id}' where it cannot be worn.");
+                p.Worn[slot] = gear;
+            }
             return p;
         }
 
@@ -515,7 +529,18 @@ namespace HunterSystem.Simulation
             return d;
         }
 
-        internal static ModifierDefinition ReadModifier(BinaryReader r) => new ModifierDefinition
+        private GearDefinition SnapshotGear(string id) =>
+            GearById(id) ?? throw new FormatException($"The snapshot names gear '{id}', which this world does not have.");
+
+        /// <param name="withWornTag">False only to read a character saved before gear (save format 3 and older).</param>
+        internal static ModifierDefinition ReadModifier(BinaryReader r, bool withWornTag = true)
+        {
+            var m = ReadModifierNumbers(r);
+            if (withWornTag) m.PerWornTag = ReadNullable(r);
+            return m;
+        }
+
+        private static ModifierDefinition ReadModifierNumbers(BinaryReader r) => new ModifierDefinition
         {
             Id = ReadNullable(r),
             Name = ReadNullable(r),

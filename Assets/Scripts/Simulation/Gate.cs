@@ -57,7 +57,7 @@ namespace HunterSystem.Simulation
         public float WipeDelaySeconds { get; set; } = 3f;
 
         /// <summary>The clear reward: each player present draws one they do not have yet (spec: a fixed pool, random draw, no repeats until it is all owned).</summary>
-        public List<ModifierDefinition> RewardPool { get; } = new List<ModifierDefinition>();
+        public List<LootDefinition> RewardPool { get; } = new List<LootDefinition>();
 
         /// <summary>True when some room holds a boss: then defeating the bosses is what clears the gate.</summary>
         public bool HasBoss

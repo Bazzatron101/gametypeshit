@@ -23,6 +23,8 @@ namespace HunterSystem.Simulation
             record.Modifiers.AddRange(player.Modifiers);
             record.Gold = player.Gold;
             record.Duplicates.AddRange(player.Duplicates.Select(d => d.Id));
+            record.Gear.AddRange(player.Bag.Select(g => g.Id));
+            for (var slot = 0; slot < GearDefinition.SlotCount; slot++) record.Worn[slot] = player.Worn[slot]?.Id;
             return record;
         }
 
@@ -112,6 +114,14 @@ namespace HunterSystem.Simulation
             player.Duplicates.Clear();
             foreach (var id in character.Duplicates ?? Enumerable.Empty<string>())
                 if (LootById(id) is { } item) player.Duplicates.Add(item);
+
+            // Gear the game still has (a piece removed from the game is dropped), worn only in its own slot.
+            player.Bag.Clear();
+            Array.Clear(player.Worn, 0, player.Worn.Length);
+            foreach (var id in character.Gear ?? Enumerable.Empty<string>())
+                if (GearById(id) is { } gear && !player.Bag.Contains(gear)) player.Bag.Add(gear);
+            for (var slot = 0; slot < GearDefinition.SlotCount && character.Worn != null && slot < character.Worn.Length; slot++)
+                if (player.Bag.FirstOrDefault(g => g.Id == character.Worn[slot]) is { } worn && (int)worn.Slot == slot) player.Worn[slot] = worn;
 
             player.MaxHealth = ComputeMaxHealth(player);
             player.Health = player.MaxHealth;

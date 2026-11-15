@@ -53,6 +53,9 @@ namespace HunterSystem.Simulation
         /// <summary>Every skill in the game. Starters (unlock level 1) fill the bar in this order.</summary>
         public IReadOnlyList<SkillDefinition> Skills { get; set; } = Array.Empty<SkillDefinition>();
 
+        /// <summary>Every piece of gear in the game (ticket 23). Gear is named by id in saves and snapshots, so host and clients must hold the same list; gates' pools name pieces from it.</summary>
+        public IReadOnlyList<GearDefinition> Gear { get; set; } = Array.Empty<GearDefinition>();
+
         /// <summary>Stores that buy duplicates, wherever they stand in the world (ticket 22).</summary>
         public IReadOnlyList<ShopDefinition> Shops { get; set; } = Array.Empty<ShopDefinition>();
 

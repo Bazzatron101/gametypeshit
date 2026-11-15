@@ -42,6 +42,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}
   - {fileID: 11400000, guid: c27b3a3b1a9038b4589fb03218ff0cc0, type: 2}
   - {fileID: 11400000, guid: 8d7f52e4a7a38da4195ded7bbc7bbe54, type: 2}
+  gear:
+  - {fileID: 11400000, guid: 1e342c880a364122878fb28921d84ce5, type: 2}
+  - {fileID: 11400000, guid: eb100f56ff6947c198ea634065dd70b3, type: 2}
+  - {fileID: 11400000, guid: e7eb20fa4be042d8904e994503b46784, type: 2}
+  - {fileID: 11400000, guid: 3cbdd5981f0640a2998645acab4feaf5, type: 2}
+  - {fileID: 11400000, guid: f0fb6a56be4d4bea9c7c7c9aefbd6a34, type: 2}
+  - {fileID: 11400000, guid: d9362d15aaa54687a832a6214a22bb14, type: 2}
+  - {fileID: 11400000, guid: c10c65cd59b04beca7cb80e523f72862, type: 2}
+  - {fileID: 11400000, guid: 26376b2753974eb89c18f8bfb7024074, type: 2}
+  - {fileID: 11400000, guid: e6afbdf23c1b4f4bb8e8e2c3c0a0f5a3, type: 2}
   enemies:
   - {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
   - {fileID: 11400000, guid: b8213ddf57ac7634ab101d13adabee64, type: 2}

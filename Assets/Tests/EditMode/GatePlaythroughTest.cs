@@ -78,7 +78,11 @@ namespace HunterSystem.Tests
             var rewards = events.OfType<GateRewardGranted>().ToList();
             Assert.That(rewards.Select(r => r.Player), Is.EquivalentTo(world.PlayerIds), "every player was rewarded");
             foreach (var reward in rewards)
-                Assert.That(world.GetPlayer(reward.Player).ActiveModifiers.Select(m => m.Id), Has.Member(reward.Modifier.Id));
+            {
+                var player = world.GetPlayer(reward.Player);
+                var kept = reward.Gear != null ? player.Bag.Select(g => g.Id) : player.ActiveModifiers.Select(m => m.Id);
+                Assert.That(kept, Has.Member(reward.Reward.Id), "a modifier is kept, gear goes in the bag");
+            }
         }
 
         [Test]

@@ -28,7 +28,13 @@ namespace HunterSystem.Simulation
             public int Gold;
 
             /// <summary>Rewards drawn again once the pool was owned, one entry per copy, to sell.</summary>
-            public readonly List<ModifierDefinition> Duplicates = new List<ModifierDefinition>();
+            public readonly List<LootDefinition> Duplicates = new List<LootDefinition>();
+
+            /// <summary>Every piece of gear the character has, worn or not, in the order found (ticket 23).</summary>
+            public readonly List<GearDefinition> Bag = new List<GearDefinition>();
+
+            /// <summary>The piece worn in each <see cref="GearSlot"/>, or null. Always one from <see cref="Bag"/>.</summary>
+            public readonly GearDefinition[] Worn = new GearDefinition[GearDefinition.SlotCount];
 
             /// <summary>Where this tick's command aims skills (the camera), or null to use the facing. Set each tick the player is standing, before any skill; never saved.</summary>
             public Vec3? Aim;

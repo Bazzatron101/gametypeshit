@@ -21,14 +21,17 @@ namespace HunterSystem.Game
         [SerializeField, Min(0.5f), Tooltip("How close a player must come to a checkpoint to reach it, in metres")] private float checkpointRadius = 2f;
         [SerializeField, Min(0f), Tooltip("Co-op: seconds after the whole party is down before everyone returns at the latest checkpoint")] private float wipeDelaySeconds = 3f;
         [SerializeField, Tooltip("The clear reward: each player draws one they do not have yet")] private ModifierDefinitionAsset[] rewardPool = new ModifierDefinitionAsset[0];
+        [SerializeField, Tooltip("Gear in the same reward pool (ticket 23). Each piece must also be in the game content's gear list.")] private GearDefinitionAsset[] gearPool = new GearDefinitionAsset[0];
 
         public string Id => id;
         public string DisplayName => displayName;
         public string Intel => intel;
         public IReadOnlyList<RoomPieceAsset> Rooms => rooms;
         public IReadOnlyList<ModifierDefinitionAsset> RewardPool => rewardPool;
+        public IReadOnlyList<GearDefinitionAsset> GearPool => gearPool;
 
-        public GateDefinition ToDefinition(Dictionary<ScriptableObject, EnemyDefinition> enemies)
+        /// <param name="gear">Gear already made for this config, so the pool and the gear list share definitions.</param>
+        public GateDefinition ToDefinition(Dictionary<ScriptableObject, EnemyDefinition> enemies, Dictionary<GearDefinitionAsset, GearDefinition> gear = null)
         {
             var gate = new GateDefinition
             {
@@ -43,6 +46,11 @@ namespace HunterSystem.Game
             {
                 if (modifier == null) { Debug.LogWarning($"{name}: an empty entry in the reward pool was skipped.", this); continue; }
                 gate.RewardPool.Add(modifier.ToDefinition());
+            }
+            foreach (var piece in gearPool ?? new GearDefinitionAsset[0])
+            {
+                if (piece == null) { Debug.LogWarning($"{name}: an empty entry in the gear pool was skipped.", this); continue; }
+                gate.RewardPool.Add(piece.ToDefinition(gear));
             }
             return gate;
         }

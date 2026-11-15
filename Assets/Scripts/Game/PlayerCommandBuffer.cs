@@ -21,6 +21,7 @@ namespace HunterSystem.Game
         private bool _sprintHeld;
         private float? _aimYawDegrees;
         private readonly Queue<string> _sales = new Queue<string>();
+        private readonly Queue<(string equip, GearSlot? unequip)> _gearChanges = new Queue<(string, GearSlot?)>();
         private bool? _setReadyPending;
         private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
@@ -46,10 +47,17 @@ namespace HunterSystem.Game
             if (sampled.AllocateStat.HasValue) _statAllocations.Enqueue(sampled.AllocateStat.Value);
             if (sampled.AssignSkill.HasValue) _skillAssignments.Enqueue(sampled.AssignSkill.Value);
             if (sampled.SellItemId != null) _sales.Enqueue(sampled.SellItemId);
+            if (sampled.EquipGearId != null || sampled.UnequipSlot.HasValue) _gearChanges.Enqueue((sampled.EquipGearId, sampled.UnequipSlot));
         }
 
         /// <summary>Queues one sale at a store (from the store's menu). Commands carry one per tick, in click order.</summary>
         public void QueueSale(string itemId) => _sales.Enqueue(itemId);
+
+        /// <summary>Queues wearing a piece from the bag (the gear panel). Commands carry one gear change per tick, in click order.</summary>
+        public void QueueEquip(string gearId) => _gearChanges.Enqueue((gearId, null));
+
+        /// <summary>Queues taking off whatever is worn in a slot (the gear panel).</summary>
+        public void QueueUnequip(GearSlot slot) => _gearChanges.Enqueue((null, slot));
 
         /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>
         public void QueueStatAllocation(Stat stat) => _statAllocations.Enqueue(stat);
@@ -69,9 +77,11 @@ namespace HunterSystem.Game
             Stat? allocate = _statAllocations.Count > 0 ? _statAllocations.Dequeue() : (Stat?)null;
             SkillAssignment? assign = _skillAssignments.Count > 0 ? _skillAssignments.Dequeue() : (SkillAssignment?)null;
             var sell = _sales.Count > 0 ? _sales.Dequeue() : null;
+            var gear = _gearChanges.Count > 0 ? _gearChanges.Dequeue() : (null, null);
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
-                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld, aimYawDegrees: _aimYawDegrees, sellItemId: sell);
+                allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld, aimYawDegrees: _aimYawDegrees, sellItemId: sell,
+                equipGearId: gear.equip, unequipSlot: gear.unequip);
             _jumpPending = false;
             _respawnPending = false;
             _setReadyPending = null;

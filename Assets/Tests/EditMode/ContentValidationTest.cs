@@ -55,6 +55,8 @@ namespace HunterSystem.Tests
             Assert.That(All<ShopAsset>(), Is.SubsetOf(content.Shops));
             Assert.That(All<SkillDefinitionAsset>(), Is.SubsetOf(content.Skills));
             Assert.That(All<ModifierDefinitionAsset>(), Is.SubsetOf(content.Modifiers));
+            Assert.That(All<GearDefinitionAsset>(), Is.SubsetOf(content.Gear));
+            Assert.That(content.Gear, Is.Unique.And.All.Not.Null);
             Assert.That(All<EnemyDefinitionAsset>(), Is.SubsetOf(content.Enemies));
             Assert.That(All<GateDefinitionAsset>(), Is.SubsetOf(content.Gates));
             Assert.That(All<BossDefinitionAsset>(), Is.SubsetOf(content.Bosses));
@@ -92,6 +94,8 @@ namespace HunterSystem.Tests
 
                 foreach (var modifier in asset.RewardPool)
                     Assert.That(content.Modifiers, Has.Member(modifier), $"{asset.name}: a reward that is not in the content list");
+                foreach (var gear in asset.GearPool)
+                    Assert.That(content.Gear, Has.Member(gear), $"{asset.name}: gear that is not in the content list");
                 foreach (var room in asset.Rooms.Where(r => r.Boss != null))
                 {
                     Assert.That(content.Bosses, Has.Member(room.Boss), $"{room.name}: a boss that is not in the content list");
@@ -291,6 +295,31 @@ namespace HunterSystem.Tests
 
             Assert.That(content.Skills.Select(s => s.Id), Is.Unique);
             Assert.That(content.Modifiers.Select(m => m.Id), Is.Unique);
+        }
+
+        [Test]
+        public void ItemIdsAreUniqueAcrossModifiersAndGear()
+        {
+            var config = new SimulationConfig();
+            Content().ApplyTo(config);
+            var modifierAssets = Content().Modifiers.Select(m => m.ToDefinition());
+
+            var ids = modifierAssets.Select(m => m.Id)
+                .Concat(config.Gear.Select(g => g.Id))
+                .Concat(config.Gear.SelectMany(g => g.Modifiers).Select(m => m.Id));
+            Assert.That(ids, Is.Unique, "saves and snapshots name items by id");
+        }
+
+        [Test]
+        public void EveryRoleFindsGearInTheFirstGate()
+        {
+            var config = new SimulationConfig();
+            Content().ApplyTo(config);
+            var pool = config.Gates[0].RewardPool.OfType<GearDefinition>().ToList();
+
+            Assert.That(pool, Is.Not.Empty);
+            foreach (var role in new[] { HunterSystem.Netcode.CompanionRole.Tank, HunterSystem.Netcode.CompanionRole.Marksman, HunterSystem.Netcode.CompanionRole.Caster })
+                Assert.That(pool.Any(g => HunterSystem.Netcode.CompanionRoles.GearScore(role, g) > 0), Is.True, $"something for the {role}");
         }
     }
 }

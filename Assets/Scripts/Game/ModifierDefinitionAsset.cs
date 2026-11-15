@@ -33,6 +33,9 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Above 0: every hit bursts onto other enemies this close")] private float explosionRadius;
         [SerializeField, Min(0), Tooltip("Burst damage as a percentage of the hit")] private int explosionDamagePercent;
 
+        [Header("Worn gear (ticket 23)")]
+        [SerializeField, Tooltip("When set, counts once per worn piece of gear with this tag, and not at all with none")] private string perWornTag = "";
+
         [Header("Selling")]
         [SerializeField, Min(0), Tooltip("Gold for a duplicate at a store paying full value; each store pays its own share")] private int sellValue = 100;
 
@@ -54,6 +57,7 @@ namespace HunterSystem.Game
             ProjectileSpreadDegrees = projectileSpreadDegrees,
             ExplosionRadius = explosionRadius,
             ExplosionDamagePercent = explosionDamagePercent,
+            PerWornTag = string.IsNullOrEmpty(perWornTag) ? null : perWornTag,
             SellValue = sellValue,
         };
 
@@ -73,6 +77,7 @@ namespace HunterSystem.Game
             projectileSpreadDegrees = d.ProjectileSpreadDegrees;
             explosionRadius = d.ExplosionRadius;
             explosionDamagePercent = d.ExplosionDamagePercent;
+            perWornTag = d.PerWornTag ?? "";
             sellValue = d.SellValue;
         }
     }

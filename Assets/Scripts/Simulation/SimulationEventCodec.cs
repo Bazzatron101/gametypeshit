@@ -7,8 +7,8 @@ namespace HunterSystem.Simulation
 {
     /// <summary>
     /// Events as bytes, so a host can send what happened on its ticks to clients for presentation.
-    /// Skills travel by id and resolve to the receiving side's own definitions (both run the same
-    /// build); modifiers travel in full, as in snapshots. Bytes that cannot be read, or that name a
+    /// Skills and gear travel by id and resolve to the receiving side's own definitions (both run the
+    /// same build); modifiers travel in full, as in snapshots. Bytes that cannot be read, or that name a
     /// skill the receiver does not have, are rejected with an <see cref="ArgumentException"/>.
     /// </summary>
     public static class SimulationEventCodec
@@ -25,7 +25,11 @@ namespace HunterSystem.Simulation
             ReadyChanged, ReturnedToHub, StorySceneStarted,
             PlayerJumped, AttackJumped,
             ItemSold,
+            GearEquipped, GearUnequipped,
         }
+
+        // What a reward is, in GateRewardGranted.
+        private const byte NoReward = 0, ModifierReward = 1, GearReward = 2;
 
         public static byte[] Encode(IEnumerable<SimulationEvent> events)
         {
@@ -171,13 +175,25 @@ namespace HunterSystem.Simulation
                     Head(w, Code.ReturnedToHub, e); SimulationWorld.WriteNullable(w, x.GateId); w.Write(x.Cleared);
                     break;
                 case GateRewardGranted g:
-                    Head(w, Code.GateRewardGranted, e); w.Write(g.Player.Value); w.Write(g.Modifier != null);
-                    if (g.Modifier != null) SimulationWorld.WriteModifier(w, g.Modifier);
+                    Head(w, Code.GateRewardGranted, e); w.Write(g.Player.Value);
+                    switch (g.Reward)
+                    {
+                        case null: w.Write(NoReward); break;
+                        case ModifierDefinition m: w.Write(ModifierReward); SimulationWorld.WriteModifier(w, m); break;
+                        case GearDefinition gear: w.Write(GearReward); w.Write(gear.Id); break;
+                        default: throw new NotSupportedException($"No encoding for a {g.Reward.GetType().Name} reward.");
+                    }
                     w.Write(g.IsDuplicate);
                     break;
                 case ItemSold x:
                     Head(w, Code.ItemSold, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.ItemId);
                     SimulationWorld.WriteNullable(w, x.ShopId); w.Write(x.Gold);
+                    break;
+                case GearEquipped x:
+                    Head(w, Code.GearEquipped, e); w.Write(x.Player.Value); w.Write((byte)x.Slot); w.Write(x.GearId);
+                    break;
+                case GearUnequipped x:
+                    Head(w, Code.GearUnequipped, e); w.Write(x.Player.Value); w.Write((byte)x.Slot); w.Write(x.GearId);
                     break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
@@ -199,6 +215,12 @@ namespace HunterSystem.Simulation
             SkillDefinition Skill() => SkillById(config, r.ReadString());
             SkillDefinition NullableSkill() => SimulationWorld.ReadNullable(r) is { } id ? SkillById(config, id) : null;
             AttackKind Kind() => (AttackKind)r.ReadByte();
+            GearSlot Slot()
+            {
+                var slot = r.ReadByte();
+                if (slot >= GearDefinition.SlotCount) throw new FormatException("Impossible gear slot.");
+                return (GearSlot)slot;
+            }
 
             switch (code)
             {
@@ -271,17 +293,38 @@ namespace HunterSystem.Simulation
                 case Code.GateRewardGranted:
                 {
                     var player = Player();
-                    var modifier = r.ReadBoolean() ? SimulationWorld.ReadModifier(r) : null;
-                    return new GateRewardGranted(tick, player, modifier, r.ReadBoolean());
+                    LootDefinition reward = r.ReadByte() switch
+                    {
+                        NoReward => null,
+                        ModifierReward => SimulationWorld.ReadModifier(r),
+                        GearReward => GearById(config, r.ReadString()),
+                        _ => throw new FormatException("Unknown kind of reward."),
+                    };
+                    return new GateRewardGranted(tick, player, reward, r.ReadBoolean());
                 }
                 case Code.ItemSold:
                 {
                     var player = Player();
                     return new ItemSold(tick, player, SimulationWorld.ReadNullable(r), SimulationWorld.ReadNullable(r), r.ReadInt32());
                 }
+                case Code.GearEquipped:
+                {
+                    var player = Player();
+                    var slot = Slot();
+                    return new GearEquipped(tick, player, slot, GearById(config, r.ReadString()).Id);
+                }
+                case Code.GearUnequipped:
+                {
+                    var player = Player();
+                    var slot = Slot();
+                    return new GearUnequipped(tick, player, slot, GearById(config, r.ReadString()).Id);
+                }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }
         }
+
+        private static GearDefinition GearById(SimulationConfig config, string id) =>
+            (config.Gear ?? Array.Empty<GearDefinition>()).FirstOrDefault(g => g != null && g.Id == id) ?? throw new FormatException($"Unknown gear '{id}'.");
 
         private static SkillDefinition SkillById(SimulationConfig config, string id) =>
             config.Skills.FirstOrDefault(s => s.Id == id) ?? throw new FormatException($"Unknown skill '{id}'.");

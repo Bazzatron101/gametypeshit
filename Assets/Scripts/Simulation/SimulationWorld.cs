@@ -60,6 +60,7 @@ namespace HunterSystem.Simulation
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
             ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
             IndexLootAndValidateShops();
+            IndexAndValidateGear();
             TickDelta = 1f / config.TickRate;
             _attacks = new ResolvedAttack[AttackKindCount];
             _attacks[(int)AttackKind.Light] = Resolve(AttackKind.Light, config.LightAttack);
@@ -115,7 +116,8 @@ namespace HunterSystem.Simulation
                 p.LifeState, p.IsDodging(Tick), p.IsInvulnerable(Tick), p.IsWindingUp,
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
-                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray());
+                p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray(),
+                p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone());
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
@@ -177,6 +179,8 @@ namespace HunterSystem.Simulation
             {
                 if (!commands.TryGetValue(player.Id, out var cmd)) continue;
                 if (cmd.AssignSkill.HasValue) TryAssignSkill(player, cmd.AssignSkill.Value, tick);
+                if (cmd.UnequipSlot.HasValue) TryUnequip(player, cmd.UnequipSlot.Value, tick);
+                if (cmd.EquipGearId != null) TryEquip(player, cmd.EquipGearId, tick);
                 if (cmd.AllocateStat.HasValue) TryAllocateStat(player, cmd.AllocateStat.Value, tick);
                 if (cmd.Respawn) TryRespawn(player, tick);
                 if (cmd.SetReady.HasValue) TrySetReady(player, cmd.SetReady.Value, tick);

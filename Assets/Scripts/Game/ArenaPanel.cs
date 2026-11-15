@@ -99,6 +99,16 @@ namespace HunterSystem.Game
 
         public bool IsModifierActive(ModifierDefinitionAsset asset) => _runner.World.HasModifier(Player, asset.Id);
 
+        /// <summary>Puts every piece of gear in the game in the bag, so builds can be tried here (I opens the gear menu).</summary>
+        public void GiveAllGear()
+        {
+            foreach (var gear in Content.Gear)
+                if (gear != null) _runner.World.GiveGear(Player, gear.Id);
+        }
+
+        /// <summary>Gives a piece (if it is not in the bag yet) and wears it.</summary>
+        public void Wear(GearDefinitionAsset gear) => _runner.World.GiveGear(Player, gear.Id, equip: true);
+
         public void ResetCooldowns() => _runner.World.ResetCooldowns(Player);
 
         public void Heal() => _runner.World.RestoreHealth(Player);
@@ -171,6 +181,14 @@ namespace HunterSystem.Game
                 if (modifier == null) continue;
                 var active = IsModifierActive(modifier);
                 if (GUILayout.Toggle(active, " " + modifier.DisplayName) != active) ToggleModifier(modifier);
+            }
+
+            GUILayout.Label("Gear (I: the gear menu)", _header);
+            if (GUILayout.Button("Give every piece")) GiveAllGear();
+            foreach (var gear in Content.Gear)
+            {
+                if (gear == null) continue;
+                if (GUILayout.Button("Wear " + gear.DisplayName)) Wear(gear);
             }
 
             GUILayout.Label("Tuning", _header);

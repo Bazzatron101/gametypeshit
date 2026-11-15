@@ -437,23 +437,29 @@ namespace HunterSystem.Simulation
     }
 
     /// <summary>
-    /// A player's reward for clearing a gate: a modifier from the gate's pool, already added to their
-    /// character. Null when they already own the whole pool.
+    /// A player's reward for clearing a gate: an item from the gate's pool, already added to their
+    /// character (a modifier kept for good, or gear put in the bag), or a duplicate to sell.
     /// </summary>
     public sealed class GateRewardGranted : SimulationEvent
     {
         public PlayerId Player { get; }
 
-        /// <summary>The reward drawn.</summary>
-        public ModifierDefinition Modifier { get; }
+        /// <summary>The reward drawn, or null for none.</summary>
+        public LootDefinition Reward { get; }
+
+        /// <summary>The reward when it is a modifier, else null.</summary>
+        public ModifierDefinition Modifier => Reward as ModifierDefinition;
+
+        /// <summary>The reward when it is gear, else null.</summary>
+        public GearDefinition Gear => Reward as GearDefinition;
 
         /// <summary>True when the player already owned the whole pool: a duplicate, kept to sell (ticket 22).</summary>
         public bool IsDuplicate { get; }
 
-        public GateRewardGranted(int tick, PlayerId player, ModifierDefinition modifier, bool isDuplicate = false) : base(tick)
+        public GateRewardGranted(int tick, PlayerId player, LootDefinition reward, bool isDuplicate = false) : base(tick)
         {
             Player = player;
-            Modifier = modifier;
+            Reward = reward;
             IsDuplicate = isDuplicate;
         }
     }

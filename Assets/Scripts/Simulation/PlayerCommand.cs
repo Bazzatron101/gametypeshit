@@ -14,7 +14,11 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot);
+
+        /// <summary>This command with a piece of gear to wear (or none).</summary>
+        public PlayerCommand WithEquipGear(string gearId) =>
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, gearId, UnequipSlot);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -51,6 +55,12 @@ namespace HunterSystem.Simulation
         /// <summary>At a store: sell one duplicate of this item (a press), or null for none (ticket 22).</summary>
         public readonly string SellItemId;
 
+        /// <summary>Wear this piece from the bag in its slot (a press), or null for none (ticket 23). What was there goes back to the bag.</summary>
+        public readonly string EquipGearId;
+
+        /// <summary>Take off whatever is worn in this slot (a press), or null for none. Applied before <see cref="EquipGearId"/>.</summary>
+        public readonly GearSlot? UnequipSlot;
+
         /// <summary>Steps of the aim's yaw in a full turn. The aim is stored in these steps, so it is exactly the same after the wire.</summary>
         public const int AimSteps = 65536;
 
@@ -77,9 +87,12 @@ namespace HunterSystem.Simulation
 
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
             Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
-            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null, string sellItemId = null)
+            bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null, string sellItemId = null,
+            string equipGearId = null, GearSlot? unequipSlot = null)
         {
             SellItemId = sellItemId;
+            EquipGearId = equipGearId;
+            UnequipSlot = unequipSlot;
             HasAim = aimYawDegrees.HasValue && !float.IsNaN(aimYawDegrees.Value) && !float.IsInfinity(aimYawDegrees.Value);
             AimYaw = HasAim ? ToAimSteps(aimYawDegrees.Value) : (ushort)0;
             Jump = jump;

@@ -117,9 +117,10 @@ namespace HunterSystem.Game
                         if (!_rewardShown) Notify(home.Cleared ? "Back in the hub." : "You left the gate. Back in the hub.");
                         break;
                     case GateRewardGranted r when r.Player == me:
-                        Notify(r.Modifier == null ? $"{_gateName} cleared."
-                            : r.IsDuplicate ? $"{_gateName} cleared.  A duplicate {r.Modifier.Name}: sell it at a store, such as the {CheapestStoreName()} in the hub."
-                            : $"{_gateName} cleared.  Reward: {r.Modifier.Name}, kept on your hunter.");
+                        Notify(r.Reward == null ? $"{_gateName} cleared."
+                            : r.IsDuplicate ? $"{_gateName} cleared.  A duplicate {r.Reward.Name}: sell it at a store, such as the {CheapestStoreName()} in the hub."
+                            : r.Gear != null ? $"{_gateName} cleared.  Reward: {r.Gear.Name} ({GearPanel.SlotName(r.Gear.Slot)}). Press I to see your gear."
+                            : $"{_gateName} cleared.  Reward: {r.Reward.Name}, kept on your hunter.");
                         _rewardShown = true;
                         break;
                 }

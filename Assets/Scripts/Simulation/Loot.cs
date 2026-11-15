@@ -4,6 +4,26 @@ using System.Collections.Generic;
 namespace HunterSystem.Simulation
 {
     /// <summary>
+    /// Anything a gate's pool can hold: a modifier (kept for good) or a piece of gear (kept in the
+    /// bag and worn in its slot, ticket 23). One id means one item everywhere, because saves,
+    /// snapshots and duplicates name items by id.
+    /// </summary>
+    public abstract class LootDefinition
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+
+        /// <summary>
+        /// Gold for a duplicate at a store paying full value, at least 1; each store pays its own share
+        /// (ticket 22). Not carried in snapshots or events: prices are looked up by the item's id in the gates' pools.
+        /// </summary>
+        public int SellValue { get; set; } = 100;
+
+        public override string ToString() => Id;
+    }
+
+    /// <summary>
     /// A store that buys duplicates (ticket 22). Stores stand around the world, and each pays its
     /// own share of an item's value: the guild's, in the hub, is the easiest to reach and pays the
     /// least (the developer's rule, ADR 0016).
@@ -43,11 +63,11 @@ namespace HunterSystem.Simulation
     public sealed partial class SimulationWorld
     {
         /// <summary>Every item a gate can drop, by id (duplicates are kept and saved by id).</summary>
-        private Dictionary<string, ModifierDefinition> _lootById;
+        private Dictionary<string, LootDefinition> _lootById;
 
         private void IndexLootAndValidateShops()
         {
-            _lootById = new Dictionary<string, ModifierDefinition>(StringComparer.Ordinal);
+            _lootById = new Dictionary<string, LootDefinition>(StringComparer.Ordinal);
             foreach (var gate in _config.Gates ?? Array.Empty<GateDefinition>())
             foreach (var item in gate.RewardPool)
             {
@@ -74,7 +94,7 @@ namespace HunterSystem.Simulation
         public IReadOnlyList<ShopDefinition> Shops => _config.Shops ?? Array.Empty<ShopDefinition>();
 
         /// <summary>A droppable item by id, or null if no gate drops it.</summary>
-        public ModifierDefinition LootById(string id) => id != null && _lootById.TryGetValue(id, out var item) ? item : null;
+        public LootDefinition LootById(string id) => id != null && _lootById.TryGetValue(id, out var item) ? item : null;
 
         /// <summary>The store this player stands at, or null. Never inside a gate. The first listed wins if two overlap.</summary>
         public ShopDefinition ShopInReach(PlayerId id)

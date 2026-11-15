@@ -71,7 +71,7 @@ namespace HunterSystem.Online
                 if (e is CheckpointActivated) _checkpointsSeen++;
                 if (e is PlayerRevived) _revivesSeen++;
                 if (e is BossAttackStarted) _bossAttacksSeen++;
-                if (e is GateRewardGranted reward && reward.Player == _runner.LocalPlayerId) _rewardSeen = reward.Modifier?.Id ?? "(pool owned)";
+                if (e is GateRewardGranted reward && reward.Player == _runner.LocalPlayerId) _rewardSeen = reward.Reward?.Id ?? "(pool owned)";
                 if (e is GateCleared) _gateClearedSeen = true;
                 if (e is ReturnedToHub home) _returnedHome = home.GateId + (home.Cleared ? " (cleared)" : " (left)");
                 if (_runner.World != null && _runner.World.HasGate) RememberGate(_runner.World.Gate);

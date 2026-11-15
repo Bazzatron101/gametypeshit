@@ -21,13 +21,10 @@ namespace HunterSystem.Simulation
     /// Changes how skills behave. It targets either every skill with a tag (<see cref="AppliesToTag"/>)
     /// or one signature skill (<see cref="AppliesToSkillId"/>, a hand-authored modifier). All of a
     /// player's matching modifiers combine when the skill is used: percentages add, extras add.
-    /// Gear and skill upgrades grant these; the shared skill data is never changed.
+    /// Gate clears, gear and skill upgrades grant these; the shared skill data is never changed.
     /// </summary>
-    public sealed class ModifierDefinition
+    public sealed class ModifierDefinition : LootDefinition
     {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
 
         /// <summary>Applies to every skill carrying this tag. Set this or <see cref="AppliesToSkillId"/>, not both.</summary>
         public string AppliesToTag { get; set; }
@@ -62,10 +59,11 @@ namespace HunterSystem.Simulation
         public int ExplosionDamagePercent { get; set; }
 
         /// <summary>
-        /// Gold for a duplicate at a store paying full value, at least 1; each store pays its own share
-        /// (ticket 22). Not carried in snapshots or events: prices are looked up by the item's id in the gates' pools.
+        /// When set, the modifier counts once for every piece of worn gear carrying this tag, and not
+        /// at all with none (ticket 23): with three fire pieces on, +15% damage is +45%. Every number
+        /// scales, including extra bolts and the burst's share; the burst's radius does not.
         /// </summary>
-        public int SellValue { get; set; } = 100;
+        public string PerWornTag { get; set; }
 
         public bool AppliesTo(SkillDefinition skill) =>
             (AppliesToTag != null && skill.HasTag(AppliesToTag)) ||

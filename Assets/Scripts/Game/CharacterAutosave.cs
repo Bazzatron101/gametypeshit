@@ -77,6 +77,10 @@ namespace HunterSystem.Game
             SkillSlotChanged s => s.Player == me,
             ModifierGranted m => m.Player == me,
             ModifierRevoked m => m.Player == me,
+            GateRewardGranted r => r.Player == me,
+            ItemSold s => s.Player == me,
+            GearEquipped g => g.Player == me,
+            GearUnequipped g => g.Player == me,
             _ => false,
         };
     }

@@ -108,6 +108,10 @@ namespace HunterSystem.Netcode
                 KnownSkills = new List<string>(character.KnownSkills ?? new List<string>()),
                 SkillBar = (string[])(character.SkillBar ?? new string[SimulationWorld.SkillSlotCount]).Clone(),
                 Modifiers = new List<ModifierDefinition>(character.Modifiers ?? new List<ModifierDefinition>()),
+                Gold = character.Gold,
+                Duplicates = new List<string>(character.Duplicates ?? new List<string>()),
+                Gear = new List<string>(character.Gear ?? new List<string>()),
+                Worn = (string[])(character.Worn ?? new string[GearDefinition.SlotCount]).Clone(),
             };
         }
     }

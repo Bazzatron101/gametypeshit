@@ -114,6 +114,7 @@ namespace HunterSystem.Netcode
             {
                 action = Act(world, me, self, tick);
                 if (self.UnspentStatPoints > 0) action = action.WithAllocateStat(_statPlan[_nextStat++ % _statPlan.Length]);
+                if (CompanionRoles.GearToWear(Role, self) is { } gear) action = action.WithEquipGear(gear);
             }
             _decided = action;
             return action;

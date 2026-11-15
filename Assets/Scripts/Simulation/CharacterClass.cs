@@ -57,6 +57,8 @@ namespace HunterSystem.Simulation
                 Modifiers = new List<ModifierDefinition>(Modifiers ?? new List<ModifierDefinition>()),
                 Gold = Gold,
                 Duplicates = new List<string>(Duplicates ?? new List<string>()),
+                Gear = new List<string>(Gear ?? new List<string>()),
+                Worn = (string[])(Worn ?? new string[GearDefinition.SlotCount]).Clone(),
             };
         }
     }

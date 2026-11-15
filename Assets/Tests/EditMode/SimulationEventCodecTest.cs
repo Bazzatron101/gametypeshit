@@ -15,7 +15,9 @@ namespace HunterSystem.Tests
     {
         private static readonly SkillDefinition Slam = new SkillDefinition { Id = "slam", Name = "Slam", Effect = SkillEffectKind.Area };
 
-        private static SimulationConfig Config() => new SimulationConfig { Skills = new[] { Slam } };
+        private static readonly GearDefinition Staff = new GearDefinition { Id = "staff", Name = "Staff", Slot = GearSlot.Weapon, Tags = new[] { "fire" } };
+
+        private static SimulationConfig Config() => new SimulationConfig { Skills = new[] { Slam }, Gear = new[] { Staff } };
 
         private static readonly ModifierDefinition Ember = new ModifierDefinition
         {
@@ -65,6 +67,9 @@ namespace HunterSystem.Tests
             new BossEnraged(40, E),
             new GateRewardGranted(41, P, Ember),
             new GateRewardGranted(41, P, null),
+            new GateRewardGranted(41, P, Staff),
+            new GearEquipped(48, P, GearSlot.Weapon, "staff"),
+            new GearUnequipped(49, P, GearSlot.Weapon, "staff"),
             new ReadyChanged(42, P, true),
             new ReturnedToHub(43, "goblin-warren", true),
             new StorySceneStarted(44, "arrival"),
@@ -126,7 +131,8 @@ namespace HunterSystem.Tests
         private static object Comparable(object value) => value switch
         {
             SkillDefinition s => "skill:" + s.Id,
-            ModifierDefinition m => $"modifier:{m.Id}/{m.Name}/{m.AppliesToTag}/{m.DamagePercent}/{m.ExplosionRadius}/{m.ExplosionDamagePercent}",
+            ModifierDefinition m => $"modifier:{m.Id}/{m.Name}/{m.AppliesToTag}/{m.PerWornTag}/{m.DamagePercent}/{m.ExplosionRadius}/{m.ExplosionDamagePercent}",
+            GearDefinition g => "gear:" + g.Id,
             _ => value,
         };
     }

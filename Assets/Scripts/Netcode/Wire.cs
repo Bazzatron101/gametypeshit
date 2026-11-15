@@ -99,6 +99,9 @@ namespace HunterSystem.Netcode
             if (command.HasAim) w.Write(command.AimYaw);
             w.Write(command.SellItemId != null);
             if (command.SellItemId != null) w.Write(command.SellItemId);
+            w.Write(command.EquipGearId != null);
+            if (command.EquipGearId != null) w.Write(command.EquipGearId);
+            w.Write((sbyte)(command.UnequipSlot.HasValue ? (int)command.UnequipSlot.Value : -1));
         });
 
         public static byte[] Refused(string reason) => Write(MessageType.Refused, w => w.Write(reason));
@@ -126,13 +129,16 @@ namespace HunterSystem.Netcode
             }
             float? aim = r.ReadBoolean() ? r.ReadUInt16() * (360f / PlayerCommand.AimSteps) : (float?)null;
             var sell = r.ReadBoolean() ? r.ReadString() : null;
+            var equip = r.ReadBoolean() ? r.ReadString() : null;
+            var unequip = r.ReadSByte();
             return (sequence, new PlayerCommand(moveX, moveZ,
                 lightAttack: (buttons & LightAttackBit) != 0, dodge: (buttons & DodgeBit) != 0, heavyAttack: (buttons & HeavyAttackBit) != 0,
                 allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
                 useSkillSlot: useSkill >= 0 ? useSkill : (int?)null,
                 assignSkill: assign, heldSkillSlots: held, respawn: (buttons & RespawnBit) != 0,
                 setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null,
-                jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0, aimYawDegrees: aim, sellItemId: sell));
+                jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0, aimYawDegrees: aim, sellItemId: sell,
+                equipGearId: equip, unequipSlot: unequip >= 0 && unequip < GearDefinition.SlotCount ? (GearSlot)unequip : (GearSlot?)null));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;

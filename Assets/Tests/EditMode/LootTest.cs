@@ -82,7 +82,7 @@ namespace HunterSystem.Tests
             foreach (var p in players)
             {
                 world.AddPlayer(p, HubCentre);
-                foreach (var item in pool) world.GrantModifier(p, item);
+                foreach (var item in pool) world.GrantModifier(p, (ModifierDefinition)item);
             }
             Step(world);
             world.StartGate("den");

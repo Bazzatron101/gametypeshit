@@ -82,17 +82,26 @@ namespace HunterSystem.Simulation
         public readonly int Gold;
 
         /// <summary>Duplicates to sell, one entry per copy.</summary>
-        public readonly IReadOnlyList<ModifierDefinition> Duplicates;
+        public readonly IReadOnlyList<LootDefinition> Duplicates;
+
+        /// <summary>Every piece of gear the character has, worn or not, in the order found (ticket 23).</summary>
+        public readonly IReadOnlyList<GearDefinition> Bag;
+
+        /// <summary>The piece worn in each <see cref="GearSlot"/> (index by slot), or null.</summary>
+        public readonly IReadOnlyList<GearDefinition> Worn;
 
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
             IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false,
-            ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<ModifierDefinition> duplicates = null)
+            ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<LootDefinition> duplicates = null,
+            IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null)
         {
             Gold = gold;
-            Duplicates = duplicates ?? System.Array.Empty<ModifierDefinition>();
+            Duplicates = duplicates ?? System.Array.Empty<LootDefinition>();
+            Bag = bag ?? System.Array.Empty<GearDefinition>();
+            Worn = worn ?? new GearDefinition[GearDefinition.SlotCount];
             Class = characterClass;
             JumpHeightPercent = jumpHeightPercent;
             IsAirborne = isAirborne;

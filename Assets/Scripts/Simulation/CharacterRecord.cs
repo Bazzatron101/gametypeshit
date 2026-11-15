@@ -12,8 +12,7 @@ namespace HunterSystem.Simulation
     /// not part of it: a character arrives fresh wherever it is brought in.
     /// <para>
     /// Skills are named by id and looked up in the game's content when the character is brought in.
-    /// Modifiers are kept in full, as in snapshots. There is no gear yet; when items exist they
-    /// join this record under a new <see cref="CharacterCodec"/> version.
+    /// Modifiers are kept in full, as in snapshots. Gear is named by id, like skills (ticket 23).
     /// </para>
     /// </summary>
     public sealed partial class CharacterRecord
@@ -40,6 +39,12 @@ namespace HunterSystem.Simulation
 
         /// <summary>Duplicates to sell, by item id, one entry per copy.</summary>
         public List<string> Duplicates = new List<string>();
+
+        /// <summary>Every piece of gear the character has, by id, worn or not (ticket 23).</summary>
+        public List<string> Gear = new List<string>();
+
+        /// <summary>The id of the piece worn in each <see cref="GearSlot"/>; null for an empty slot.</summary>
+        public string[] Worn = new string[GearDefinition.SlotCount];
 
         /// <summary>
         /// True for a character that has never been played. Bringing one in gives exactly what a
@@ -71,8 +76,8 @@ namespace HunterSystem.Simulation
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSCH");
 
-        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates.</summary>
-        public const byte Version = 3;
+        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates. Version 4: and gear, and modifiers that count worn gear.</summary>
+        public const byte Version = 4;
 
         public static byte[] Encode(CharacterRecord c) => Encode(c, Version);
 
@@ -81,6 +86,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>Writes a character as the game before gold did (for tests of loading old saves).</summary>
         public static byte[] EncodeVersion2ForTests(CharacterRecord c) => Encode(c, 2);
+
+        /// <summary>Writes a character as the game before gear did (for tests of loading old saves).</summary>
+        public static byte[] EncodeVersion3ForTests(CharacterRecord c) => Encode(c, 3);
 
         private static byte[] Encode(CharacterRecord c, byte version)
         {
@@ -102,12 +110,20 @@ namespace HunterSystem.Simulation
             w.Write(c.SkillBar.Length);
             foreach (var id in c.SkillBar) SimulationWorld.WriteNullable(w, id);
             w.Write(c.Modifiers.Count);
-            foreach (var m in c.Modifiers) SimulationWorld.WriteModifier(w, m);
+            foreach (var m in c.Modifiers) SimulationWorld.WriteModifier(w, m, withWornTag: version >= 4);
             if (version >= 3)
             {
                 w.Write(c.Gold);
                 w.Write(c.Duplicates.Count);
                 foreach (var id in c.Duplicates) w.Write(id ?? "");
+            }
+            if (version >= 4)
+            {
+                w.Write(c.Gear.Count);
+                foreach (var id in c.Gear) w.Write(id ?? "");
+                var worn = c.Worn ?? new string[GearDefinition.SlotCount];
+                w.Write(worn.Length);
+                foreach (var id in worn) SimulationWorld.WriteNullable(w, id);
             }
             w.Flush();
             return stream.ToArray();
@@ -142,11 +158,17 @@ namespace HunterSystem.Simulation
                 for (int i = 0, n = Count(r, bytes); i < n; i++) c.KnownSkills.Add(r.ReadString());
                 c.SkillBar = new string[Count(r, bytes)];
                 for (var i = 0; i < c.SkillBar.Length; i++) c.SkillBar[i] = SimulationWorld.ReadNullable(r);
-                for (int i = 0, n = Count(r, bytes); i < n; i++) c.Modifiers.Add(SimulationWorld.ReadModifier(r));
+                for (int i = 0, n = Count(r, bytes); i < n; i++) c.Modifiers.Add(SimulationWorld.ReadModifier(r, withWornTag: version >= 4));
                 if (version >= 3)
                 {
                     c.Gold = r.ReadInt32();
                     for (int i = 0, n = Count(r, bytes); i < n; i++) c.Duplicates.Add(r.ReadString());
+                }
+                if (version >= 4)
+                {
+                    for (int i = 0, n = Count(r, bytes); i < n; i++) c.Gear.Add(r.ReadString());
+                    c.Worn = new string[Count(r, bytes)];
+                    for (var i = 0; i < c.Worn.Length; i++) c.Worn[i] = SimulationWorld.ReadNullable(r);
                 }
                 return c;
             }
