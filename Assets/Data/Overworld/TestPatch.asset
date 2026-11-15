@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46db4e71ca22230478b296fb269b8762, type: 3}
   m_Name: TestPatch
   m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.OverworldAsset
-  ground: {fileID: 4900000, guid: 2cace97fddffec34abdcfbf74727e50f, type: 3}
+  origin: {x: -500, y: -500}
+  tileSize: 250
+  tilesX: 4
+  tilesZ: 4
+  tileFolder: Overworld/TestPatch
+  coarse: {fileID: 4900000, guid: 2f019c91a3f18e643a9116ca2dd023b0, type: 3}
   gates:
   - gateId: goblin-warren
     entrance: {x: -120, y: 9.5279255, z: -45}
@@ -43,9 +48,7 @@ MonoBehaviour:
   entranceRadius: 3
   findRadius: 20
   unopenedRegionXpPercent: 25
-  tileSize: 250
   meshCellSize: 4
   farMeshCellSize: 16
-  nearLodScreenHeight: 0.12
   seaLevel: 4
   sandAboveSea: 1.2

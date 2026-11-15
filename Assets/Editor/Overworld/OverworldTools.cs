@@ -168,11 +168,46 @@ namespace HunterSystem.Editor
             }
 
             var kinds = GroundBake.Classify(heights, columns, rows, cellSize, source.rules, (c, r) => climbable[r * columns + c]);
-            EnsureFolders("Assets/Data/Overworld");
-            File.WriteAllBytes(source.GroundPath, GroundBake.Encode(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds));
-            AssetDatabase.ImportAsset(source.GroundPath, ImportAssetOptions.ForceUpdate);
-            var groundAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.GroundPath);
             var ground = new HeightmapGround(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds);
+
+            // One file per tile, streamed in as players move (ticket 40, ADR 0020); each holds its own edge samples.
+            EnsureFolders(source.TileFolderAsset);
+            foreach (var old in Directory.GetFiles(source.TileFolderAsset, "tile_*.bytes")) File.Delete(old);
+            for (var j = 0; j < source.tilesZ; j++)
+            for (var i = 0; i < source.tilesX; i++)
+            {
+                var tileHeights = new float[(cellsPerTile + 1) * (cellsPerTile + 1)];
+                var tileKinds = new GroundKind[cellsPerTile * cellsPerTile];
+                for (var z = 0; z <= cellsPerTile; z++)
+                for (var x = 0; x <= cellsPerTile; x++)
+                {
+                    tileHeights[z * (cellsPerTile + 1) + x] = heights[(j * cellsPerTile + z) * (columns + 1) + i * cellsPerTile + x];
+                    if (x < cellsPerTile && z < cellsPerTile) tileKinds[z * cellsPerTile + x] = kinds[(j * cellsPerTile + z) * columns + i * cellsPerTile + x];
+                }
+                File.WriteAllBytes($"{source.TileFolderAsset}/{OverworldAsset.TileFileName(new TileCoord(i, j))}",
+                    GroundBake.Encode(source.origin.x + i * source.tileSize, source.origin.y + j * source.tileSize, cellSize, cellsPerTile, cellsPerTile, tileHeights, tileKinds));
+            }
+
+            // The coarse map: the whole world at the far facet size, always loaded.
+            var coarseColumns = Mathf.Max(1, Mathf.CeilToInt(source.AreaSize.x / source.farMeshCellSize));
+            var coarseCellX = source.AreaSize.x / coarseColumns; // square cells: the rows may reach a little past a non-square map
+            var coarseRows = Mathf.Max(1, Mathf.CeilToInt(source.AreaSize.y / coarseCellX - 1e-3f));
+            var coarseHeights = new float[(coarseColumns + 1) * (coarseRows + 1)];
+            var coarseKinds = new GroundKind[coarseColumns * coarseRows];
+            for (var z = 0; z <= coarseRows; z++)
+            for (var x = 0; x <= coarseColumns; x++)
+            {
+                var px = source.origin.x + x * coarseCellX;
+                var pz = source.origin.y + z * coarseCellX;
+                coarseHeights[z * (coarseColumns + 1) + x] = ground.HeightAt(new Vec3(px, 0f, pz));
+                if (x < coarseColumns && z < coarseRows)
+                    coarseKinds[z * coarseColumns + x] = ground.KindAt(new Vec3(px + coarseCellX / 2f, 0f, pz + coarseCellX / 2f));
+            }
+            EnsureFolders("Assets/Data/Overworld");
+            File.WriteAllBytes(source.CoarsePath, GroundBake.Encode(source.origin.x, source.origin.y, coarseCellX, coarseColumns, coarseRows, coarseHeights, coarseKinds));
+            if (File.Exists(source.OldGroundPath)) AssetDatabase.DeleteAsset(source.OldGroundPath); // ticket 39's one file for everything
+            AssetDatabase.Refresh();
+            var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
 
             var gates = new List<OverworldAsset.GateSiteData>();
             var roads = new List<OverworldAsset.RoadData>();
@@ -206,8 +241,9 @@ namespace HunterSystem.Editor
                 asset = ScriptableObject.CreateInstance<OverworldAsset>();
                 AssetDatabase.CreateAsset(asset, source.OverworldPath);
             }
-            asset.Set(groundAsset, gates, town != null, town != null ? OnGround(ground, town.transform.position) : Vector3.zero, town != null ? town.Radius : 0f,
-                roads, landmarks, source.tileSize, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize);
+            asset.Set(source.origin, source.tileSize, source.tilesX, source.tilesZ, source.TileFolder, coarseAsset,
+                gates, town != null, town != null ? OnGround(ground, town.transform.position) : Vector3.zero, town != null ? town.Radius : 0f,
+                roads, landmarks, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize);
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
             Debug.Log($"Baked {source.outputName}: {columns} × {rows} cells of {cellSize:0.###} m, {gates.Count} gates, {roads.Count} roads, " +

@@ -17,6 +17,12 @@ namespace HunterSystem.Simulation
 
         /// <summary>A face marked as climbable (ledges, vines, a different rock; ticket 36). Walkable for now; climbing itself is later work.</summary>
         Climbable = 3,
+
+        /// <summary>
+        /// Ground whose tile is not loaded yet (ticket 40, ADR 0020). Never baked. Nobody steps onto it, and
+        /// anyone standing on it waits where they are until it loads.
+        /// </summary>
+        Unloaded = 4,
     }
 
     /// <summary>
@@ -49,6 +55,29 @@ namespace HunterSystem.Simulation
         public static bool IsWalkable(this IGround ground, Vec3 p) => IsWalkable(ground.KindAt(p));
 
         public static bool IsWalkable(GroundKind kind) => kind == GroundKind.Walkable || kind == GroundKind.Climbable;
+
+        /// <summary>
+        /// The usual move onto ground with edges: straight there if it can stand there. Otherwise it slides: it
+        /// keeps whichever along-the-axis part of the move it can make (the longer, if both), or stays put.
+        /// Someone already on ground they cannot stand on (put there by a spawn) may move freely, so nobody is
+        /// trapped; but ground not loaded yet is never stepped onto or off: they wait (ADR 0020).
+        /// </summary>
+        public static Vec3 Slide(IGround ground, Vec3 from, Vec3 to)
+        {
+            var kindTo = ground.KindAt(to);
+            var kindFrom = ground.KindAt(from);
+            var stay = new Vec3(from.X, to.Y, from.Z);
+            if (kindTo == GroundKind.Unloaded || kindFrom == GroundKind.Unloaded) return stay;
+            if (IsWalkable(kindTo) || !IsWalkable(kindFrom)) return to;
+            var alongX = new Vec3(to.X, to.Y, from.Z);
+            var alongZ = new Vec3(from.X, to.Y, to.Z);
+            var canX = Math.Abs(to.X - from.X) > 0f && ground.IsWalkable(alongX);
+            var canZ = Math.Abs(to.Z - from.Z) > 0f && ground.IsWalkable(alongZ);
+            if (canX && canZ) return Math.Abs(to.X - from.X) >= Math.Abs(to.Z - from.Z) ? alongX : alongZ;
+            if (canX) return alongX;
+            if (canZ) return alongZ;
+            return stay;
+        }
 
         /// <summary>The usual blocked-line test: step along the line until the next step cannot be stood on.</summary>
         internal static float StepAlong(IGround ground, Vec3 origin, Vec3 direction, float range, float stepLength)
@@ -197,18 +226,7 @@ namespace HunterSystem.Simulation
         /// along-the-axis parts of the move it can make (the longer, if both), or stays put. Someone
         /// already on ground they cannot stand on (put there by a spawn) may move freely, so nobody is trapped.
         /// </summary>
-        public Vec3 Confine(Vec3 from, Vec3 to)
-        {
-            if (this.IsWalkable(to) || !this.IsWalkable(from)) return to;
-            var alongX = new Vec3(to.X, to.Y, from.Z);
-            var alongZ = new Vec3(from.X, to.Y, to.Z);
-            var canX = Math.Abs(to.X - from.X) > 0f && this.IsWalkable(alongX);
-            var canZ = Math.Abs(to.Z - from.Z) > 0f && this.IsWalkable(alongZ);
-            if (canX && canZ) return Math.Abs(to.X - from.X) >= Math.Abs(to.Z - from.Z) ? alongX : alongZ;
-            if (canX) return alongX;
-            if (canZ) return alongZ;
-            return new Vec3(from.X, to.Y, from.Z);
-        }
+        public Vec3 Confine(Vec3 from, Vec3 to) => GroundExtensions.Slide(this, from, to);
 
         public float ReachAlong(Vec3 origin, Vec3 direction, float range) =>
             GroundExtensions.StepAlong(this, origin, direction, range, Math.Min(0.1f, CellSize / 4f));

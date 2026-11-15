@@ -188,19 +188,23 @@ namespace HunterSystem.Tests
         // --- The overworld asset ------------------------------------------------------------------------
 
         [Test]
-        public void TheAssetGivesAConfigItsGroundGatesAndTown()
+        public void TheAssetGivesAConfigATiledGroundItsGatesAndTown()
         {
-            var bytes = GroundBake.Encode(0f, 0f, 1f, 1, 1, new[] { 1f, 1f, 1f, 1f }, new[] { GroundKind.Walkable });
+            var coarse = GroundBake.Encode(0f, 0f, 250f, 2, 2, new[] { 1f, 1f, 1f, 1f, 1f, 1f, 9f, 9f, 9f }, new GroundKind[4]);
             var asset = ScriptableObject.CreateInstance<OverworldAsset>();
-            asset.Set(new TextAsset(bytes), new List<OverworldAsset.GateSiteData>
+            asset.Set(Vector2.zero, 250f, 2, 2, "Overworld/Nowhere", new TextAsset(coarse), new List<OverworldAsset.GateSiteData>
                 {
                     new OverworldAsset.GateSiteData { gateId = "warren", entrance = new Vector3(5f, 1f, 6f), region = "greenmarch", knownFromStart = true },
-                }, true, new Vector3(-40f, 3f, 12f), 30f, new List<OverworldAsset.RoadData>(), new List<OverworldAsset.LandmarkData>(), 250f, 4f, 4f, 16f);
+                }, true, new Vector3(-40f, 3f, 12f), 30f, new List<OverworldAsset.RoadData>(), new List<OverworldAsset.LandmarkData>(), 4f, 4f, 16f);
             var config = new SimulationConfig { Hub = new HubDefinition() };
 
             asset.ApplyTo(config);
 
-            Assert.That(config.Ground, Is.InstanceOf<HeightmapGround>());
+            var ground = (TiledGround)config.Ground;
+            Assert.That(ground.TilesX, Is.EqualTo(2));
+            Assert.That(ground.Loaded, Is.Empty, "tiles stream in later");
+            Assert.That(ground.KindAt(new Vec3(100f, 0f, 100f)), Is.EqualTo(GroundKind.Unloaded));
+            Assert.That(ground.HeightAt(new Vec3(100f, 0f, 500f)), Is.EqualTo(9f).Within(1e-4f), "heights from the coarse map meanwhile");
             Assert.That(config.Overworld.Gates.Single().GateId, Is.EqualTo("warren"));
             Assert.That(config.Overworld.Gates.Single().KnownFromStart, Is.True);
             Assert.That(config.Overworld.StartingRegions, Does.Contain("greenmarch"));

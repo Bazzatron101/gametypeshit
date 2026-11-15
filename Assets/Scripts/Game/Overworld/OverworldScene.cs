@@ -1,15 +1,18 @@
-using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using HunterSystem.Simulation;
 using UnityEngine;
 
 namespace HunterSystem.Game
 {
     /// <summary>
-    /// Makes a scene an overworld scene (ticket 39). The simulation runner gives its config this scene's
-    /// baked ground and markers. When the scene loads, the ground players see is built from that same
-    /// baked ground: a flat-shaded mesh per tile with a coarser far version (ADR 0002), the sea, and a
-    /// pillar at each gate's entrance. The Unity Terrain tiles are only the editing surface: tagged
-    /// EditorOnly, so builds never carry them, and hidden in play in the editor.
+    /// Makes a scene an overworld scene (tickets 39 and 40). The simulation runner gives its config this
+    /// world's tiled ground and markers. Tiles stream in and out as players move (ADR 0020): a client
+    /// around its own player, the host around every player. A tile's ground and its shown mesh are made
+    /// off the main thread from the same file, so the art and the rules cannot drift. Every tile always has
+    /// a far version from the coarse map, shown until its full tile arrives. The Unity Terrain tiles are only
+    /// the editing surface: tagged EditorOnly, so builds never carry them, and hidden in play in the editor.
     /// </summary>
     [DefaultExecutionOrder(-100)] // before the runner reads it
     public sealed class OverworldScene : MonoBehaviour
@@ -18,67 +21,155 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("One per TerrainSurface: grass, rock, climbable, sand, road")] private Material[] surfaceMaterials = new Material[0];
         [SerializeField] private Material waterMaterial;
         [SerializeField] private Material gateMaterial;
+        [SerializeField, Min(0f), Tooltip("Tiles this close to a player are loaded. Set for a mount (16 m/s), not walking.")] private float loadRadius = 600f;
+        [SerializeField, Min(0f), Tooltip("Tiles further than this from every player are dropped")] private float unloadRadius = 800f;
         [SerializeField, Tooltip("Editor only: where the heights come from (an OverworldSourceAsset), for the menu's generate and bake")] private ScriptableObject source;
 
-        private HeightmapGround _ground;
+        private TiledGround _ground;
+        private TileStreamer _streamer;
+        private SimulationRunner _runner;
+        private readonly Dictionary<TileCoord, (MeshRenderer far, GameObject near)> _shown = new Dictionary<TileCoord, (MeshRenderer, GameObject)>();
 
         public OverworldAsset Overworld => overworld;
         public ScriptableObject Source => source;
+        public TiledGround Ground => _ground;
+        public TileStreamer Streamer => _streamer;
 
         /// <summary>The shown ground's root, once built.</summary>
         public GameObject Shown { get; private set; }
 
+        /// <summary>The tiles shown in full detail now (their near mesh is up).</summary>
+        public IEnumerable<TileCoord> ShownNear => _shown.Where(p => p.Value.near != null).Select(p => p.Key);
+
         /// <summary>Gives the runner's config this world. Does nothing (flat ground) without a baked asset.</summary>
         public void ApplyTo(SimulationConfig config)
         {
-            if (overworld == null || overworld.GroundData == null)
+            if (overworld == null || !overworld.IsBaked)
             {
                 Debug.LogWarning($"{name}: no baked overworld yet, so the ground is flat. Run Hunter System > Overworld > Bake.", this);
                 return;
             }
-            _ground ??= overworld.LoadGround();
+            _ground ??= overworld.CreateTiledGround();
             overworld.ApplyTo(config, _ground);
+        }
+
+        /// <summary>Changes the streaming radii (tests, and tuning in play).</summary>
+        public void SetRadii(float load, float unload)
+        {
+            loadRadius = load;
+            unloadRadius = unload;
+            if (_streamer != null) _streamer = NewStreamer();
         }
 
         private void Awake()
         {
             if (!Application.isPlaying) return;
             foreach (var terrain in FindObjectsByType<Terrain>(FindObjectsSortMode.None)) terrain.gameObject.SetActive(false);
-            if (overworld == null || overworld.GroundData == null) return;
-            _ground = overworld.LoadGround();
-            Shown = BuildShownGround();
+            if (overworld == null || !overworld.IsBaked) return;
+            _ground ??= overworld.CreateTiledGround();
+            overworld.DistanceToRoad(0f, 0f); // fills its cache here, so tile meshes can read it off the main thread
+            Shown = BuildFarGround();
+            _streamer = NewStreamer();
+
+            // The first tiles load before anyone moves: around the scene's players and the town.
+            var starts = FindObjectsByType<PlayerView>(FindObjectsSortMode.None).Select(v => ToVec3(v.transform.position)).ToList();
+            if (overworld.HasTown) starts.Add(ToVec3(overworld.TownCentre));
+            _streamer.LoadNow(starts);
         }
 
-        /// <summary>The ground players see: tiles of flat-shaded mesh (near and far versions), the sea and the gates' pillars.</summary>
-        public GameObject BuildShownGround()
+        private TileStreamer NewStreamer()
         {
-            _ground ??= overworld.LoadGround();
+            if (_streamer != null)
+                foreach (var tile in _ground.Loaded.ToList()) { _ground.RemoveTile(tile); OnTileUnloaded(tile); }
+            var streamer = new TileStreamer(_ground, LoadTile, loadRadius, unloadRadius);
+            streamer.TileLoaded += OnTileLoaded;
+            streamer.TileUnloaded += OnTileUnloaded;
+            return streamer;
+        }
+
+        private void Start() => _runner = FindAnyObjectByType<SimulationRunner>();
+
+        private void Update()
+        {
+            if (_streamer == null) return;
+            if (_runner == null) _runner = FindAnyObjectByType<SimulationRunner>();
+            var world = _runner != null ? _runner.World : null;
+            if (world == null) return;
+            _streamer.Update(Centres(world));
+        }
+
+        /// <summary>Who tiles are loaded for: a client's own player; on the host or offline, every player (ADR 0020).</summary>
+        private IEnumerable<Vec3> Centres(SimulationWorld world)
+        {
+            var isClient = _runner.IsOnline && _runner.Host == null;
+            if (isClient)
+            {
+                var me = _runner.LocalPlayerId;
+                if (me.HasValue && world.HasPlayer(me.Value)) yield return world.GetPlayer(me.Value).Position;
+                yield break;
+            }
+            foreach (var id in world.PlayerIds) yield return world.GetPlayer(id).Position;
+        }
+
+        /// <summary>Reads, decodes and builds a tile's near mesh contents off the main thread.</summary>
+        private Task<TilePayload> LoadTile(TileCoord tile)
+        {
+            var path = overworld.TilePath(tile);
+            var corner = _ground.CornerOf(tile);
+            var size = _ground.TileSize;
+            var cell = overworld.MeshCellSize;
+            var sea = overworld.SeaLevel;
+            var sand = overworld.SandAboveSea;
+            var asset = overworld;
+            return Task.Run(() =>
+            {
+                var ground = GroundBake.Decode(System.IO.File.ReadAllBytes(path));
+                var mesh = FlatTerrainMesh.BuildData(ground, corner.X, corner.Z, size, cell,
+                    at => FlatTerrainMesh.SurfaceAt(ground, at, sea, sand, asset.DistanceToRoad));
+                return new TilePayload { Ground = ground, Extra = mesh };
+            });
+        }
+
+        private void OnTileLoaded(TileCoord tile, TilePayload payload)
+        {
+            if (!_shown.TryGetValue(tile, out var shown) || payload.Extra is not FlatTerrainMesh.MeshData data) return;
+            if (shown.near != null) Destroy(shown.near);
+            var near = MeshObject("Near", shown.far.transform.parent, FlatTerrainMesh.ToMesh(data), surfaceMaterials);
+            shown.far.enabled = false;
+            _shown[tile] = (shown.far, near.gameObject);
+        }
+
+        private void OnTileUnloaded(TileCoord tile)
+        {
+            if (!_shown.TryGetValue(tile, out var shown)) return;
+            if (shown.near != null)
+            {
+                Destroy(shown.near.GetComponent<MeshFilter>().sharedMesh);
+                Destroy(shown.near);
+            }
+            shown.far.enabled = true;
+            _shown[tile] = (shown.far, null);
+        }
+
+        /// <summary>The ground players see before any tile loads: every tile's far version from the coarse map, the sea, and the gates' pillars.</summary>
+        private GameObject BuildFarGround()
+        {
+            var coarse = overworld.LoadCoarse();
             var root = new GameObject("Overworld (shown)");
             root.transform.SetParent(transform, false);
-            var tile = overworld.TileSize;
-            var tilesX = Mathf.Max(1, Mathf.CeilToInt((_ground.MaxX - _ground.OriginX) / tile - 1e-3f));
-            var tilesZ = Mathf.Max(1, Mathf.CeilToInt((_ground.MaxZ - _ground.OriginZ) / tile - 1e-3f));
-            Func<Vector3, TerrainSurface> surface = at =>
-                FlatTerrainMesh.SurfaceAt(_ground, at, overworld.SeaLevel, overworld.SandAboveSea, overworld.DistanceToRoad);
-
-            for (var j = 0; j < tilesZ; j++)
-            for (var i = 0; i < tilesX; i++)
+            for (var z = 0; z < _ground.TilesZ; z++)
+            for (var x = 0; x < _ground.TilesX; x++)
             {
-                var minX = _ground.OriginX + i * tile;
-                var minZ = _ground.OriginZ + j * tile;
-                var size = Mathf.Min(tile, Mathf.Min(_ground.MaxX - minX, _ground.MaxZ - minZ));
-                var tileObject = new GameObject($"Tile {i},{j}");
+                var tile = new TileCoord(x, z);
+                var corner = _ground.CornerOf(tile);
+                var tileObject = new GameObject($"Tile {x},{z}");
                 tileObject.transform.SetParent(root.transform, false);
-                tileObject.transform.position = new Vector3(minX, 0f, minZ);
-                var near = MeshObject("Near", tileObject.transform, FlatTerrainMesh.Build(_ground, minX, minZ, size, overworld.MeshCellSize, surface), surfaceMaterials);
-                var far = MeshObject("Far", tileObject.transform, FlatTerrainMesh.Build(_ground, minX, minZ, size, overworld.FarMeshCellSize, surface), surfaceMaterials);
-                var lods = tileObject.AddComponent<LODGroup>();
-                lods.SetLODs(new[]
-                {
-                    new LOD(overworld.NearLodScreenHeight, new Renderer[] { near }),
-                    new LOD(0f, new Renderer[] { far }), // never culled: the far version stays to the horizon
-                });
-                lods.RecalculateBounds();
+                tileObject.transform.position = new Vector3(corner.X, 0f, corner.Z);
+                var far = MeshObject("Far", tileObject.transform,
+                    FlatTerrainMesh.Build(coarse, corner.X, corner.Z, _ground.TileSize, overworld.FarMeshCellSize,
+                        at => FlatTerrainMesh.SurfaceAt(coarse, at, overworld.SeaLevel, overworld.SandAboveSea, overworld.DistanceToRoad)),
+                    surfaceMaterials);
+                _shown[tile] = (far, null);
             }
 
             if (waterMaterial != null)
@@ -100,8 +191,7 @@ namespace HunterSystem.Game
                 pillar.name = $"Gate: {site.gateId}";
                 Destroy(pillar.GetComponent<Collider>());
                 pillar.transform.SetParent(root.transform, false);
-                var y = _ground.HeightAt(new Vec3(site.entrance.x, 0f, site.entrance.z));
-                pillar.transform.position = new Vector3(site.entrance.x, y + 2f, site.entrance.z);
+                pillar.transform.position = site.entrance + Vector3.up * 2f;
                 pillar.transform.localScale = new Vector3(2.5f, 2f, 2.5f); // 4 m tall
                 if (gateMaterial != null) pillar.GetComponent<Renderer>().sharedMaterial = gateMaterial;
             }
@@ -117,6 +207,8 @@ namespace HunterSystem.Game
             renderer.sharedMaterials = materials;
             return renderer;
         }
+
+        private static Vec3 ToVec3(Vector3 v) => new Vec3(v.x, v.y, v.z);
 
         /// <summary>For editor tooling.</summary>
         public void Set(OverworldAsset asset, ScriptableObject heightSource, Material[] surfaces, Material water, Material gates)

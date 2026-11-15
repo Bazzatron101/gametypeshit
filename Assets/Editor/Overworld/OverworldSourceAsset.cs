@@ -12,7 +12,7 @@ namespace HunterSystem.Editor
     [CreateAssetMenu(menuName = "Hunter System/Overworld Source", fileName = "NewOverworldSource")]
     public sealed class OverworldSourceAsset : ScriptableObject
     {
-        [Tooltip("Names the generated files: Assets/Art/Terrain/<name>/ and Assets/Data/Overworld/<name>.asset")]
+        [Tooltip("Names the generated files: Assets/Art/Terrain/<name>/, Assets/Data/Overworld/<name>.asset and Assets/StreamingAssets/Overworld/<name>/")]
         public string outputName = "Overworld";
 
         [Header("Area and tiles")]
@@ -35,6 +35,11 @@ namespace HunterSystem.Editor
         public int CellsPerTile => heightmapResolution - 1;
         public string TerrainFolder => $"Assets/Art/Terrain/{outputName}";
         public string OverworldPath => $"Assets/Data/Overworld/{outputName}.asset";
-        public string GroundPath => $"Assets/Data/Overworld/{outputName}.ground.bytes";
+        public string CoarsePath => $"Assets/Data/Overworld/{outputName}.coarse.bytes";
+        public string OldGroundPath => $"Assets/Data/Overworld/{outputName}.ground.bytes";
+
+        /// <summary>The tiles' folder under StreamingAssets (ADR 0020), and the same as a project path.</summary>
+        public string TileFolder => $"Overworld/{outputName}";
+        public string TileFolderAsset => $"Assets/StreamingAssets/{TileFolder}";
     }
 }
