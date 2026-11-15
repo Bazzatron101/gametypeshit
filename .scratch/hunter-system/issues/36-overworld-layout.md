@@ -6,7 +6,7 @@
 
 **Status:** ready-for-human (open questions below)
 
-- [x] Scale settled (how long a crossing takes, and at what speed): an hour at walking pace, ~12 × 7 km
+- [x] Scale settled: ~10.5 × 7.5 km on the drawn map, ~40 minutes walking (2026-11-15; first aimed for an hour, ~12 × 7 km); grow if playtests say it is too close
 - [x] Region list, order and what opens each one settled (first sketch, 2026-11-14; region sketch 2026-11-15)
 - [x] Gate placement per region sketched (story gates and farming gates): gates sit at each region's important places; region sketch kept 2026-11-15
 - [x] What physically stops a player entering a region that is not open yet: nothing physical; danger and no guild work there (see Comments)
@@ -257,3 +257,15 @@ Still the same count (about 25 gates) and every gate can be reopened harder. Som
 **Settled (kept for S, see below):** the snowy mountains and south peninsula are a lot of ground to leave to the S story. Alternative: they open with a story beat during A, so A-rank gets one region after all, and only the island stays for S.
 
 **2026-11-15 (developer, recorded by agent):** The snowy mountains and the south peninsula are **kept for the S story**, with the south-east island: the Riftlands are all three. A-rank still opens no new region. Like everywhere else they have no walls; until the S story they are simply too dangerous and the guild gives no work there.
+
+**2026-11-15 (developer, recorded by agent):** **Size kept at about 10.5 × 7.5 km for now;** make it bigger if it feels too close in playtests.
+- Correction to the earlier note: on the drawn map the longest road (west island to the east coast) is roughly 11–13 km, so a crossing is about **40 minutes walking**, ~25 sprinting, ~13 mounted, not the hour first aimed for.
+- About 60–70 places (31 settlements, ~25 gates, landmarks) over ~50 km² of land: a new place about every 850 m, ~3 min walking or ~1 min mounted.
+- Gaps are filled with cheap things the design already has: supply carts, leaked monsters, camps, shrines, ruins and viewpoints.
+- **Playtest check:** if it feels too close, grow the map (scale the terrain; keep the drawing). Winding the roads more is the cheaper way to add travel time.
+
+**2026-11-15 (developer, recorded by agent):** The game ends with the player helping the continent's best adventuring guild beat an S-rank dungeon (ticket 16). On this map that dungeon is the Rift on the south-east island, at the end of the Riftlands. There are several guilds on the continent; where the best guild is based is still open (Farwatch, the castle on the island, is a candidate, or one of the mainland strongholds).
+
+**2026-11-15 (developer, recorded by agent):** After the main campaign's end (the demon king's death, ticket 16), **the gates slowly close.** The overworld calms down: leaks stop as their gates close. A closed gate stops leaking but can still be replayed (ticket 16).
+
+**2026-11-15 (developer, recorded by agent):** After the demon king, **demon princes rise up** (the S story's enemies, ticket 16), and **other lands** with their own problems lie off this map (later content). The Riftlands' S gates are suggested to be the princes' gates.

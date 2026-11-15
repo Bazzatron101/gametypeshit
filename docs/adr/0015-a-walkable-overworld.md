@@ -38,7 +38,7 @@ faster, and a crossing takes about an hour. Ticket 36 holds the layout.
   player, and the host simulates the tiles around every player, up to 10 spread apart.
 - **Snapshots need interest management:** each client gets only what is near it (ties to ticket 31's
   bandwidth work).
-- **Size:** an hour to cross at walking pace (5 m/s): a road of about 18 km over a map of about 12 × 7 km
+- **Size:** about 10.5 × 7.5 km on the drawn map (`docs/maps/overworld-reference.webp`), about 40 minutes to cross walking; to grow if playtests find it too close (developer, 2026-11-15). First aimed for an hour, about 12 × 7 km
   (developer, 2026-11-14).
 - **Coordinates:** keep the world's origin at the map's centre. Nothing is then more than ~7 km out, where
   float precision stays near a millimetre, so no floating origin is needed.

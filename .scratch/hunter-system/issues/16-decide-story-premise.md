@@ -46,3 +46,41 @@ Follows from this, to settle with the premise:
 - **Words settled:** a gate is the entrance to a dungeon. Hunters go through a gate to clear the dungeon behind it. The spec's and code's "gate" (a run, the gate board, gate ranks) stays as it is; player-facing text can say "dungeon" for the place inside.
 - **The hook:** the developer is still thinking about it. This ticket stays open for the hook and the System's voice.
 
+
+**2026-11-15 (developer, recorded by agent):** **The arc, start to end.** The developer: "we will start the game as a new adventurer and then will will end the game helping the best adventuring guild in the continent as our final story quest beating a S rank dungeon".
+- **Start:** the player is a new adventurer, at E-rank, in the guild town on the west island (ticket 36).
+- **End:** the final story quest is helping the best adventuring guild on the continent beat an S-rank dungeon. On the overworld this is the Rift, on the south-east island (ticket 36, the Riftlands).
+- **New from this:** there is more than one adventuring guild on the continent, and one is the best. The player's own guild is not it (the player helps them). Until now the notes said "the guild" as if there were one.
+- Settled below: it is the end of the S-rank story, after the main game. Still to settle: who the best guild is, where it is based, and how the player comes to help them. The hook (why the world has gates and a System) is still open.
+
+**2026-11-15 (developer, recorded by agent):** The final quest with the best guild is **the end of the S-rank story, after the main game.** The spec stands: the main campaign ends at A-rank (story 6), then the S-rank end story (story 7) leads to the S-rank dungeon with the best guild, and its end unlocks the hidden class (story 17).
+- Still to settle: how the main campaign's A-rank ending lands (it needs its own climax before S), who the best guild is, where it is based, and how the player comes to help them.
+
+**2026-11-15 (developer, recorded by agent):** **The main campaign ends with the death of the demon king,** who is in charge of the gates on this continent. The developer: "it ends with the death of the demon king whole is in charge of the gates for this continent".
+- This is a big piece of the hook: the gates are not natural; a demon king controls them.
+- "For this continent" suggests other continents have their own demon kings and gates, which leaves room for the S story and the possible SS-rank DLC (spec).
+- He is the main campaign's final boss: a handcrafted boss at the end of an A-rank story gate (spec story 44).
+- Still to settle:
+  - What happens to the gates and their leaks after he dies (they stop, they go wild, or nothing changes)? This decides what the overworld is like after the main game.
+  - Why there is still an S-rank dungeon to beat after he is dead (whose is it, if not his?).
+  - Where his gate is on the map (ticket 36).
+  - Does the player know about him from the start, or is he the mystery that the System and the guild slowly reveal?
+
+**2026-11-15 (developer, recorded by agent):** After the demon king dies, **the gates slowly close.**
+- The world calms down after the main game: leaks stop as their gates close, and the roads get safer.
+- Suggested, to confirm: this gives the S story its question. One gate does not close: the Rift. If every gate was his and they are all closing, the Rift must belong to someone or something else, which is what the S story finds out with the best guild.
+- Suggested, for the game: gates close over the S story, not all at once (for example a few after each S story step), so there is still a world to play in. Which gates close and when is the host's world's progress.
+- Settled below: a closed gate is still replayable.
+
+**2026-11-15 (developer, recorded by agent):** A closed gate is **still replayable.**
+- Closing ends the gate's threat to the world: it stops leaking, and the guild no longer reopens it harder.
+- The run itself stays: the party can still go in (from the board, or at the entrance), for farming and for guests who are behind. Loot, XP and clear rewards work as before.
+- Suggested, to confirm: a closed gate looks closed in the world (its entrance dim or sealed) so the change after the main game shows, even though it still works.
+
+**2026-11-15 (developer, recorded by agent):** **After the demon king: demon princes, and other lands.** The developer: "there are demon princes that worked under the demon king that rise up and also other lands with their own problems".
+- **Demon princes** served the demon king. With him dead, they rise up. They are the S story's enemies: while his gates slowly close, the princes keep some open or open their own.
+- **Other lands** (other continents) have their own problems, and their own demon kings or worse ("for this continent"). These are off this map: room for the SS-rank DLC or later content. Not in the first release.
+- This answers why an S-rank dungeon is left after the demon king dies: it belongs to a demon prince.
+- Still to settle: how many princes, whether each holds a gate (or a region) in the Riftlands, and whether the final S-rank dungeon with the best guild is the strongest prince's. The Rift as "the one gate that does not close" is not confirmed; the princes may replace that idea.
+
+**2026-11-15 (developer, recorded by agent):** How many demon princes there are is **decided later.** Note for then: the Riftlands sketch has three S-rank gates (ticket 36), so three princes fit without new gates; each extra prince is another S-rank gate and handcrafted boss.
