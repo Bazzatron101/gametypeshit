@@ -305,3 +305,5 @@ Still the same count (about 25 gates) and every gate can be reopened harder. Som
   - Still to settle: what full standing pays (100 %?), whether the rival's pay and the 25 % unlicensed rule stack (25 % × 50 %), and whether only your own guild promotes you.
 - **Gate spots:** the crossed swords on the drawing are where the developer thinks gates can go ("the sword crossing and the places where I thinking gates can go"). There are 16 crossed swords; the region sketch has about 25 gates plus the demon king's hidden gate under Saltreach (not drawn, on purpose). The gates without crossed swords (Heron isle, the four specialty gates, and the hidden peat camp, riverbed, herd grounds and wreck cove) need spots from the developer.
 - **Names:** the developer will write them. Placeholders stay until then.
+
+**2026-11-15 (developer, recorded by agent):** The developer will **mark the nine missing gates on the drawing** (Heron isle; the four specialty gates; the peat camp, riverbed, herd grounds and wreck cove). Waiting on the updated `docs/maps/overworld-reference.webp`; the demon king's gate under Saltreach stays unmarked.
