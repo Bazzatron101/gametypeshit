@@ -313,3 +313,16 @@ Still the same count (about 25 gates) and every gate can be reopened harder. Som
 - **Any guild can promote you,** your own or a rival. A rival guild asks more for the same promotion (for example more clears or a harder promotion quest). How much more is a configuration value.
 - Rank is one licence however you earned it: a promotion from a rival counts everywhere.
 - **Full standing with a rival pays 100 %,** the same as your own guild (developer, 2026-11-15). Standing runs from 50 % to 100 %.
+
+**2026-11-15 (agent):** The engine work that follows this layout is written up as tickets 37 to 45: the simulation's ground (37), the overworld as a place (38), the terrain pipeline and a 1 km test patch (39), streaming (40), sending each client only what is near it (41), mounts (42), roaming monsters and bots on real ground (43), a spread-out stress test (44), and the full map (45). All are needs-triage.
+
+**2026-11-15 (developer, recorded by agent):** **Updated drawing** (`docs/maps/overworld-reference.webp`, replacing the first one; the old one is in git history). The developer marked the missing gates and added two things:
+- **Red dashed lines are leak zones:** each outlines how far a gate's leaked monsters reach. As agreed, they run up to town entrances and over roads. Zones are drawn for design; in game they stay invisible (leaks are found by meeting the monsters).
+- **Some gates appear later, through story events.** These do not exist at the start (not merely hidden): a story event opens them, and only then do they leak. So a gate is one of three kinds: known to the guild, hidden until found, or appearing through the story. Which crossed swords are story-appearing gates is to be listed.
+
+New ground on the updated drawing:
+- **A small islet off the far west coast,** reached by a dashed path from a cave on the south-west coast. Read as a walkable shallows path (fits "shallows only"); to confirm.
+- **A small island south of the south-west lobe,** joined by a bridge to the south peninsula, with gates of its own.
+- **More gates along the north coast and in the far north-east.**
+
+Still to settle: which crossed swords are which gate (the region table predates the new marks), and which ones appear through story events.
