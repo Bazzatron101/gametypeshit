@@ -125,6 +125,9 @@ namespace HunterSystem.Simulation
                 }
                 HitPlayerWithBossAttack(boss, player, attack, tick);
             }
+            foreach (var summon in new List<Summon>(_summons)) // ticket 57: summons in the way are hit too
+                if (attack.Covers(boss.AttackOrigin, boss.AttackDirection, summon.Position))
+                    DamageSummon(summon, boss.Id, PartyScalingDefinition.Scale(attack.Damage, boss.DamagePercent), tick);
             EndBossAttack(boss, attack, tick);
         }
 

@@ -80,6 +80,24 @@ namespace HunterSystem.Game
             return definition;
         }
 
+        public GearDefinitionAsset StartingWeapon => startingWeapon;
+
+        /// <summary>For editor tooling: the weapon a character of this class is issued.</summary>
+        public void SetStartingWeapon(GearDefinitionAsset weapon) => startingWeapon = weapon;
+
+        /// <summary>For editor tooling: fills a stub (a specialty with no passives) with its description and passives. True if it did.</summary>
+        public bool FillStub(string specialtyId, string description, ModifierDefinitionAsset[] passives)
+        {
+            for (var i = 0; i < (specialties?.Length ?? 0); i++)
+            {
+                if (specialties[i].id != specialtyId || (specialties[i].passives?.Length ?? 0) > 0) continue;
+                specialties[i].description = description;
+                specialties[i].passives = passives;
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>For editor tooling: the class's trials and its specialty tree (ticket 26).</summary>
         public void SetSpecialties(GateDefinitionAsset[] trials, Specialty[] tree)
         {

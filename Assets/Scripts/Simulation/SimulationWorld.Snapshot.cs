@@ -89,6 +89,7 @@ namespace HunterSystem.Simulation
                 WriteIds(w, e.ChargeHit);
                 w.Write(e.Enraged);
                 w.Write(e.EnragePending);
+                w.Write(e.AttackSummonId);
             }
 
             w.Write(resolvedSkills.Count);
@@ -134,6 +135,7 @@ namespace HunterSystem.Simulation
             w.Write(_worldOwner.HasValue);
             if (_worldOwner.HasValue) w.Write(_worldOwner.Value.Value);
             WriteLeaks(w);
+            WriteSummons(w);
 
             w.Flush();
             return stream.ToArray();
@@ -192,6 +194,9 @@ namespace HunterSystem.Simulation
             _worldRank = parsed.WorldRank;
             _worldOwner = parsed.WorldOwner;
             RestoreLeaks(parsed.Leaks);
+            _summons.Clear();
+            _summons.AddRange(parsed.Summons);
+            _nextSummonId = parsed.NextSummonId;
             _events.Clear();
             _pendingOperations.Clear();
         }
@@ -369,6 +374,8 @@ namespace HunterSystem.Simulation
             public int WorldRank;
             public PlayerId? WorldOwner;
             public readonly List<(string gate, bool filled, int nextTick)> Leaks = new List<(string, bool, int)>();
+            public int NextSummonId = 1;
+            public List<Summon> Summons = new List<Summon>();
         }
 
         private ParsedSnapshot Parse(byte[] snapshot)
@@ -424,6 +431,7 @@ namespace HunterSystem.Simulation
                 e.ChargeHit.AddRange(ReadIds(r));
                 e.Enraged = r.ReadBoolean();
                 e.EnragePending = r.ReadBoolean();
+                e.AttackSummonId = r.ReadInt32();
                 parsed.Enemies.Add(e);
                 enemiesById.Add(e.Id.Value, e);
             }
@@ -474,6 +482,7 @@ namespace HunterSystem.Simulation
             if (parsed.WorldRank < 0) throw new FormatException("Impossible world rank.");
             parsed.WorldOwner = r.ReadBoolean() ? new PlayerId(r.ReadInt32()) : (PlayerId?)null;
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.Leaks.Add((r.ReadString(), r.ReadBoolean(), r.ReadInt32()));
+            (parsed.NextSummonId, parsed.Summons) = ReadSummons(r, playersById);
 
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");
             return parsed;

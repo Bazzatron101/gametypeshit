@@ -173,6 +173,9 @@ namespace HunterSystem.Simulation
             public int AttackLandsAtTick;
             public Player AttackTarget;
 
+            /// <summary>The summon a wind-up is aimed at (ticket 57), by id; 0 when it is aimed at a player or at nothing.</summary>
+            public int AttackSummonId;
+
             /// <summary>Which way it faces on the floor (unit length). Bosses turn slowly, so getting behind them works.</summary>
             public Vec3 Facing = new Vec3(0f, 0f, -1f);
 

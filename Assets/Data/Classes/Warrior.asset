@@ -39,8 +39,10 @@ MonoBehaviour:
     displayName: Sentinel
     rank: D
     parent: 
-    description: 'Not built yet: a D-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
-    passives: []
+    description: 'Holds the line and shakes the ground around it. Ground Slam deals 15% more damage and covers 1.5 m more around it. Area skills have 15% shorter cooldowns. New skill: Shockwave (level 16).'
+    passives:
+    - {fileID: 11400000, guid: b27bcdbf18701014dbf5e10e5f999f5d, type: 2}
+    - {fileID: 11400000, guid: 8074e002c6453ba4c803f8dedab8a2a7, type: 2}
   - id: berserker
     displayName: Berserker
     rank: B
@@ -53,17 +55,23 @@ MonoBehaviour:
     displayName: Champion
     rank: B
     parent: vanguard
-    description: 'Not built yet: a B-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
-    passives: []
+    description: 'A duellist who ends fights with single, crushing blows. Rending Slash deals 35% more damage and reaches 0.5 m further. Physical skills have 15% shorter cooldowns. New skills: Executioner''s Strike (level 56), Valiant Lunge (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 21beb8a81f7eddd49a7e58a69074079d, type: 2}
+    - {fileID: 11400000, guid: 31eb391cbbedf354080030c48fd7216e, type: 2}
   - id: guardian
     displayName: Guardian
     rank: B
     parent: sentinel
-    description: 'Not built yet: a B-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
-    passives: []
+    description: 'A wall of steel that sweeps everything away from the party. Shield Bash deals 40% more damage and has a 20% shorter cooldown. Area skills cover 1 m more around them. New skills: Bastion Slam (level 56), Rampart Sweep (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 687f588a350f0474aa107b00c40f5d11, type: 2}
+    - {fileID: 11400000, guid: 71a12e4dc215ebd44a5e1475c0fdfbf8, type: 2}
   - id: bulwark
     displayName: Bulwark
     rank: B
     parent: sentinel
-    description: 'Not built yet: a B-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
-    passives: []
+    description: 'Every blow sends a tremor through the ground. Ground Slam bursts on every hit, for 40% of it within 2.5 m. Melee skills deal 15% more damage. New skills: Aftershock (level 56), Fault Line (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 8cd04846a393eb743816279ee3528bf3, type: 2}
+    - {fileID: 11400000, guid: 1212c87c116ddc64fb8dd3cf0d8aa6e0, type: 2}

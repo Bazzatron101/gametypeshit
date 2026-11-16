@@ -33,7 +33,7 @@ asked for the classes now.
   `fire-bolt`, so saves and modifiers still find it. Hunter's Javelin became the Archer's level-1
   heavy shot: it was a level-5 Strength skill dealing 40, and is now a level-1 Agility skill dealing 30.
   A character from before classes keeps its bar order only for the skills its class keeps; the rest of
-  the bar fills as skills are learned. Magic belongs to the Wizard only, which content validation checks.
+  the bar fills as skills are learned. Magic belongs to the Wizard only, which content validation checks. (Changed 2026-11-17, ticket 58: magic belongs to the caster classes, the Wizard, the Warlock and the Cleric.)
 - **The jump:** only the Rogue clears an enemy (the developer's choice). Its jump is 450% of the base,
   which is 4.05 m and clears the Warlord's 3.5 m charge (ADR 0011). Content validation checks that the
   Rogue's jump clears the tallest boss and that no other class's jump does.

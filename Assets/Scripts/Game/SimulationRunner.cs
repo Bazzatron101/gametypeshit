@@ -171,6 +171,7 @@ namespace HunterSystem.Game
             if (GetComponent<Nameplates>() == null) gameObject.AddComponent<Nameplates>();
             if (GetComponent<DamageNumbers>() == null) gameObject.AddComponent<DamageNumbers>(); // a landed hit shows its number (ticket 47)
             if (GetComponent<SpecialtyPicker>() == null) gameObject.AddComponent<SpecialtyPicker>(); // the pick after a class's trial (ticket 26)
+            if (GetComponent<SummonView>() == null) gameObject.AddComponent<SummonView>(); // summons drawn where they stand (ticket 57)
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
             var overworldScene = FindAnyObjectByType<OverworldScene>(); // an overworld scene's ground and markers (ticket 39)

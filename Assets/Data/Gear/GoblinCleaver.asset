@@ -33,6 +33,7 @@ MonoBehaviour:
     projectileSpreadDegrees: 15
     explosionRadius: 0
     explosionDamagePercent: 0
+  statBonuses: []
   lightAttack:
     id: cleaver-chop
     displayName: Chop

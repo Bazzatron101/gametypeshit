@@ -186,6 +186,7 @@ namespace HunterSystem.Simulation
             var cleared = _gate.ClearAnnounced;
             foreach (var id in _enemyIds.ToList()) DespawnEnemy(id);
             _projectiles.Clear();
+            ClearSummons();
             _gate = null;
             foreach (var player in _players)
             {

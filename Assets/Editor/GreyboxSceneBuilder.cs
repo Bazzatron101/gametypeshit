@@ -92,6 +92,30 @@ namespace HunterSystem.Editor
                 Id = "wizard", Name = "Wizard", StatsPerLevel = ClassStats(intel: 1, sense: 1),
                 Description = "Starts with one weak Fireball and grows into the strongest spells in the game. +1 Intelligence, +1 Sense each level.",
             },
+            new ClassDefinition
+            {
+                // Ticket 55. Fights unarmed: quick palms and kicks up close, and a wave of force for reach.
+                Id = "monk", Name = "Monk", StatsPerLevel = ClassStats(agi: 1, vit: 1), StartingWeaponId = "hand-wraps",
+                Description = "Fights with bare hands: fast strikes, kicks, and a wave of force. +1 Agility, +1 Vitality each level.",
+            },
+            new ClassDefinition
+            {
+                // Ticket 56. Holy smites (Intelligence) and healing bolts that fly to an ally (Sense).
+                Id = "cleric", Name = "Cleric", StatsPerLevel = ClassStats(intel: 1, sense: 1), StartingWeaponId = "acolyte-sceptre",
+                Description = "A holy caster who keeps the party standing: smites that burn, and bolts of light that heal the ally they reach. +1 Intelligence, +1 Sense each level.",
+            },
+            new ClassDefinition
+            {
+                // Ticket 58. Dark spells that drain life: every hit heals the Warlock for part of it.
+                Id = "warlock", Name = "Warlock", StatsPerLevel = ClassStats(intel: 1, luck: 1), StartingWeaponId = "hexed-rod",
+                Description = "A dark caster who lives on what it takes: its spells heal it for part of the damage they deal. +1 Intelligence, +1 Luck each level.",
+            },
+            new ClassDefinition
+            {
+                // Ticket 57. Calls creatures that fight for it: their hits rise with Intelligence, their health with Sense.
+                Id = "summoner", Name = "Summoner", StatsPerLevel = ClassStats(intel: 1, sense: 1), StartingWeaponId = "binding-staff",
+                Description = "Calls creatures to fight for it, up to three at once, each for a while or until it falls. +1 Intelligence, +1 Sense each level.",
+            },
         };
 
         private static int[] ClassStats(int str = 0, int agi = 0, int vit = 0, int intel = 0, int sense = 0, int luck = 0)
@@ -218,6 +242,142 @@ namespace HunterSystem.Editor
                 // The capstone: no charge, it is already enormous.
                 Id = "monarchs-decree", Name = "Monarch's Decree", ClassId = "wizard", Effect = SkillEffectKind.Area, Damage = 80, Radius = 6f,
                 CooldownSeconds = 20f, UnlockLevel = 20, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "area" },
+            },
+
+            // Monk (ticket 55): two starters, then a skill at 3, 5, 10 and 15.
+            new SkillDefinition
+            {
+                Id = "palm-strike", Name = "Palm Strike", ClassId = "monk", Effect = SkillEffectKind.Cone, Damage = 24, Range = 2.5f, ArcDegrees = 100f,
+                CooldownSeconds = 3f, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "rising-kick", Name = "Rising Kick", ClassId = "monk", Effect = SkillEffectKind.Cone, Damage = 32, Range = 3f, ArcDegrees = 70f,
+                CooldownSeconds = 5f, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "flurry-of-fists", Name = "Flurry of Fists", ClassId = "monk", Effect = SkillEffectKind.Area, Damage = 26, Radius = 2.5f,
+                CooldownSeconds = 6f, UnlockLevel = 3, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical", "area" },
+            },
+            new SkillDefinition
+            {
+                // Reach for a fighter with none: a wave of force, not magic.
+                Id = "force-wave", Name = "Force Wave", ClassId = "monk", Effect = SkillEffectKind.Projectile, Damage = 28, Range = 10f, Radius = 0.7f, ProjectileSpeed = 16f,
+                CooldownSeconds = 6f, UnlockLevel = 5, ScalingStat = Stat.Agility, Tags = new[] { "projectile", "physical" },
+            },
+            new SkillDefinition
+            {
+                Id = "hundred-palms", Name = "Hundred Palms", ClassId = "monk", Effect = SkillEffectKind.Cone, Damage = 55, Range = 3f, ArcDegrees = 120f,
+                CooldownSeconds = 9f, UnlockLevel = 10, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical" },
+                ChargeSeconds = 1f, ChargedDamagePercent = 80, ChargeUnlockLevel = 12,
+            },
+            new SkillDefinition
+            {
+                Id = "dragons-descent", Name = "Dragon's Descent", ClassId = "monk", Effect = SkillEffectKind.Area, Damage = 60, Radius = 4f,
+                CooldownSeconds = 12f, UnlockLevel = 15, ScalingStat = Stat.Agility, Tags = new[] { "melee", "physical", "area" },
+            },
+
+            // Cleric (ticket 56): smites scale with Intelligence, heals with Sense. Mending Light flies to an ally; Sanctuary heals everyone near, the Cleric too.
+            new SkillDefinition
+            {
+                Id = "smite", Name = "Smite", ClassId = "cleric", Effect = SkillEffectKind.Projectile, Damage = 20, Range = 12f, Radius = 0.5f, ProjectileSpeed = 16f,
+                CooldownSeconds = 2.5f, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "projectile" },
+            },
+            new SkillDefinition
+            {
+                Id = "mending-light", Name = "Mending Light", ClassId = "cleric", Effect = SkillEffectKind.Projectile, Damage = 0, Healing = 30, Range = 14f, Radius = 0.8f, ProjectileSpeed = 18f,
+                CooldownSeconds = 6f, ScalingStat = Stat.Sense, Tags = new[] { "magic", "projectile" },
+            },
+            new SkillDefinition
+            {
+                Id = "holy-nova", Name = "Holy Nova", ClassId = "cleric", Effect = SkillEffectKind.Area, Damage = 30, Radius = 3.5f,
+                CooldownSeconds = 7f, UnlockLevel = 3, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "area" },
+            },
+            new SkillDefinition
+            {
+                Id = "sanctuary", Name = "Sanctuary", ClassId = "cleric", Effect = SkillEffectKind.Area, Damage = 0, Healing = 28, Radius = 5f,
+                CooldownSeconds = 14f, UnlockLevel = 5, ScalingStat = Stat.Sense, Tags = new[] { "magic", "area" },
+            },
+            new SkillDefinition
+            {
+                Id = "judgement", Name = "Judgement", ClassId = "cleric", Effect = SkillEffectKind.Cone, Damage = 50, Range = 6f, ArcDegrees = 50f,
+                CooldownSeconds = 9f, UnlockLevel = 10, ScalingStat = Stat.Intelligence, Tags = new[] { "magic" },
+                ChargeSeconds = 1f, ChargedDamagePercent = 80, ChargeUnlockLevel = 12,
+            },
+            new SkillDefinition
+            {
+                Id = "radiant-lance", Name = "Radiant Lance", ClassId = "cleric", Effect = SkillEffectKind.Projectile, Damage = 55, Range = 16f, Radius = 0.6f, ProjectileSpeed = 20f, Pierces = true,
+                CooldownSeconds = 10f, UnlockLevel = 15, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "projectile" },
+            },
+
+            // Warlock (ticket 58): every spell drains life, healing the Warlock for part of what it deals.
+            new SkillDefinition
+            {
+                Id = "shadow-bolt", Name = "Shadow Bolt", ClassId = "warlock", Effect = SkillEffectKind.Projectile, Damage = 20, Range = 12f, Radius = 0.5f, ProjectileSpeed = 16f,
+                CooldownSeconds = 2.5f, ScalingStat = Stat.Intelligence, LifeStealPercent = 20, Tags = new[] { "magic", "projectile" },
+            },
+            new SkillDefinition
+            {
+                Id = "drain-touch", Name = "Drain Touch", ClassId = "warlock", Effect = SkillEffectKind.Cone, Damage = 22, Range = 2.5f, ArcDegrees = 90f,
+                CooldownSeconds = 4f, ScalingStat = Stat.Intelligence, LifeStealPercent = 50, Tags = new[] { "magic" },
+            },
+            new SkillDefinition
+            {
+                Id = "hex-nova", Name = "Hex Nova", ClassId = "warlock", Effect = SkillEffectKind.Area, Damage = 28, Radius = 3f,
+                CooldownSeconds = 7f, UnlockLevel = 3, ScalingStat = Stat.Intelligence, LifeStealPercent = 25, Tags = new[] { "magic", "area" },
+            },
+            new SkillDefinition
+            {
+                Id = "soul-siphon", Name = "Soul Siphon", ClassId = "warlock", Effect = SkillEffectKind.Projectile, Damage = 32, Range = 12f, Radius = 0.6f, ProjectileSpeed = 15f,
+                CooldownSeconds = 6f, UnlockLevel = 5, ScalingStat = Stat.Intelligence, LifeStealPercent = 40, Tags = new[] { "magic", "projectile" },
+            },
+            new SkillDefinition
+            {
+                Id = "abyssal-wave", Name = "Abyssal Wave", ClassId = "warlock", Effect = SkillEffectKind.Cone, Damage = 48, Range = 6f, ArcDegrees = 70f,
+                CooldownSeconds = 10f, UnlockLevel = 10, ScalingStat = Stat.Intelligence, LifeStealPercent = 15, Tags = new[] { "magic" },
+                ChargeSeconds = 1f, ChargedSizePercent = 60, ChargeUnlockLevel = 12,
+            },
+            new SkillDefinition
+            {
+                Id = "void-rupture", Name = "Void Rupture", ClassId = "warlock", Effect = SkillEffectKind.Area, Damage = 65, Radius = 5f,
+                CooldownSeconds = 14f, UnlockLevel = 15, ScalingStat = Stat.Intelligence, LifeStealPercent = 20, Tags = new[] { "magic", "area" },
+            },
+
+            // Summoner (ticket 57): summons hit with Intelligence and stand up with Sense; a summoner keeps at most three.
+            new SkillDefinition
+            {
+                Id = "call-imp", Name = "Call Imp", ClassId = "summoner", Effect = SkillEffectKind.Summon, Damage = 9, SummonHealth = 60, SummonLifetimeSeconds = 20f,
+                SummonAttackRange = 1.5f, SummonAttackSeconds = 0.9f, SummonMoveSpeed = 4.5f, SummonCount = 1,
+                CooldownSeconds = 8f, UnlockLevel = 1, ScalingStat = Stat.Intelligence, Tags = new[] { "summon" },
+            },
+            new SkillDefinition
+            {
+                Id = "spirit-lash", Name = "Spirit Lash", ClassId = "summoner", Effect = SkillEffectKind.Projectile, Damage = 16, Range = 11f, Radius = 0.5f, ProjectileSpeed = 16f,
+                CooldownSeconds = 2.5f, ScalingStat = Stat.Intelligence, Tags = new[] { "summon", "projectile" },
+            },
+            new SkillDefinition
+            {
+                Id = "call-wolves", Name = "Call Wolves", ClassId = "summoner", Effect = SkillEffectKind.Summon, Damage = 7, SummonHealth = 45, SummonLifetimeSeconds = 15f,
+                SummonAttackRange = 1.5f, SummonAttackSeconds = 0.8f, SummonMoveSpeed = 6f, SummonCount = 2,
+                CooldownSeconds = 12f, UnlockLevel = 3, ScalingStat = Stat.Intelligence, Tags = new[] { "summon" },
+            },
+            new SkillDefinition
+            {
+                Id = "soul-burst", Name = "Soul Burst", ClassId = "summoner", Effect = SkillEffectKind.Area, Damage = 28, Radius = 3.5f,
+                CooldownSeconds = 7f, UnlockLevel = 5, ScalingStat = Stat.Intelligence, Tags = new[] { "summon", "area" },
+            },
+            new SkillDefinition
+            {
+                Id = "call-golem", Name = "Call Golem", ClassId = "summoner", Effect = SkillEffectKind.Summon, Damage = 22, SummonHealth = 250, SummonLifetimeSeconds = 25f,
+                SummonAttackRange = 2f, SummonAttackSeconds = 1.6f, SummonMoveSpeed = 3f, SummonCount = 1,
+                CooldownSeconds = 22f, UnlockLevel = 10, ScalingStat = Stat.Intelligence, Tags = new[] { "summon" },
+            },
+            new SkillDefinition
+            {
+                Id = "call-wraith", Name = "Call Wraith", ClassId = "summoner", Effect = SkillEffectKind.Summon, Damage = 26, SummonHealth = 110, SummonLifetimeSeconds = 20f,
+                SummonAttackRange = 6f, SummonAttackSeconds = 1.2f, SummonMoveSpeed = 5f, SummonCount = 1,
+                CooldownSeconds = 16f, UnlockLevel = 15, ScalingStat = Stat.Intelligence, Tags = new[] { "summon" },
             },
 
             // The Warrior's Vanguard specialty (ticket 26, D-rank tier): learned only by Vanguards, from the start of D-rank.
@@ -458,17 +618,26 @@ namespace HunterSystem.Editor
             var tuning = GetOrCreateSingle<PlayerTuningAsset>(PlayerTuningPath);
             var progression = GetOrCreateSingle<ProgressionAsset>(ProgressionPath); // its defaults hold the default curve
             var classes = ClassData.Select(GetOrCreateClass).ToArray();
-            var skills = SkillData.Select(data => GetOrCreateSkill(data, classes)).ToArray();
+            var skills = SkillData.Concat(SpecialtyTreeSkills).Select(data => GetOrCreateSkill(data, classes)).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
-            var passives = SpecialtyModifierData.Select(GetOrCreateModifier).ToArray();
+            var passives = SpecialtyModifierData.Concat(SpecialtyTreePassives).Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
-            var trialReward = modifiers.Where(m => m.Id == "deep-rend").ToArray();
-            var warriorTrials = new[] { GetOrCreateWarriorTrial("D", trialReward), GetOrCreateWarriorTrial("B", trialReward) };
-            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() }.Concat(warriorTrials).ToArray();
-            GiveWarriorItsSpecialties(classes.First(c => c.Id == "warrior"), warriorTrials, passives);
+
+            // Each class's two trials (ADR 0022), with a clear reward that suits the class.
+            var trialRewards = new Dictionary<string, string> { ["warrior"] = "deep-rend", ["rogue"] = "split-shot", ["archer"] = "split-shot", ["wizard"] = "searing", ["monk"] = "split-shot", ["cleric"] = "split-shot", ["warlock"] = "split-shot", ["summoner"] = "split-shot" };
+            var trials = classes.Where(c => trialRewards.ContainsKey(c.Id)).ToDictionary(c => c.Id, c =>
+            {
+                var reward = modifiers.Where(m => m.Id == trialRewards[c.Id]).ToArray();
+                return new[] { GetOrCreateTrial(c.DisplayName, "D", reward), GetOrCreateTrial(c.DisplayName, "B", reward) };
+            });
+            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() }.Concat(trials.Values.SelectMany(t => t)).ToArray();
+            GiveWarriorItsSpecialties(classes.First(c => c.Id == "warrior"), trials["warrior"], passives);
+            foreach (var c in classes)
+                if (trials.TryGetValue(c.Id, out var own)) FillSpecialtyTree(c, own, passives);
             var bosses = new[] { GetOrCreateGoblinWarlord() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
-            var scenes = new[] { GetOrCreateArrivalScene() }.Concat(GetOrCreatePromotionScenes()).Concat(warriorTrials.Select(GetOrCreateTrialScene)).ToArray();
+            var scenes = new[] { GetOrCreateArrivalScene() }.Concat(GetOrCreatePromotionScenes())
+                .Concat(classes.Where(c => trials.ContainsKey(c.Id)).SelectMany(c => trials[c.Id].Select(t => GetOrCreateTrialScene(t, c.DisplayName)))).ToArray();
             var scaling = GetOrCreateSingle<PartyScalingAsset>(PartyScalingPath); // its defaults are the starting tiers
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
@@ -525,8 +694,22 @@ namespace HunterSystem.Editor
                 a.Set("guild-exchange", "Guild Exchange", new Vector3(centre.X - 7f, 0f, centre.Z + 5f), 2.5f, 50));
         }
 
-        private static ClassDefinitionAsset GetOrCreateClass(ClassDefinition data) =>
-            GetOrCreate<ClassDefinitionAsset>("Classes", data.Name, a => a.CopyFrom(data));
+        private static ClassDefinitionAsset GetOrCreateClass(ClassDefinition data)
+        {
+            var asset = GetOrCreate<ClassDefinitionAsset>("Classes", data.Name, a => a.CopyFrom(data));
+            // A new class's weapon (ticket 55): the gear asset with that id, set once if the class has none.
+            if (asset.StartingWeapon == null && data.StartingWeaponId != null)
+            {
+                var weapon = AssetDatabase.FindAssets("t:GearDefinitionAsset").Select(g => AssetDatabase.LoadAssetAtPath<GearDefinitionAsset>(AssetDatabase.GUIDToAssetPath(g)))
+                    .FirstOrDefault(g => g != null && g.Id == data.StartingWeaponId);
+                if (weapon != null)
+                {
+                    asset.SetStartingWeapon(weapon);
+                    EditorUtility.SetDirty(asset);
+                }
+            }
+            return asset;
+        }
 
         /// <summary>
         /// The skill's asset, created if missing. A skill asset made before classes (no class yet)
@@ -676,7 +859,7 @@ namespace HunterSystem.Editor
         /// every boss gate it gives a clear reward. Greybox content from the kit, ending with the Warlord: the D trial
         /// a goblin den, the B trial a bigger proving ground of hobgoblins.
         /// </summary>
-        private static GateDefinitionAsset GetOrCreateWarriorTrial(string rank, ModifierDefinitionAsset[] rewardPool)
+        private static GateDefinitionAsset GetOrCreateTrial(string className, string rank, ModifierDefinitionAsset[] rewardPool)
         {
             var goblin = GetOrCreateGoblinDefinition();
             var hobgoblin = GetOrCreateHobgoblinDefinition();
@@ -690,10 +873,10 @@ namespace HunterSystem.Editor
             var antechamber = GetOrCreateRoom("Antechamber", 8f, 8f, checkpoint: true);
             var bossChamber = GetOrCreate<RoomPieceAsset>("Rooms", "Warlord Chamber",
                 a => a.Set(22f, 26f, new RoomPieceAsset.Spawn[0], checkpoint: false, roomBoss: GetOrCreateGoblinWarlord(), bossAt: new Vector3(0f, 0f, 6f)));
-            return GetOrCreate<GateDefinitionAsset>("Gates", $"Warrior Trial {rank}", a =>
+            return GetOrCreate<GateDefinitionAsset>("Gates", $"{className} Trial {rank}", a =>
             {
-                a.Set($"warrior-trial-{rank.ToLowerInvariant()}", $"Warrior's {rank}-rank Trial", new[] { entrance, corridor, fight, corridor, antechamber, bossChamber }, rewardPool);
-                a.SetRankAndIntel(rank, $"[Guild notice: the Warrior's {rank}-rank trial, for {rank}-rank Warriors: {TextSceneAsset.Unwritten}]");
+                a.Set($"{className.ToLowerInvariant()}-trial-{rank.ToLowerInvariant()}", $"{className}'s {rank}-rank Trial", new[] { entrance, corridor, fight, corridor, antechamber, bossChamber }, rewardPool);
+                a.SetRankAndIntel(rank, $"[Guild notice: the {className}'s {rank}-rank trial, for {rank}-rank {className}s: {TextSceneAsset.Unwritten}]");
             });
         }
 
@@ -733,17 +916,17 @@ namespace HunterSystem.Editor
         }
 
         /// <summary>A trial's scene (ticket 26): plays after the first clear of that trial in a world. Blank markers (ADR 0009).</summary>
-        private static TextSceneAsset GetOrCreateTrialScene(GateDefinitionAsset trial)
+        private static TextSceneAsset GetOrCreateTrialScene(GateDefinitionAsset trial, string className)
         {
             TextSceneAsset.Line Blank(string who, string what) => new TextSceneAsset.Line
             {
                 speaker = who, text = $"[{what}: {TextSceneAsset.Unwritten}]",
             };
-            return GetOrCreate<TextSceneAsset>("Scenes", $"Warrior Trial {trial.Rank} Cleared", a => a.Set($"{trial.Id}-cleared", StoryTrigger.GateCleared, new[]
+            return GetOrCreate<TextSceneAsset>("Scenes", $"{className} Trial {trial.Rank} Cleared", a => a.Set($"{trial.Id}-cleared", StoryTrigger.GateCleared, new[]
             {
-                Blank("", $"Narration: back at the guild after the Warrior's {trial.Rank}-rank trial"),
+                Blank("", $"Narration: back at the guild after the {className}'s {trial.Rank}-rank trial"),
                 Blank("[Guild NPC]", "The guild says the trial is passed"),
-                Blank("[Guild NPC]", $"The paths a {trial.Rank}-rank Warrior can take from here, and that the choice is for good"),
+                Blank("[Guild NPC]", $"The paths a {trial.Rank}-rank {className} can take from here, and that the choice is for good"),
             }, forGate: trial));
         }
 

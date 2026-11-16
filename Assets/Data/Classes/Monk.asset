@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b224a181a491ed4f97d855920a9fd24, type: 3}
+  m_Name: Monk
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.ClassDefinitionAsset
+  id: monk
+  displayName: Monk
+  description: 'Fights with bare hands: fast strikes, kicks, and a wave of force. +1 Agility, +1 Vitality each level.'
+  strength: 0
+  agility: 1
+  vitality: 1
+  intelligence: 0
+  sense: 0
+  luck: 0
+  startingWeapon: {fileID: 11400000, guid: e656079fa15448f884345c59b8398adc, type: 2}
+  jumpHeightPercent: 100
+  trialGates:
+  - {fileID: 11400000, guid: d7f074b0740e9ad4e9db353695bf04e6, type: 2}
+  - {fileID: 11400000, guid: 703f09a10e2c68d4d862d81b6ea71fd6, type: 2}
+  specialties:
+  - id: iron-fist
+    displayName: Iron Fist
+    rank: D
+    parent: 
+    description: 'Every blow lands like a hammer. Palm Strike deals 30% more damage. Melee skills deal 10% more damage. New skill: Stone Palm (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 23bfcc6c92965a248ae42b1fefdabc38, type: 2}
+    - {fileID: 11400000, guid: 5c2ab79a0a93b454a8d5ee70fd949561, type: 2}
+  - id: wind-walker
+    displayName: Wind Walker
+    rank: D
+    parent: 
+    description: 'Never still, and never where the enemy strikes. Melee skills have 15% shorter cooldowns. Rising Kick has a 20% shorter cooldown and reaches 1 m further. New skill: Gale Kick (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 215d6254da18f6a499ab399a91578cbe, type: 2}
+    - {fileID: 11400000, guid: 4ea6b5d32c784af4d987a094098a113c, type: 2}
+  - id: mountain-breaker
+    displayName: Mountain Breaker
+    rank: B
+    parent: iron-fist
+    description: 'Strikes the ground hard enough to throw a crowd off its feet. Dragon''s Descent deals 30% more damage and covers 1.5 m more around it. Area skills deal 15% more damage. New skills: Earthshaker Fist (level 56), Quaking Palm (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 3963b14f628cee54eab1efb82175e54d, type: 2}
+    - {fileID: 11400000, guid: c12ef488b1ebb904ba9c0455b36fc132, type: 2}
+  - id: dragon-fist
+    displayName: Dragon Fist
+    rank: B
+    parent: iron-fist
+    description: 'One perfect strike, gathered and let go. Hundred Palms deals 35% more damage. Physical skills deal 10% more damage. New skills: Dragon Strike (level 56), Coiling Dragon (level 62).'
+    passives:
+    - {fileID: 11400000, guid: ce65def77453c79438d9b3ce183db2b6, type: 2}
+    - {fileID: 11400000, guid: fdfce88034ab72c46b22cc54da7a6036, type: 2}
+  - id: storm-dancer
+    displayName: Storm Dancer
+    rank: B
+    parent: wind-walker
+    description: 'A whirl of kicks that never lets up. Flurry of Fists has a 25% shorter cooldown and covers 1 m more around it. Melee skills have 10% shorter cooldowns. New skills: Cyclone Kick (level 56), Thunder Step (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 84001d37ec9d88f47b4f24e55ca707fb, type: 2}
+    - {fileID: 11400000, guid: 7c5b8b89d4a5a364fa7174f90f1ee9ce, type: 2}
+  - id: shadow-palm
+    displayName: Shadow Palm
+    rank: B
+    parent: wind-walker
+    description: 'Strikes from a distance with waves of force. Force Wave fires 2 more bolts in a fan. Projectile skills deal 20% more damage. New skills: Twin Waves (level 56), Palm of Silence (level 62).'
+    passives:
+    - {fileID: 11400000, guid: cd5ec1851fcf6f14f90bd29a352cf561, type: 2}
+    - {fileID: 11400000, guid: 241f567b67d5c6949b47b72b9224b17e, type: 2}

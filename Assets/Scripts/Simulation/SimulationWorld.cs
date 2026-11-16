@@ -22,6 +22,7 @@ namespace HunterSystem.Simulation
         private readonly int _damagePerMillePerStrength;
         private readonly int _damagePerMillePerIntelligence;
         private readonly int _damagePerMillePerAgility;
+        private readonly int _damagePerMillePerSense;
         private readonly List<Projectile> _projectiles = new List<Projectile>();
         private readonly HashSet<string> _knownTags;
         private int _nextProjectileId = 1;
@@ -61,6 +62,7 @@ namespace HunterSystem.Simulation
             _damagePerMillePerStrength = (int)MathF.Round(config.StatEffects.DamagePerStrength * 1000f);
             _damagePerMillePerIntelligence = (int)MathF.Round(config.StatEffects.DamagePerIntelligence * 1000f);
             _damagePerMillePerAgility = (int)MathF.Round(config.StatEffects.DamagePerAgility * 1000f);
+            _damagePerMillePerSense = (int)MathF.Round(config.StatEffects.DamagePerSense * 1000f);
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
             ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
             ValidateSpecialties();
@@ -266,6 +268,7 @@ namespace HunterSystem.Simulation
 
             foreach (var player in _players) UpdateJump(player, tick);
             UpdateProjectiles(tick);
+            UpdateSummons(tick);
 
             foreach (var enemy in _enemies)
                 if (enemy.Health > 0) UpdateEnemy(enemy, tick);

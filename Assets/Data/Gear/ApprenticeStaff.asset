@@ -19,6 +19,7 @@ MonoBehaviour:
   tags:
   - magic
   modifiers: []
+  statBonuses: []
   lightAttack:
     id: staff-bolt
     displayName: Magic Bolt

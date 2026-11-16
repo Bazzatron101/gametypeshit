@@ -62,6 +62,31 @@ namespace HunterSystem.Editor
         /// <summary>Each piece's placeholder, by gear id, in its slot's anchor space. Swords and staves stand up from the hand, tilted forward.</summary>
         private static readonly Dictionary<string, Part[]> Recipes = new Dictionary<string, Part[]>
         {
+            ["hand-wraps"] = new[]
+            {
+                // Cloth wound round the fist, with a brass knuckle: the Monk's weapon (ticket 55).
+                P(PrimitiveType.Cube, "Leather", new Vector3(0f, 0f, 0f), new Vector3(0.11f, 0.12f, 0.11f)),
+                P(PrimitiveType.Cube, "Iron", new Vector3(0f, 0.02f, 0.06f), new Vector3(0.12f, 0.04f, 0.03f)),
+            },
+            ["acolyte-sceptre"] = new[]
+            {
+                // The Cleric's weapon (ticket 56): a short pale rod with a bright head.
+                P(PrimitiveType.Cylinder, "Wood", new Vector3(0f, 0.2f, 0f), new Vector3(0.05f, 0.5f, 0.05f)),
+                P(PrimitiveType.Sphere, "Arcane", new Vector3(0f, 0.75f, 0f), Vector3.one * 0.14f),
+            },
+            ["hexed-rod"] = new[]
+            {
+                // The Warlock's weapon (ticket 58): a dark rod with a charred head.
+                P(PrimitiveType.Cylinder, "Charcoal", new Vector3(0f, 0.25f, 0f), new Vector3(0.05f, 0.6f, 0.05f)),
+                P(PrimitiveType.Cube, "Cinder", new Vector3(0f, 0.9f, 0f), Vector3.one * 0.12f),
+            },
+            ["binding-staff"] = new[]
+            {
+                // The Summoner's weapon (ticket 57): a tall staff with a pale spirit stone.
+                P(PrimitiveType.Cylinder, "Wood", new Vector3(0f, 0.35f, 0f), new Vector3(0.06f, 0.9f, 0.06f)),
+                P(PrimitiveType.Sphere, "Arcane", new Vector3(0f, 1.3f, 0f), Vector3.one * 0.12f),
+                P(PrimitiveType.Cube, "Charcoal", new Vector3(0f, 1.15f, 0f), new Vector3(0.2f, 0.03f, 0.03f)),
+            },
             ["iron-sword"] = new[]
             {
                 P(PrimitiveType.Cube, "Leather", new Vector3(0f, 0f, 0f), new Vector3(0.06f, 0.22f, 0.06f), new Vector3(30f, 0f, 0f)),

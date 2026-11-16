@@ -21,5 +21,57 @@ MonoBehaviour:
   intelligence: 1
   sense: 1
   luck: 0
-  jumpHeightPercent: 100
   startingWeapon: {fileID: 11400000, guid: f02345fc0342474fb3a1c6ef1c7c3e02, type: 2}
+  jumpHeightPercent: 100
+  trialGates:
+  - {fileID: 11400000, guid: 1bed41176b58bd841862d25bb3e08410, type: 2}
+  - {fileID: 11400000, guid: 50201a67b4f00ff469e6b5f5f8e5ccf8, type: 2}
+  specialties:
+  - id: pyromancer
+    displayName: Pyromancer
+    rank: D
+    parent: 
+    description: 'Fire, and more fire. Fire skills deal 15% more damage. Fireball bursts on every hit, for 50% of it within 2 m. New skill: Fire Lance (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 0e6d2537b9495904a827c1a113204db1, type: 2}
+    - {fileID: 11400000, guid: 5b9407f84a3ef694196e936832833aa3, type: 2}
+  - id: arcanist
+    displayName: Arcanist
+    rank: D
+    parent: 
+    description: 'Pure magic, cast quickly and often. Magic skills have 15% shorter cooldowns. Arcane Orb deals 25% more damage and covers 0.5 m more around it. New skill: Arcane Missiles (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 82ba834e56719af4ca4f42da9d475a60, type: 2}
+    - {fileID: 11400000, guid: 8e20fe9e5844b03479282398bfaaac0d, type: 2}
+  - id: flamecaller
+    displayName: Flamecaller
+    rank: B
+    parent: pyromancer
+    description: 'Calls fire down from the sky. Flame Burst deals 30% more damage and covers 1.5 m more around it. Inferno Wave deals 25% more damage and reaches 2 m further. New skills: Meteor (level 56), Pillar of Flame (level 62).'
+    passives:
+    - {fileID: 11400000, guid: b0c0033ad34d60e4ca8b8f323df84048, type: 2}
+    - {fileID: 11400000, guid: d26d103f06fe0534aaa9b61cc08eb2a0, type: 2}
+  - id: ashbringer
+    displayName: Ashbringer
+    rank: B
+    parent: pyromancer
+    description: 'A swarm of embers that never lets up. Fire skills fire 1 more bolt in a fan. Fire skills have 15% shorter cooldowns. New skills: Ember Swarm (level 56), Cinder Nova (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 9135235f794b0c44ba6cbc87164e20a3, type: 2}
+    - {fileID: 11400000, guid: 3d6afb098c1821d4d861841489ea074d, type: 2}
+  - id: chronomancer
+    displayName: Chronomancer
+    rank: B
+    parent: arcanist
+    description: 'Bends time so spells come back sooner. Magic skills have 20% shorter cooldowns. Monarch''s Decree has a 30% shorter cooldown. New skills: Time Rift (level 56), Echo Bolt (level 62).'
+    passives:
+    - {fileID: 11400000, guid: a04b96c70d0bc9a459996e375a38bcde, type: 2}
+    - {fileID: 11400000, guid: 37edfdd75445be845a7b41a9d099675b, type: 2}
+  - id: spellblade
+    displayName: Spellblade
+    rank: B
+    parent: arcanist
+    description: 'Casts up close, with a blade of light. Magic skills deal 15% more damage. Area skills deal 20% more damage. New skills: Arcane Slash (level 56), Runic Burst (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 7657aeb8a419daa42a2d6c39d4b5b4d9, type: 2}
+    - {fileID: 11400000, guid: da68209b16878d649bce03dd65402d82, type: 2}

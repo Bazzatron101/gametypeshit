@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b224a181a491ed4f97d855920a9fd24, type: 3}
+  m_Name: Summoner
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.ClassDefinitionAsset
+  id: summoner
+  displayName: Summoner
+  description: Calls creatures to fight for it, up to three at once, each for a while or until it falls. +1 Intelligence, +1 Sense each level.
+  strength: 0
+  agility: 0
+  vitality: 0
+  intelligence: 1
+  sense: 1
+  luck: 0
+  startingWeapon: {fileID: 11400000, guid: 741219cef73845998692dd4e4ed51e81, type: 2}
+  jumpHeightPercent: 100
+  trialGates:
+  - {fileID: 11400000, guid: c4978c14a112e334ea3492e28bcf1424, type: 2}
+  - {fileID: 11400000, guid: f4a503def3840024cbc53bf83ca885ec, type: 2}
+  specialties:
+  - id: beastcaller
+    displayName: Beastcaller
+    rank: D
+    parent: 
+    description: 'Fights beside a pack of beasts. Call Wolves deals 30% more damage. Summon skills have 15% shorter cooldowns. New skill: Call Bear (level 16).'
+    passives:
+    - {fileID: 11400000, guid: f07a1792813253347869d68cc87d3557, type: 2}
+    - {fileID: 11400000, guid: 66d4461f990973645af55a3035c24573, type: 2}
+  - id: spiritbinder
+    displayName: Spiritbinder
+    rank: D
+    parent: 
+    description: 'Binds restless spirits to its will. Spirit Lash fires 1 more bolt in a fan. Summon skills deal 15% more damage. New skill: Call Spirits (level 16).'
+    passives:
+    - {fileID: 11400000, guid: f91429ab414262445bd466ca7b2125e3, type: 2}
+    - {fileID: 11400000, guid: dec8d9eab105a7b478bf129aa52b1fbe, type: 2}
+  - id: packmaster
+    displayName: Packmaster
+    rank: B
+    parent: beastcaller
+    description: 'Leads a pack that hunts as one. Call Wolves has a 30% shorter cooldown. Summon skills deal 15% more damage. New skills: Call Dire Wolves (level 56), Howl (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 60db2bc1a8edada4dba5bf363ff0ddcc, type: 2}
+    - {fileID: 11400000, guid: 9d0c0a78da83e3b4f8a4c144afd92ddb, type: 2}
+  - id: golemancer
+    displayName: Golemancer
+    rank: B
+    parent: beastcaller
+    description: 'Raises giants of stone to stand in front of the party. Call Golem deals 35% more damage and has a 20% shorter cooldown. Area skills deal 15% more damage. New skills: Call Colossus (level 56), Tremor (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 4c08246f4eed58142809e279731fc63f, type: 2}
+    - {fileID: 11400000, guid: ce856daa75ca5ad43935e8e35ada955d, type: 2}
+  - id: necromancer
+    displayName: Necromancer
+    rank: B
+    parent: spiritbinder
+    description: 'The fallen rise again, and fight for it. Call Wraith deals 30% more damage. Summon skills have 15% shorter cooldowns. New skills: Raise Dead (level 56), Bone Spear (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 8a4eff068f3f6954781003e5d144df85, type: 2}
+    - {fileID: 11400000, guid: a7159b42f084d224493a92b5bcb8da30, type: 2}
+  - id: soulweaver
+    displayName: Soulweaver
+    rank: B
+    parent: spiritbinder
+    description: 'Weaves spirits into storms and phantoms. Spirit Lash fires 2 more bolts in a fan. Projectile skills deal 15% more damage. New skills: Soul Storm (level 56), Call Phantom (level 62).'
+    passives:
+    - {fileID: 11400000, guid: a2c73b6475de78d45b6bcee33aa19121, type: 2}
+    - {fileID: 11400000, guid: cb5f71ea777b52740b466029c675d784, type: 2}

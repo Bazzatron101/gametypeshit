@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b224a181a491ed4f97d855920a9fd24, type: 3}
+  m_Name: Cleric
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.ClassDefinitionAsset
+  id: cleric
+  displayName: Cleric
+  description: 'A holy caster who keeps the party standing: smites that burn, and bolts of light that heal the ally they reach. +1 Intelligence, +1 Sense each level.'
+  strength: 0
+  agility: 0
+  vitality: 0
+  intelligence: 1
+  sense: 1
+  luck: 0
+  startingWeapon: {fileID: 11400000, guid: 43711d5075ea4fe69759994760c1ed01, type: 2}
+  jumpHeightPercent: 100
+  trialGates:
+  - {fileID: 11400000, guid: 6a10c6addf210714ab6a1db18d2aae2b, type: 2}
+  - {fileID: 11400000, guid: d9a3da206ef8fc24b8e65661abdf17c5, type: 2}
+  specialties:
+  - id: priest
+    displayName: Priest
+    rank: D
+    parent: 
+    description: 'Keeps the party standing. Mending Light restores 30% more health. Sanctuary covers 1.5 m more around it. New skill: Greater Mending (level 16).'
+    passives:
+    - {fileID: 11400000, guid: b1e9835b2e622ba47b090716551a1e65, type: 2}
+    - {fileID: 11400000, guid: 36dc6aea1a24ee748b3b84f4cfc56289, type: 2}
+  - id: templar
+    displayName: Templar
+    rank: D
+    parent: 
+    description: 'Carries the light into the fight. Smite deals 30% more damage. Magic skills deal 10% more damage. New skill: Hammer of Light (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 8fd46b599dfb5d445a9aa1932a8dac95, type: 2}
+    - {fileID: 11400000, guid: 41bc90a8788f9434d967d8711e0841ee, type: 2}
+  - id: oracle
+    displayName: Oracle
+    rank: B
+    parent: priest
+    description: 'Sees who will fall, and gets there first. Sanctuary has a 30% shorter cooldown. Mending Light fires 2 more bolts in a fan. New skills: Circle of Light (level 56), Blessed Bolt (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 41cc5017c8748b74294bcbbbe6250cf9, type: 2}
+    - {fileID: 11400000, guid: 8da9d9f90c087414396c7cc8cd62d7cd, type: 2}
+  - id: saint
+    displayName: Saint
+    rank: B
+    parent: priest
+    description: 'Turns a lost fight around. Mending Light has a 25% shorter cooldown. Sanctuary restores 30% more health. New skills: Miracle (level 56), Halo (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 254c70b7fec6b5944bb31041e6a9ddc2, type: 2}
+    - {fileID: 11400000, guid: a2b8e0908f8a52b45a134a5ecca65878, type: 2}
+  - id: paladin
+    displayName: Paladin
+    rank: B
+    parent: templar
+    description: 'A holy knight in the front line. Judgement deals 35% more damage. Holy Nova covers 1 m more around it. New skills: Divine Hammer (level 56), Consecrate (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 6a6819729b2d7b043996bb7040545ffa, type: 2}
+    - {fileID: 11400000, guid: b4dec2c13d633c543abd00fcdcf6cd38, type: 2}
+  - id: inquisitor
+    displayName: Inquisitor
+    rank: B
+    parent: templar
+    description: 'Burns the wicked from far away. Radiant Lance deals 30% more damage and has a 20% shorter cooldown. Magic skills deal 15% more damage. New skills: Searing Light (level 56), Final Verdict (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 12e5ba161167ce6408e09898800545f8, type: 2}
+    - {fileID: 11400000, guid: 43061927c31892b4d84809e7ee2991a4, type: 2}

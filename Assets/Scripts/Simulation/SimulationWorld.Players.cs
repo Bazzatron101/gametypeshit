@@ -148,6 +148,8 @@ namespace HunterSystem.Simulation
             if (amount == 0) return 0;
             enemy.Health -= amount;
             _events.Add(new DamageDealt(tick, attacker.Id, enemy.Id, amount, enemy.Health, skill, secondary));
+            if (!secondary && skill != null && skill.LifeStealPercent > 0) // drain life (ticket 58)
+                HealPlayer(attacker, PercentOf(amount, skill.LifeStealPercent), attacker, skill, tick);
             CheckEnrage(enemy);
             if (enemy.Health == 0)
             {

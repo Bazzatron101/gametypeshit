@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 636b85facfdade0438af0441a68d0f68, type: 3}
+  m_Name: PalmofSilence
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.SkillDefinitionAsset
+  id: palm-of-silence
+  displayName: Palm of Silence
+  cooldownSeconds: 11
+  unlockLevel: 62
+  characterClass: {fileID: 11400000, guid: 7c1e4f9a7652c87439ed5ef357870b19, type: 2}
+  specialty: shadow-palm
+  tags:
+  - melee
+  - physical
+  scalingStat: 1
+  effect: 0
+  damage: 140
+  range: 2.5
+  arcDegrees: 80
+  radius: 3
+  projectileSpeed: 15
+  pierces: 0
+  chargeSeconds: 0
+  chargedSizePercent: 0
+  chargedDamagePercent: 0
+  chargeUnlockLevel: 1

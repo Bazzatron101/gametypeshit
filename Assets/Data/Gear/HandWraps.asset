@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: HandWraps
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: hand-wraps
+  displayName: Hand Wraps
+  description: Bare-handed fighting. Quick jabs, and a heavy palm that knocks the breath out of an enemy.
+  slot: 0
+  tags:
+  - melee
+  - physical
+  modifiers: []
+  statBonuses: []
+  lightAttack:
+    id: wraps-jab
+    displayName: Jab
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 9
+    range: 2.2
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.25
+    windupSeconds: 0
+  heavyAttack:
+    id: wraps-palm
+    displayName: Heavy Palm
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 24
+    range: 2.8
+    arcDegrees: 60
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.7
+    windupSeconds: 0.2
+  sellValue: 40
+  look: {fileID: 1690573484968964898, guid: 983588635601a4d47bee28327c3570ad, type: 3}

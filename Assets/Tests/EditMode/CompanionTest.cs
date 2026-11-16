@@ -44,7 +44,11 @@ namespace HunterSystem.Tests
             var roster = CompanionParty.Roster(playerClass, config.Classes);
 
             Assert.That(roster.Count, Is.EqualTo(5));
-            Assert.That(roster.Distinct(), Is.EquivalentTo(Classes), "one of every class, at least");
+            var classes = config.Classes.Select(c => c.Id).ToArray();
+            if (classes.Length <= roster.Count)
+                Assert.That(roster.Distinct(), Is.EquivalentTo(classes), "one of every class, at least");
+            else // more classes than seats (tickets 55 to 58): every role, at least
+                Assert.That(roster.Select(CompanionRoles.ForClass).Distinct(), Is.EquivalentTo(classes.Select(CompanionRoles.ForClass).Distinct()), "one of every role, at least");
             var party = playerClass != null ? roster.Append(playerClass).ToList() : roster;
             var front = party.Count(id => CompanionRoles.IsFrontLine(CompanionRoles.ForClass(id)));
             Assert.That(Math.Abs(front - (party.Count - front)), Is.LessThanOrEqualTo(1), $"front {front} of {party.Count}: {string.Join(", ", party)}");

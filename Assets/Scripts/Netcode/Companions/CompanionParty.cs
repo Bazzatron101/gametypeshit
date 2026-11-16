@@ -20,6 +20,10 @@ namespace HunterSystem.Netcode
             { "rogue", new[] { "Vex", "Shade" } },
             { "archer", new[] { "Wren", "Kestrel" } },
             { "wizard", new[] { "Orin", "Ilsa" } },
+            { "monk", new[] { "Tamsin", "Joss" } },
+            { "cleric", new[] { "Maren", "Aldous" } },
+            { "warlock", new[] { "Morrow", "Sable" } },
+            { "summoner", new[] { "Lio", "Fenna" } },
         };
 
         /// <summary>Which class fills a gap first when two would do: a second tank before another melee, a marksman before a second caster.</summary>
@@ -39,8 +43,11 @@ namespace HunterSystem.Netcode
                 return roster;
             }
 
-            var ordered = classes.Select(c => c.Id).OrderBy(id => Array.IndexOf(FillOrder, CompanionRoles.ForClass(id))).ToList();
-            roster.AddRange(ordered.Take(Size));
+            var byRole = classes.Select(c => c.Id).OrderBy(id => Array.IndexOf(FillOrder, CompanionRoles.ForClass(id))).ToList();
+            // One class of every role first, so a game with more classes than seats still has every role (tickets 55 to 58).
+            var firsts = byRole.GroupBy(CompanionRoles.ForClass).Select(g => g.First()).ToList();
+            var ordered = firsts.Concat(byRole.Except(firsts)).ToList();
+            roster.AddRange((classes.Count <= Size ? ordered : firsts).Take(Size)); // past five classes: one per role, then the balance below
             while (roster.Count < Size)
             {
                 var party = roster.Concat(playerClassId != null ? new[] { playerClassId } : Array.Empty<string>()).ToList();

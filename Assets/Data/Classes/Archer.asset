@@ -21,5 +21,57 @@ MonoBehaviour:
   intelligence: 0
   sense: 1
   luck: 0
-  jumpHeightPercent: 100
   startingWeapon: {fileID: 11400000, guid: 849530eb8d3944f19f7cae89134f31e0, type: 2}
+  jumpHeightPercent: 100
+  trialGates:
+  - {fileID: 11400000, guid: c3d9b0609774aac42b777bf298e733b3, type: 2}
+  - {fileID: 11400000, guid: d354fa7db66bb9741bac0370a53a30cc, type: 2}
+  specialties:
+  - id: marksman
+    displayName: Marksman
+    rank: D
+    parent: 
+    description: 'One arrow, aimed true, from far away. Hunter''s Javelin deals 30% more damage and reaches 4 m further. Projectile skills deal 10% more damage. New skill: Aimed Shot (level 16).'
+    passives:
+    - {fileID: 11400000, guid: de99a47e300a416438be49ddc4ebf8a3, type: 2}
+    - {fileID: 11400000, guid: a6bc5962581c25d40bb563528a314219, type: 2}
+  - id: ranger
+    displayName: Ranger
+    rank: D
+    parent: 
+    description: 'Covers the field with arrows. Arrow Rain covers 1.5 m more around it. Volley has a 20% shorter cooldown. New skill: Scatter Shot (level 16).'
+    passives:
+    - {fileID: 11400000, guid: e3445812b84be2f479cebbf458de5323, type: 2}
+    - {fileID: 11400000, guid: 2df999435e8d7bd43a99295abbe28838, type: 2}
+  - id: sniper
+    displayName: Sniper
+    rank: B
+    parent: marksman
+    description: 'Picks off the biggest threat before it is close. Hunter''s Javelin deals 40% more damage. Projectile skills reach 5 m further. New skills: Deadeye (level 56), Piercing Bolt (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 8b34d275b278ab9408114b1c592e3e30, type: 2}
+    - {fileID: 11400000, guid: efff6ad0b88fd694f8cf36736311e7c6, type: 2}
+  - id: hawkeye
+    displayName: Hawkeye
+    rank: B
+    parent: marksman
+    description: 'Looses arrows faster than the eye can follow. Quick Shot fires 2 more bolts in a fan. Quick Shot has a 25% shorter cooldown. New skills: Rapid Fire (level 56), Split Arrow (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 9dccd1945c274004fad1a9bc11bc8124, type: 2}
+    - {fileID: 11400000, guid: 5cd8e19cafe2d354d85fee2b147efe8b, type: 2}
+  - id: warden
+    displayName: Warden
+    rank: B
+    parent: ranger
+    description: 'Turns the sky over a fight into falling arrows. Arrow Rain deals 35% more damage. Area skills deal 15% more damage. New skills: Hail of Arrows (level 56), Thorn Barrage (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 2a48487a1611b2545bd95cb76e9aa157, type: 2}
+    - {fileID: 11400000, guid: fe5a8c3d21667544580a110c4c8d0691, type: 2}
+  - id: trapper
+    displayName: Trapper
+    rank: B
+    parent: ranger
+    description: 'Arrows that burst, and ground that bites. Projectile skills burst on every hit, for 40% of it within 2 m. Volley deals 25% more damage. New skills: Snare Shot (level 56), Spike Field (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 14ce74ad07e57ec4e9ee9b026738943b, type: 2}
+    - {fileID: 11400000, guid: 156f319a3227fbc4088345d2495b8037, type: 2}

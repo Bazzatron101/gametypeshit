@@ -64,6 +64,23 @@ namespace HunterSystem.Simulation
                     Require(skill.ProjectileSpeed > 0f, "a projectile needs a positive ProjectileSpeed.");
                     Require(skill.Range > 0f, "a projectile needs a positive Range.");
                 }
+                if (skill.Effect == SkillEffectKind.Summon)
+                {
+                    Require(skill.SummonHealth > 0, "a summon needs health.");
+                    Require(skill.SummonLifetimeSeconds > 0f, "a summon needs a lifetime.");
+                    Require(skill.SummonAttackRange > 0f, "a summon needs an attack range.");
+                    Require(skill.SummonAttackSeconds > 0f, "a summon needs time between hits.");
+                    Require(skill.SummonMoveSpeed >= 0f, "SummonMoveSpeed is negative.");
+                    Require(skill.SummonCount >= 1 && skill.SummonCount <= MaxSummonsPerPlayer, $"SummonCount must be 1 to {MaxSummonsPerPlayer}.");
+                    Require(!skill.Heals, "a summon does not heal.");
+                }
+                Require(skill.Healing >= 0, "Healing is negative.");
+                Require(skill.LifeStealPercent >= 0, "LifeStealPercent is negative.");
+                if (skill.Heals)
+                {
+                    Require(skill.Effect != SkillEffectKind.Cone, "a healing skill is a projectile or an area, not a cone.");
+                    Require(skill.Damage == 0, "a healing skill deals no damage.");
+                }
                 Require(skill.ClassId == null || classIds.Contains(skill.ClassId),
                     $"its class '{skill.ClassId}' is not one of the game's classes.");
             }
@@ -232,6 +249,7 @@ namespace HunterSystem.Simulation
                 else resolved.Radius *= size;
                 var damagePercent = (int)MathF.Round(skill.ChargedDamagePercent * chargeFraction, MidpointRounding.AwayFromZero);
                 resolved.BaseDamage = PercentOf(resolved.BaseDamage, 100 + damagePercent);
+                resolved.BaseHealing = PercentOf(resolved.BaseHealing, 100 + damagePercent);
             }
 
             player.SkillReadyAtTick[skill.Id] = tick + resolved.CooldownTicks;
@@ -260,8 +278,19 @@ namespace HunterSystem.Simulation
                     HitEnemiesWhere(player, damage, tick, resolved, at => InCone(player, at, resolved.Range, minCos));
                     break;
 
+                case SkillEffectKind.Area when skill.Heals:
+                    var healing = ScaledDamage(player, resolved.BaseHealing, skill.ScalingStat);
+                    foreach (var ally in _players.ToList())
+                        if (ally.IsAlive && !ally.Away && Flat(ally.Position - player.Position).Length <= resolved.Radius)
+                            HealPlayer(ally, healing, player, skill, tick);
+                    break;
+
                 case SkillEffectKind.Area:
                     HitEnemiesWhere(player, damage, tick, resolved, at => Flat(at - player.Position).Length <= resolved.Radius);
+                    break;
+
+                case SkillEffectKind.Summon:
+                    CallSummons(player, resolved, damage, tick);
                     break;
 
                 case SkillEffectKind.Projectile:
@@ -276,7 +305,7 @@ namespace HunterSystem.Simulation
                             Owner = player,
                             Skill = skill,
                             Resolved = resolved,
-                            Damage = damage,
+                            Damage = skill.Heals ? ScaledDamage(player, resolved.BaseHealing, skill.ScalingStat) : damage,
                             Speed = skill.ProjectileSpeed,
                             Position = player.Position,
                             Direction = RotateFlat(player.Facing, offset),
@@ -322,6 +351,22 @@ namespace HunterSystem.Simulation
 
                 var step = MathF.Min(p.Speed * TickDelta, p.Resolved.Range - p.Travelled);
                 var from = p.Position;
+                if (p.Skill.Heals)
+                {
+                    // A healing bolt (ticket 56) flies past enemies to the first other player along its path.
+                    var ally = FirstAllyAlong(p.Owner, from, p.Direction, step, p.Resolved.Radius, out var reach);
+                    if (ally != null)
+                    {
+                        p.Position = from + p.Direction * reach;
+                        HealPlayer(ally, p.Damage, p.Owner, p.Skill, tick);
+                        EndProjectile(i, p, tick, hitEnemy: false);
+                        continue;
+                    }
+                    p.Position = from + p.Direction * step;
+                    p.Travelled += step;
+                    if (p.Travelled >= p.Resolved.Range - Epsilon) EndProjectile(i, p, tick, hitEnemy: false);
+                    continue;
+                }
                 if (p.Skill.Pierces)
                 {
                     // Everything along this stretch that this use has not hit yet, nearest first; then on.
@@ -350,6 +395,37 @@ namespace HunterSystem.Simulation
                 p.Travelled += step;
                 if (p.Travelled >= p.Resolved.Range - Epsilon) EndProjectile(i, p, tick, hitEnemy: false);
             }
+        }
+
+        /// <summary>The living, present player other than <paramref name="owner"/> nearest the start of a segment, within <paramref name="radius"/> of it.</summary>
+        private Player FirstAllyAlong(Player owner, Vec3 from, Vec3 direction, float length, float radius, out float along)
+        {
+            Player first = null;
+            along = float.MaxValue;
+            foreach (var player in _players)
+            {
+                if (player == owner || !player.IsAlive || player.Away) continue;
+                var offset = Flat(player.Position - from);
+                var t = Math.Clamp(offset.X * direction.X + offset.Z * direction.Z, 0f, length);
+                var miss = Flat(offset - direction * t).Length;
+                if (miss > radius) continue;
+                var contact = Math.Max(0f, t - MathF.Sqrt(MathF.Max(0f, radius * radius - miss * miss)));
+                if (contact < along) { along = contact; first = player; }
+            }
+            return first;
+        }
+
+        /// <summary>
+        /// The one place player health goes up from a skill (ticket 56): healing and drained life. Never past the
+        /// player's max, never for the fallen. Announced with the health actually restored.
+        /// </summary>
+        private void HealPlayer(Player player, int amount, Player healer, SkillDefinition skill, int tick)
+        {
+            if (!player.IsAlive) return;
+            var healed = Math.Min(Math.Max(0, amount), player.MaxHealth - player.Health);
+            if (healed <= 0) return;
+            player.Health += healed;
+            _events.Add(new PlayerHealed(tick, player.Id, healed, player.Health, healer.Id, skill));
         }
 
         private void EndProjectile(int index, Projectile p, int tick, bool hitEnemy)

@@ -23,6 +23,24 @@ namespace HunterSystem.Simulation
             foreach (var operation in operations) operation(tick);
         }
 
+        /// <summary>For testing only: takes <paramref name="amount"/> health from the player at the start of the next tick, through the one place health goes down.</summary>
+        public void DamagePlayerForTesting(PlayerId id, int amount)
+        {
+            var player = FindPlayer(id);
+            Enqueue(tick => player.TakeDamage(amount, out _));
+        }
+
+        /// <summary>For testing only: sets one of the player's stats at the start of the next tick.</summary>
+        public void SetStatsForTesting(PlayerId id, Stat stat, int value)
+        {
+            var player = FindPlayer(id);
+            Enqueue(tick =>
+            {
+                player.Stats[(int)stat] = value;
+                player.MaxHealth = ComputeMaxHealth(player);
+            });
+        }
+
         /// <summary>Grants XP as if from a kill: level-ups, stat points, unlocks and their events all follow.</summary>
         public void GrantXp(PlayerId id, int amount)
         {

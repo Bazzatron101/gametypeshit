@@ -31,6 +31,8 @@ namespace HunterSystem.Simulation
             MountChanged, MountGranted,
             RankPromoted,
             SpecialtyUnlocked, SpecialtyChosen,
+            PlayerHealed,
+            SummonAppeared, SummonDamaged, SummonEnded,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -219,6 +221,19 @@ namespace HunterSystem.Simulation
                 case SpecialtyUnlocked x:
                     Head(w, Code.SpecialtyUnlocked, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.ClassId); SimulationWorld.WriteNullable(w, x.Rank);
                     break;
+                case SummonAppeared x:
+                    Head(w, Code.SummonAppeared, e); w.Write(x.Summon); w.Write(x.Owner.Value); w.Write(x.Skill.Id); SimulationWorld.WriteVec(w, x.Position);
+                    break;
+                case SummonDamaged x:
+                    Head(w, Code.SummonDamaged, e); w.Write(x.Summon); w.Write(x.Attacker.Value); w.Write(x.Amount); w.Write(x.RemainingHealth);
+                    break;
+                case SummonEnded x:
+                    Head(w, Code.SummonEnded, e); w.Write(x.Summon); w.Write(x.Fell);
+                    break;
+                case PlayerHealed x:
+                    Head(w, Code.PlayerHealed, e); w.Write(x.Player.Value); w.Write(x.Amount); w.Write(x.Health); w.Write(x.Healer.Value);
+                    SimulationWorld.WriteNullable(w, x.Skill?.Id);
+                    break;
                 case SpecialtyChosen x:
                     Head(w, Code.SpecialtyChosen, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.SpecialtyId);
                     break;
@@ -373,6 +388,33 @@ namespace HunterSystem.Simulation
                     var player = Player();
                     var classId = SimulationWorld.ReadNullable(r);
                     return new SpecialtyUnlocked(tick, player, classId, SimulationWorld.ReadNullable(r));
+                }
+                case Code.SummonAppeared:
+                {
+                    var summon = r.ReadInt32();
+                    var owner = Player();
+                    var skill = Skill();
+                    return new SummonAppeared(tick, summon, owner, skill, SimulationWorld.ReadVec(r));
+                }
+                case Code.SummonDamaged:
+                {
+                    var summon = r.ReadInt32();
+                    var attacker = Enemy();
+                    var amount = r.ReadInt32();
+                    return new SummonDamaged(tick, summon, attacker, amount, r.ReadInt32());
+                }
+                case Code.SummonEnded:
+                {
+                    var summon = r.ReadInt32();
+                    return new SummonEnded(tick, summon, r.ReadBoolean());
+                }
+                case Code.PlayerHealed:
+                {
+                    var player = Player();
+                    var amount = r.ReadInt32();
+                    var health = r.ReadInt32();
+                    var healer = Player();
+                    return new PlayerHealed(tick, player, amount, health, healer, NullableSkill());
                 }
                 case Code.SpecialtyChosen:
                 {

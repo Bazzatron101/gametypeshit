@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 636b85facfdade0438af0441a68d0f68, type: 3}
+  m_Name: SpikeField
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.SkillDefinitionAsset
+  id: spike-field
+  displayName: Spike Field
+  cooldownSeconds: 10
+  unlockLevel: 62
+  characterClass: {fileID: 11400000, guid: 1a8667069c9c1c94bb386f02f8d45ba5, type: 2}
+  specialty: trapper
+  tags:
+  - physical
+  - area
+  scalingStat: 1
+  effect: 1
+  damage: 95
+  range: 3
+  arcDegrees: 120
+  radius: 4
+  projectileSpeed: 15
+  pierces: 0
+  chargeSeconds: 0
+  chargedSizePercent: 0
+  chargedDamagePercent: 0
+  chargeUnlockLevel: 1

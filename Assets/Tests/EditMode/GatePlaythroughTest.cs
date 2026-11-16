@@ -117,6 +117,10 @@ namespace HunterSystem.Tests
         [TestCase("rogue")]
         [TestCase("archer")]
         [TestCase("wizard")]
+        [TestCase("monk")] // tickets 55 to 58: every class solos the first gate (ADR 0012)
+        [TestCase("cleric")]
+        [TestCase("warlock")]
+        [TestCase("summoner")]
         public void ASoloBotGetsThroughTheFirstGateAndBeatsItsBossByTheSoloRules(string classId)
         {
             var world = WorldInFirstGate(new[] { classId }, out _);

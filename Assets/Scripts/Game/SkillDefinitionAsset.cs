@@ -23,6 +23,17 @@ namespace HunterSystem.Game
         [SerializeField, Range(1f, 360f), Tooltip("Cone width")] private float arcDegrees = 120f;
         [SerializeField, Min(0f), Tooltip("Area radius, or projectile hit radius, in metres")] private float radius = 3f;
         [SerializeField, Min(0f), Tooltip("Metres per second")] private float projectileSpeed = 15f;
+        [SerializeField, Tooltip("A projectile that flies on through enemies, hitting each one once")] private bool pierces;
+        [SerializeField, Min(0), Tooltip("Health restored instead of damage (ticket 56): a bolt heals the first ally it reaches, an area every player in it. Set damage to 0")] private int healing;
+        [SerializeField, Min(0), Tooltip("Drain life (ticket 58): the caster heals this % of the health the skill's direct hits remove")] private int lifeStealPercent;
+
+        [Header("Summon (effect Summon, ticket 57): damage is each hit's")]
+        [SerializeField, Min(1), Tooltip("A summon's health, raised by Sense")] private int summonHealth = 60;
+        [SerializeField, Min(0.1f), Tooltip("Seconds it lasts, if nothing fells it first")] private float summonLifetimeSeconds = 20f;
+        [SerializeField, Min(0.1f), Tooltip("Metres it hits from")] private float summonAttackRange = 1.5f;
+        [SerializeField, Min(0.05f), Tooltip("Seconds between its hits")] private float summonAttackSeconds = 1f;
+        [SerializeField, Min(0f), Tooltip("Metres per second")] private float summonMoveSpeed = 4f;
+        [SerializeField, Range(1, 3), Tooltip("How many one use calls (a summoner keeps at most three)")] private int summonCount = 1;
 
         [Header("Charge (hold the key)")]
         [SerializeField, Min(0f), Tooltip("Seconds of holding for a full charge; 0 = this skill cannot be charged")] private float chargeSeconds;
@@ -51,6 +62,15 @@ namespace HunterSystem.Game
             ArcDegrees = arcDegrees,
             Radius = radius,
             ProjectileSpeed = projectileSpeed,
+            Pierces = pierces,
+            Healing = healing,
+            LifeStealPercent = lifeStealPercent,
+            SummonHealth = summonHealth,
+            SummonLifetimeSeconds = summonLifetimeSeconds,
+            SummonAttackRange = summonAttackRange,
+            SummonAttackSeconds = summonAttackSeconds,
+            SummonMoveSpeed = summonMoveSpeed,
+            SummonCount = summonCount,
             ChargeSeconds = chargeSeconds,
             ChargedSizePercent = chargedSizePercent,
             ChargedDamagePercent = chargedDamagePercent,
@@ -85,6 +105,15 @@ namespace HunterSystem.Game
             arcDegrees = d.ArcDegrees;
             radius = d.Radius;
             projectileSpeed = d.ProjectileSpeed;
+            pierces = d.Pierces;
+            healing = d.Healing;
+            lifeStealPercent = d.LifeStealPercent;
+            summonHealth = d.SummonHealth;
+            summonLifetimeSeconds = d.SummonLifetimeSeconds;
+            summonAttackRange = d.SummonAttackRange;
+            summonAttackSeconds = d.SummonAttackSeconds;
+            summonMoveSpeed = d.SummonMoveSpeed;
+            summonCount = d.SummonCount;
             chargeSeconds = d.ChargeSeconds;
             chargedSizePercent = d.ChargedSizePercent;
             chargedDamagePercent = d.ChargedDamagePercent;

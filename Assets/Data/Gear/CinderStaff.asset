@@ -33,6 +33,7 @@ MonoBehaviour:
     projectileSpreadDegrees: 12
     explosionRadius: 0
     explosionDamagePercent: 0
+  statBonuses: []
   lightAttack:
     id: cinder-bolt
     displayName: Cinder Bolt

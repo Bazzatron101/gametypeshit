@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: HexedRod
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: hexed-rod
+  displayName: Hexed Rod
+  description: Bolts of shadow; the heavy attack is a burst of darkness all round you.
+  slot: 0
+  tags:
+  - magic
+  modifiers: []
+  statBonuses: []
+  lightAttack:
+    id: rod-bolt
+    displayName: Hex Bolt
+    effect: 2
+    tags:
+    - magic
+    - projectile
+    scalingStat: 3
+    damage: 11
+    range: 11
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 16
+    pierces: 0
+    cooldownSeconds: 0.55
+    windupSeconds: 0
+  heavyAttack:
+    id: rod-burst
+    displayName: Dark Burst
+    effect: 1
+    tags:
+    - magic
+    - area
+    scalingStat: 3
+    damage: 22
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.2
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.6
+    windupSeconds: 0.4
+  sellValue: 60
+  look: {fileID: 8453142738613781702, guid: 66b1777b90f72a548874446d3a14381a, type: 3}

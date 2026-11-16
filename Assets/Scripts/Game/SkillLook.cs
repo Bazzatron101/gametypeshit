@@ -18,6 +18,10 @@ namespace HunterSystem.Game
                 case "rogue": return Color.HSVToRGB(0.78f, 0.65f, 0.9f);
                 case "archer": return Color.HSVToRGB(0.32f, 0.7f, 0.85f);
                 case "wizard": return Color.HSVToRGB(0.58f, 0.75f, 1f);
+                case "monk": return Color.HSVToRGB(0.09f, 0.75f, 1f);
+                case "cleric": return Color.HSVToRGB(0.15f, 0.35f, 1f);
+                case "warlock": return Color.HSVToRGB(0.85f, 0.7f, 0.75f);
+                case "summoner": return Color.HSVToRGB(0.47f, 0.6f, 0.9f);
                 default: return Color.HSVToRGB(0.13f, 0.45f, 1f);
             }
         }

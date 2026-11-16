@@ -601,8 +601,12 @@ namespace HunterSystem.Netcode
             hitsBoss = false;
             var aim = Direction(self.Position, target.Position);
             var hits = 0;
+            if (skill.Heals) return 0; // a heal hits no enemy; bots do not heal yet (ticket 56)
             switch (skill.Effect)
             {
+                case SkillEffectKind.Summon: // a summon is worth calling once there is a fight near (ticket 57)
+                    hitsBoss = target.IsBoss;
+                    return Flat(target.Position - self.Position).Length <= 10f ? 1 : 0;
                 case SkillEffectKind.Projectile:
                     if (Flat(target.Position - self.Position).Length > skill.Range) return 0;
                     hitsBoss = target.IsBoss;

@@ -31,7 +31,11 @@ namespace HunterSystem.Netcode
             {
                 case "warrior": return CompanionRole.Tank;
                 case "archer": return CompanionRole.Marksman;
-                case "wizard": return CompanionRole.Caster;
+                case "wizard":
+                case "cleric": // tickets 56 to 58: the casters keep their distance too
+                case "warlock":
+                case "summoner":
+                    return CompanionRole.Caster;
                 default: return CompanionRole.Skirmisher;
             }
         }

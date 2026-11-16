@@ -15,6 +15,7 @@ namespace HunterSystem.Simulation
         {
             public SkillDefinition Definition;
             public int BaseDamage;
+            public int BaseHealing;
             public int CooldownTicks;
             public float Range;
             public float Radius;
@@ -113,6 +114,7 @@ namespace HunterSystem.Simulation
             {
                 Definition = skill,
                 BaseDamage = PercentOf(skill.Damage, 100 + damagePercent),
+                BaseHealing = PercentOf(skill.Healing, 100 + damagePercent), // a "more damage" modifier is more healing on a heal
                 CooldownTicks = SecondsToTicks(cooldownSeconds),
                 Range = MathF.Max(0f, skill.Range + rangeAdd),
                 Radius = MathF.Max(0f, skill.Radius + radiusAdd),

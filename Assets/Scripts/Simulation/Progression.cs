@@ -109,7 +109,7 @@ namespace HunterSystem.Simulation
 
     /// <summary>
     /// What each stat point above <see cref="ProgressionDefinition.StartingStatValue"/> does.
-    /// Sense and Luck have no effect yet; Luck arrives with loot.
+    /// Sense raises skills that scale with it (the Cleric's heals, ticket 56); Luck has no effect yet.
     /// </summary>
     public sealed class StatEffectsDefinition
     {
@@ -121,6 +121,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>Damage multiplier per Agility point for skills and weapon attacks that scale with Agility, such as the bow (0.05 = +5%).</summary>
         public float DamagePerAgility { get; set; } = 0.05f;
+
+        /// <summary>Damage or healing multiplier per Sense point for skills that scale with Sense, such as the Cleric's heals (0.05 = +5%; ticket 56).</summary>
+        public float DamagePerSense { get; set; } = 0.05f;
 
         /// <summary>Max health gained per Vitality point.</summary>
         public int HealthPerVitality { get; set; } = 10;

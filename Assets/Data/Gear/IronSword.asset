@@ -20,6 +20,7 @@ MonoBehaviour:
   - melee
   - physical
   modifiers: []
+  statBonuses: []
   lightAttack:
     id: sword-slash
     displayName: Slash

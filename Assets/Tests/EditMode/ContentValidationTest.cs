@@ -229,8 +229,8 @@ namespace HunterSystem.Tests
                 foreach (var built in c.Specialties.Where(s => s.ParentId != null && world.IsSpecialtyBuilt(s)))
                     Assert.That(world.IsSpecialtyBuilt(c.Specialties.Single(s => s.Id == built.ParentId)), Is.True, $"{c.Name}: {built.Name} is built, so the way to it must be too");
             }
-            var warrior = config.Classes.Single(c => c.Id == "warrior");
-            Assert.That(warrior.Specialties.Where(world.IsSpecialtyBuilt).Select(s => s.Id), Is.EqualTo(new[] { "vanguard", "berserker" }), "ticket 26 builds one path, Vanguard then Berserker");
+            foreach (var id in new[] { "warrior", "rogue", "archer", "wizard", "monk", "cleric", "warlock", "summoner" })
+                Assert.That(config.Classes.Single(c => c.Id == id).Specialties.Where(world.IsSpecialtyBuilt).Count(), Is.EqualTo(6), $"{id}: ticket 54 fills the whole tree");
             foreach (var skill in config.Skills.Where(s => s.SpecialtyId != null))
             {
                 var tier = config.SpecialtyById(skill.SpecialtyId).Rank;
@@ -318,12 +318,12 @@ namespace HunterSystem.Tests
         }
 
         [Test]
-        public void TheFourClassesEachHaveTheirOwnKit()
+        public void EveryClassHasItsOwnKit()
         {
             var config = new SimulationConfig();
             Content().ApplyTo(config);
 
-            Assert.That(config.Classes.Select(c => c.Id), Is.EquivalentTo(new[] { "warrior", "rogue", "archer", "wizard" }));
+            Assert.That(config.Classes.Select(c => c.Id), Is.SupersetOf(new[] { "warrior", "rogue", "archer", "wizard", "monk", "cleric", "warlock", "summoner" }));
             foreach (var c in config.Classes)
             {
                 var kit = config.Skills.Where(s => s.ClassId == c.Id).ToArray();
@@ -331,7 +331,8 @@ namespace HunterSystem.Tests
                 Assert.That(kit.Length, Is.GreaterThanOrEqualTo(4), $"{c.Id} has skills to unlock");
                 Assert.That(c.StatsPerLevel.Sum(), Is.GreaterThan(0), $"{c.Id} gains stats each level");
             }
-            Assert.That(config.Skills.Where(s => s.Tags.Contains("magic")).Select(s => s.ClassId), Has.All.EqualTo("wizard"), "magic is the wizard's");
+            // Magic belongs to the caster classes (ticket 58 changed ADR 0012's "the Wizard's alone").
+            Assert.That(config.Skills.Where(s => s.Tags.Contains("magic")).Select(s => s.ClassId).Distinct(), Is.SubsetOf(new[] { "wizard", "warlock", "cleric" }), "magic is the casters'");
 
             // Only the Rogue jumps over an enemy: its jump clears the tallest one in the game.
             var tallest = Content().Bosses.Select(b => b.ToDefinition(new System.Collections.Generic.Dictionary<ScriptableObject, EnemyDefinition>()).Height).Max();

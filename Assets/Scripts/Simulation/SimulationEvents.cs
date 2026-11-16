@@ -625,4 +625,73 @@ namespace HunterSystem.Simulation
             SpecialtyId = specialtyId;
         }
     }
+
+    /// <summary><see cref="Player"/> was healed by <see cref="Healer"/>'s skill (ticket 56), or drained life with their own (ticket 58).</summary>
+    public sealed class PlayerHealed : SimulationEvent
+    {
+        public PlayerId Player { get; }
+
+        /// <summary>Health actually restored: never past the player's max.</summary>
+        public int Amount { get; }
+
+        public int Health { get; }
+        public PlayerId Healer { get; }
+        public SkillDefinition Skill { get; }
+
+        public PlayerHealed(int tick, PlayerId player, int amount, int health, PlayerId healer, SkillDefinition skill) : base(tick)
+        {
+            Player = player;
+            Amount = amount;
+            Health = health;
+            Healer = healer;
+            Skill = skill;
+        }
+    }
+
+    /// <summary>A summon (ticket 57) appeared beside <see cref="Owner"/>, called by <see cref="Skill"/>.</summary>
+    public sealed class SummonAppeared : SimulationEvent
+    {
+        public int Summon { get; }
+        public PlayerId Owner { get; }
+        public SkillDefinition Skill { get; }
+        public Vec3 Position { get; }
+
+        public SummonAppeared(int tick, int summon, PlayerId owner, SkillDefinition skill, Vec3 position) : base(tick)
+        {
+            Summon = summon;
+            Owner = owner;
+            Skill = skill;
+            Position = position;
+        }
+    }
+
+    /// <summary>An enemy hit a summon (ticket 57).</summary>
+    public sealed class SummonDamaged : SimulationEvent
+    {
+        public int Summon { get; }
+        public EnemyId Attacker { get; }
+        public int Amount { get; }
+        public int RemainingHealth { get; }
+
+        public SummonDamaged(int tick, int summon, EnemyId attacker, int amount, int remainingHealth) : base(tick)
+        {
+            Summon = summon;
+            Attacker = attacker;
+            Amount = amount;
+            RemainingHealth = remainingHealth;
+        }
+    }
+
+    /// <summary>A summon went (ticket 57): it fell, or its time was up or its summoner called another past the cap.</summary>
+    public sealed class SummonEnded : SimulationEvent
+    {
+        public int Summon { get; }
+        public bool Fell { get; }
+
+        public SummonEnded(int tick, int summon, bool fell) : base(tick)
+        {
+            Summon = summon;
+            Fell = fell;
+        }
+    }
 }

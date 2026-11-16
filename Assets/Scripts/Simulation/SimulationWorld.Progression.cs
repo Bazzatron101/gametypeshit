@@ -53,6 +53,7 @@ namespace HunterSystem.Simulation
             var perPoint = scalingStat == Stat.Strength ? _damagePerMillePerStrength
                 : scalingStat == Stat.Intelligence ? _damagePerMillePerIntelligence
                 : scalingStat == Stat.Agility ? _damagePerMillePerAgility
+                : scalingStat == Stat.Sense ? _damagePerMillePerSense
                 : 0;
             var perMille = Math.Max(MinStatScalePerMille, 1000 + PointsAboveStart(player, scalingStat) * perPoint);
             return (int)Math.Max(0L, ((long)baseDamage * perMille + 500) / 1000);

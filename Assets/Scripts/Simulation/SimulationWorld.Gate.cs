@@ -76,6 +76,7 @@ namespace HunterSystem.Simulation
             var definition = _config.Gates.FirstOrDefault(g => g.Id == gateId)
                              ?? throw new ArgumentException($"There is no gate '{gateId}' in the game's content.", nameof(gateId));
             foreach (var id in _enemyIds.ToList()) DespawnEnemy(id);
+            ClearSummons();
             _gate = NewRun(definition);
             if (_config.Overworld != null) _gate.XpPercent = XpPercentFor(definition);
             foreach (var player in _players)
@@ -319,6 +320,7 @@ namespace HunterSystem.Simulation
         private void RestartGate(int tick)
         {
             _gate.Attempt++;
+            ClearSummons();
             ResetRooms(_gate, onlyUnfinished: false);
             Array.Clear(_gate.CheckpointActivated, 0, _gate.CheckpointActivated.Length);
             _gate.RevivesUsed.Clear();

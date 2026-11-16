@@ -17,6 +17,13 @@ namespace HunterSystem.Simulation
         /// enemy within <see cref="SkillDefinition.Radius"/> of its path, and fizzles after <see cref="SkillDefinition.Range"/>.
         /// </summary>
         Projectile,
+
+        /// <summary>
+        /// Calls up <see cref="SkillDefinition.SummonCount"/> creatures beside the player (ticket 57). Each hits for the
+        /// skill's damage, has <see cref="SkillDefinition.SummonHealth"/> (raised by Sense), and lasts
+        /// <see cref="SkillDefinition.SummonLifetimeSeconds"/> or until it falls.
+        /// </summary>
+        Summon,
     }
 
     /// <summary>
@@ -65,6 +72,36 @@ namespace HunterSystem.Simulation
 
         /// <summary>A projectile that flies on through enemies, hitting each one along its path once (ticket 46: the bow's drawn shot).</summary>
         public bool Pierces { get; set; }
+
+        /// <summary>
+        /// Health restored instead of damage dealt (ticket 56), raised by the scaling stat like damage. A healing
+        /// projectile flies past enemies and heals the first other player it reaches; a healing area heals every
+        /// player within its radius, the caster too. A healing skill deals no damage, and is never a cone.
+        /// </summary>
+        public int Healing { get; set; }
+
+        /// <summary>Drain life (ticket 58): the caster heals this percentage of the health the skill's direct hits remove.</summary>
+        public int LifeStealPercent { get; set; }
+
+        public bool Heals => Healing > 0;
+
+        /// <summary>A summon's health before Sense (ticket 57).</summary>
+        public int SummonHealth { get; set; } = 60;
+
+        /// <summary>How long a summon lasts, if nothing fells it first.</summary>
+        public float SummonLifetimeSeconds { get; set; } = 20f;
+
+        /// <summary>How close a summon must be to hit, in metres.</summary>
+        public float SummonAttackRange { get; set; } = 1.5f;
+
+        /// <summary>Seconds between a summon's hits.</summary>
+        public float SummonAttackSeconds { get; set; } = 1f;
+
+        /// <summary>A summon's speed, in metres per second.</summary>
+        public float SummonMoveSpeed { get; set; } = 4f;
+
+        /// <summary>How many creatures one use calls.</summary>
+        public int SummonCount { get; set; } = 1;
 
         /// <summary>
         /// Seconds of holding the key for a full charge, or 0 if the skill cannot be charged. A tap

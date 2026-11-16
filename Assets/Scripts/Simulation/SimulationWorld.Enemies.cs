@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace HunterSystem.Simulation
 {
@@ -23,6 +24,23 @@ namespace HunterSystem.Simulation
             }
 
             var target = enemy.Home.HasValue ? NearestLivePlayerNearHome(enemy, out var distance) : NearestLivePlayer(enemy.Position, out distance);
+
+            // A summon nearer than any hunter draws the attack (ticket 57). An enemy tied to its gate's home only fights by it.
+            var summonDistance = float.MaxValue;
+            var summon = enemy.Home.HasValue ? null : NearestSummon(enemy.Position, out summonDistance);
+            if (summon != null && (target == null || summonDistance < distance))
+            {
+                if (summonDistance <= enemy.Definition.AttackRange && tick >= enemy.AttackReadyAtTick)
+                {
+                    enemy.AttackSummonId = summon.Id;
+                    enemy.AttackLandsAtTick = tick + enemy.WindupTicks;
+                    return;
+                }
+                var toSummon = summonDistance - enemy.Definition.StopDistance;
+                if (toSummon > 0f) MoveEnemyToward(enemy, summon.Position, MathF.Min(enemy.Definition.MoveSpeed * TickDelta, toSummon), tick);
+                return;
+            }
+
             if (target == null)
             {
                 if (enemy.Home.HasValue) WalkHome(enemy, tick); // nobody near its gate: back to it
@@ -45,6 +63,17 @@ namespace HunterSystem.Simulation
 
         private void ResolveEnemyAttack(Enemy enemy, int tick)
         {
+            if (enemy.AttackSummonId != 0)
+            {
+                var summon = _summons.FirstOrDefault(s => s.Id == enemy.AttackSummonId);
+                enemy.AttackSummonId = 0;
+                enemy.AttackLandsAtTick = 0;
+                enemy.AttackReadyAtTick = tick + enemy.AttackCooldownTicks;
+                if (summon != null && Flat(summon.Position - enemy.Position).Length <= enemy.Definition.AttackRange)
+                    DamageSummon(summon, enemy.Id, PartyScalingDefinition.Scale(enemy.Definition.AttackDamage, enemy.DamagePercent), tick);
+                return;
+            }
+
             var target = enemy.AttackTarget;
             enemy.AttackLandsAtTick = 0;
             enemy.AttackTarget = null;

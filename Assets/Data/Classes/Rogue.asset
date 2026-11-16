@@ -21,4 +21,57 @@ MonoBehaviour:
   intelligence: 0
   sense: 0
   luck: 1
+  startingWeapon: {fileID: 0}
   jumpHeightPercent: 450
+  trialGates:
+  - {fileID: 11400000, guid: d684c9ac2a5d3d94d91e91460970a329, type: 2}
+  - {fileID: 11400000, guid: 08bf8d85ee9b5ed4cb2b7bea92e4948e, type: 2}
+  specialties:
+  - id: assassin
+    displayName: Assassin
+    rank: D
+    parent: 
+    description: 'Strikes once, hard, from up close. Eviscerate deals 30% more damage. Melee skills have 10% shorter cooldowns. New skill: Backstab (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 4b449aaf253350e4a90fcbd9d5c7b8e1, type: 2}
+    - {fileID: 11400000, guid: be20ec7acc5f4154f9a94912617b7e11, type: 2}
+  - id: trickster
+    displayName: Trickster
+    rank: D
+    parent: 
+    description: 'Fights from a step away with a hail of blades. Throwing Knives fires 2 more bolts in a fan. Projectile skills deal 10% more damage. New skill: Fan of Blades (level 16).'
+    passives:
+    - {fileID: 11400000, guid: 4db4400d22676b34b8a51bb085231899, type: 2}
+    - {fileID: 11400000, guid: 5d203e7111f34d241a48e3eb280c424e, type: 2}
+  - id: shadowblade
+    displayName: Shadowblade
+    rank: B
+    parent: assassin
+    description: 'Vanishes into the crowd and leaves it bleeding. Shadow Flurry deals 30% more damage and covers 1 m more around it. Melee skills deal 15% more damage. New skills: Shadow Rend (level 56), Death Mark (level 62).'
+    passives:
+    - {fileID: 11400000, guid: 1bf96cb2fd32c6140adca31964cb74cf, type: 2}
+    - {fileID: 11400000, guid: 29d59f7d6c0cbbb459e21658b0a66fe9, type: 2}
+  - id: nightstalker
+    displayName: Nightstalker
+    rank: B
+    parent: assassin
+    description: 'Never stops cutting: quick fangs, again and again. Twin Fangs deals 40% more damage and has a 20% shorter cooldown. Eviscerate has a 25% shorter cooldown. New skills: Ambush (level 56), Thousand Cuts (level 62).'
+    passives:
+    - {fileID: 11400000, guid: e15d884b54d335a4da7d66f9f2ddb517, type: 2}
+    - {fileID: 11400000, guid: 9329ac19f8e161e4381b57ad624f20d3, type: 2}
+  - id: bladedancer
+    displayName: Bladedancer
+    rank: B
+    parent: trickster
+    description: 'Spins through the fight, blades flying in every direction. Projectile skills have 15% shorter cooldowns. Projectile skills reach 3 m further. New skills: Whirling Blades (level 56), Blade Storm (level 62).'
+    passives:
+    - {fileID: 11400000, guid: f2d6963f3d7e2b2418a223e6756b93ec, type: 2}
+    - {fileID: 11400000, guid: b9e47d97a0cbdda4f9f70f930ac277d9, type: 2}
+  - id: saboteur
+    displayName: Saboteur
+    rank: B
+    parent: trickster
+    description: 'Every knife is a fuse, and every fight ends in smoke. Projectile skills burst on every hit, for 50% of it within 2 m. Throwing Knives deals 25% more damage. New skills: Smoke Bomb (level 56), Blasting Charge (level 62).'
+    passives:
+    - {fileID: 11400000, guid: ac3c321f288f47846ab81e9207e8e75a, type: 2}
+    - {fileID: 11400000, guid: f4050e85b82646143b1c7f9608b8e2ab, type: 2}

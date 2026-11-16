@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1313cb7fcb6f264fa2efc12e8f7c64d, type: 3}
+  m_Name: SummonerTrialBCleared
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.TextSceneAsset
+  id: summoner-trial-b-cleared
+  trigger: 1
+  gate: {fileID: 11400000, guid: f4a503def3840024cbc53bf83ca885ec, type: 2}
+  rank: 
+  lines:
+  - speaker: 
+    text: '[Narration: back at the guild after the Summoner''s B-rank trial: write me]'
+  - speaker: '[Guild NPC]'
+    text: '[The guild says the trial is passed: write me]'
+  - speaker: '[Guild NPC]'
+    text: '[The paths a B-rank Summoner can take from here, and that the choice is for good: write me]'

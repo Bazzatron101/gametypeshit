@@ -37,6 +37,7 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("0.05 = +5% damage per Strength point (attacks and Strength skills)")] private float damagePerStrength = 0.05f;
         [SerializeField, Tooltip("0.05 = +5% damage per Intelligence point (Intelligence skills)")] private float damagePerIntelligence = 0.05f;
         [SerializeField, Tooltip("0.05 = +5% damage per Agility point (Agility skills and the bow)")] private float damagePerAgility = 0.05f;
+        [SerializeField, Tooltip("0.05 = +5% damage or healing per Sense point (Sense skills: the Cleric's heals)")] private float damagePerSense = 0.05f;
         [SerializeField, Tooltip("Max health per Vitality point")] private int healthPerVitality = 10;
         [SerializeField, Tooltip("0.02 = +2% move speed per Agility point")] private float moveSpeedPerAgility = 0.02f;
 
@@ -57,6 +58,7 @@ namespace HunterSystem.Game
             DamagePerStrength = damagePerStrength,
             DamagePerIntelligence = damagePerIntelligence,
             DamagePerAgility = damagePerAgility,
+            DamagePerSense = damagePerSense,
             HealthPerVitality = healthPerVitality,
             MoveSpeedPerAgility = moveSpeedPerAgility,
         };

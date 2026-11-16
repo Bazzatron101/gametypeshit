@@ -22,7 +22,7 @@ The developer chose (2026-11-17):
 ## Decision
 
 - **A tree in two tiers.** Each class has two specialties at D (`SpecialtyDefinition.Rank`), and two at B
-  under each D one (`SpecialtyDefinition.ParentId`). That makes six per class and **24 in all** (it was six).
+  under each D one (`SpecialtyDefinition.ParentId`). That makes six per class: **24 in all** with four classes (it was six), and 48 with the eight classes of tickets 55 to 58.
   A hunter ends with one D specialty and one B specialty under it.
 - **Each tier's quest is a guild trial gate.** A class names one trial per tier (`ClassDefinition.TrialGateIds`).
   The gate's rank is the tier's (`GateDefinition.Rank`). It has no site on the map, so the guild posts it on
@@ -98,3 +98,14 @@ The developer chose (2026-11-17):
   of a quest without changing how the pick works.
 - In co-op, Warriors of the right rank pass together. A party with no Warrior can still run the trial and
   gains nothing.
+
+## Update (2026-11-17, tickets 54 to 58)
+
+- **Every tree is built.** Ticket 54 filled the Warrior's four stubs and the Rogue's, Archer's and Wizard's trees. Tickets 55 to 58
+  added the Monk, Cleric, Warlock and Summoner, each with a full tree and its D and B trials. That is 48 specialties, none of them stubs.
+- **The trees are data in one place:** `Assets/Editor/GreyboxSceneBuilder.Specialties.cs`. Each specialty's description is worked
+  out from its passives' and skills' numbers, so the words match what it does. All names are working names.
+- **New mechanics** some specialties use: healing (`SkillDefinition.Healing`: a bolt that heals the first ally it reaches, or an area
+  that heals everyone in it), drain life (`LifeStealPercent`), and summons (`SkillEffectKind.Summon`). Sense now raises skills that
+  scale with it.
+

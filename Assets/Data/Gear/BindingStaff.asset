@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: BindingStaff
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: binding-staff
+  displayName: Binding Staff
+  description: Bolts of spirit; the heavy attack is a burst of spirit all round you.
+  slot: 0
+  tags:
+  - summon
+  modifiers: []
+  statBonuses: []
+  lightAttack:
+    id: binding-bolt
+    displayName: Spirit Bolt
+    effect: 2
+    tags:
+    - summon
+    - projectile
+    scalingStat: 3
+    damage: 11
+    range: 11
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 16
+    pierces: 0
+    cooldownSeconds: 0.55
+    windupSeconds: 0
+  heavyAttack:
+    id: binding-burst
+    displayName: Spirit Burst
+    effect: 1
+    tags:
+    - summon
+    - area
+    scalingStat: 3
+    damage: 22
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.2
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.6
+    windupSeconds: 0.4
+  sellValue: 60
+  look: {fileID: 4431385737702627699, guid: f48cc270a48ef9245aac9f73aee7fa8e, type: 3}

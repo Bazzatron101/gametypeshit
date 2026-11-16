@@ -20,6 +20,7 @@ MonoBehaviour:
   - projectile
   - physical
   modifiers: []
+  statBonuses: []
   lightAttack:
     id: bow-shot
     displayName: Arrow
