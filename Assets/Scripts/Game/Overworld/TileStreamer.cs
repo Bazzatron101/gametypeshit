@@ -54,33 +54,96 @@ namespace HunterSystem.Game
         public int LoadsCompleted { get; private set; }
         public double LongestLoadMilliseconds { get; private set; }
 
-        /// <summary>Asks for the tiles around <paramref name="centres"/>, drops far ones, and puts in finished loads.</summary>
+        /// <summary>
+        /// How far a point must move before the wanted tiles are worked out again (ticket 44: doing it every tick for ten
+        /// players was the host's biggest cost). 25 m is under two seconds at mount speed, against hundreds of metres of lead.
+        /// </summary>
+        public float RefreshDistance { get; set; } = 25f;
+
+        private readonly List<Vec3> _points = new List<Vec3>();
+        private readonly List<Vec3> _refreshedAt = new List<Vec3>();
+        private readonly List<TileCoord> _scratch = new List<TileCoord>();
+        private bool _mustRefresh = true;
+        private int _updatesSinceRefresh;
+
+        /// <summary>A refresh at least this often (in updates), whatever the movement: someone waiting at an edge does not move.</summary>
+        public int RefreshEveryUpdates { get; set; } = 30;
+
+        /// <summary>
+        /// Puts in finished loads (a few per call). When any point has moved <see cref="RefreshDistance"/> since the last
+        /// look, or points came or went, or a load failed, it also asks for the tiles now within reach (nearest first)
+        /// and drops the ones out of reach.
+        /// </summary>
         public void Update(IEnumerable<Vec3> centres)
         {
-            var points = centres.ToList();
-            var wanted = _ground.TilesWithin(points, LoadRadius);
-            var keep = _ground.TilesWithin(points, UnloadRadius);
+            _points.Clear();
+            _points.AddRange(centres);
+            if (_mustRefresh || ++_updatesSinceRefresh >= RefreshEveryUpdates || Moved()) Refresh();
+            ApplyFinished();
+        }
 
-            foreach (var tile in _ground.Loaded.Where(t => !keep.Contains(t)).ToList())
+        private bool Moved()
+        {
+            if (_points.Count != _refreshedAt.Count) return true;
+            var distance = Math.Min(RefreshDistance, LoadRadius / 4f); // never a big share of the lead
+            var limit = distance * distance;
+            for (var i = 0; i < _points.Count; i++)
+            {
+                var dx = _points[i].X - _refreshedAt[i].X;
+                var dz = _points[i].Z - _refreshedAt[i].Z;
+                if (dx * dx + dz * dz > limit) return true;
+            }
+            return false;
+        }
+
+        private void Refresh()
+        {
+            _mustRefresh = false;
+            _updatesSinceRefresh = 0;
+            _refreshedAt.Clear();
+            _refreshedAt.AddRange(_points);
+            var wanted = _ground.TilesWithin(_points, LoadRadius);
+            var keep = _ground.TilesWithin(_points, UnloadRadius);
+
+            _scratch.Clear();
+            foreach (var tile in _ground.Loaded) if (!keep.Contains(tile)) _scratch.Add(tile);
+            foreach (var tile in _scratch)
             {
                 _ground.RemoveTile(tile);
                 TileUnloaded?.Invoke(tile);
             }
-            foreach (var tile in _pending.Keys.Where(t => !keep.Contains(t)).ToList()) _pending.Remove(tile); // no longer needed: its result is dropped
+            _scratch.Clear();
+            foreach (var tile in _pending.Keys) if (!keep.Contains(tile)) _scratch.Add(tile);
+            foreach (var tile in _scratch) _pending.Remove(tile); // no longer needed: its result is dropped
 
-            foreach (var tile in wanted.OrderBy(t => points.Min(c => _ground.DistanceToTile(c, t)))) // nearest first
-                if (!_ground.IsLoaded(tile) && !_pending.ContainsKey(tile))
-                    _pending[tile] = (_load(tile), Stopwatch.StartNew());
+            // Only the tiles not yet asked for are ordered, nearest first.
+            _scratch.Clear();
+            foreach (var tile in wanted) if (!_ground.IsLoaded(tile) && !_pending.ContainsKey(tile)) _scratch.Add(tile);
+            if (_scratch.Count > 1) _scratch.Sort((a, b) => NearestDistance(a).CompareTo(NearestDistance(b)));
+            foreach (var tile in _scratch) _pending[tile] = (_load(tile), Stopwatch.StartNew());
+        }
 
+        private float NearestDistance(TileCoord tile)
+        {
+            var best = float.MaxValue;
+            foreach (var p in _points) best = Math.Min(best, _ground.DistanceToTile(p, tile));
+            return best;
+        }
+
+        private void ApplyFinished()
+        {
+            if (_pending.Count == 0) return;
+            _scratch.Clear();
+            foreach (var pair in _pending) if (pair.Value.task.IsCompleted) _scratch.Add(pair.Key);
             var applied = 0;
-            foreach (var tile in _pending.Keys.ToList())
+            foreach (var tile in _scratch)
             {
                 var (task, clock) = _pending[tile];
-                if (!task.IsCompleted) continue;
                 _pending.Remove(tile);
                 if (task.IsFaulted || task.IsCanceled || task.Result?.Ground == null)
                 {
                     UnityEngine.Debug.LogWarning($"Loading {tile} failed: {task.Exception?.GetBaseException().Message}. It will be asked for again.");
+                    _mustRefresh = true;
                     continue;
                 }
                 _ground.SetTile(tile, task.Result.Ground);
