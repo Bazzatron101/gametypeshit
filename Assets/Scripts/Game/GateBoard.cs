@@ -122,6 +122,7 @@ namespace HunterSystem.Game
             var area = new Rect(Screen.width / 2f - 280, Screen.height / 2f - 230, 560, 460);
             GUILayout.BeginArea(area, GUI.skin.box);
             GUILayout.Label(_site != null ? "GATE" : "GATE BOARD", _title);
+            if (world.WorldRank != null) GUILayout.Label($"The guild licenses this party at {world.WorldRank}-rank", _intel); // the host's world's rank (ticket 25)
             GUILayout.Space(6);
 
             GUILayout.Label("The party", _label);
@@ -139,7 +140,7 @@ namespace HunterSystem.Game
             var gates = _runner.Content != null ? _runner.Content.Gates.Where(g => g != null).ToList() : new System.Collections.Generic.List<GateDefinitionAsset>();
             gates = _site != null
                 ? gates.Where(g => g.Id == _site.GateId).ToList() // at an entrance: this gate alone, licensed or not
-                : gates.Where(g => world.IsOnBoard(g.Id)).ToList(); // the board: found gates in open regions
+                : gates.Where(g => world.IsOnBoard(g.Id)).ToList(); // the board: found gates the world is licensed for (open region, rank reached)
             var cleared = world.ClearedGates; // the host's world's clears, as every player's world knows them
             var canStart = world.CanStartGate(out var waiting);
             foreach (var gate in gates)

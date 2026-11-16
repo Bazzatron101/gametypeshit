@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1313cb7fcb6f264fa2efc12e8f7c64d, type: 3}
+  m_Name: PromotionD
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.TextSceneAsset
+  id: promotion-d
+  trigger: 2
+  gate: {fileID: 0}
+  rank: D
+  lines:
+  - speaker:
+    text: '[Narration: the guild calls the hunter in for the D-rank licence: write me]'
+  - speaker: '[Guild NPC]'
+    text: '[The guild grants the D-rank licence: write me]'
+  - speaker: '[Guild NPC]'
+    text: '[What the D-rank licence opens: work in Fenward mire, and the first mount: write me]'

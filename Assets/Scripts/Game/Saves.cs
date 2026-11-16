@@ -403,6 +403,9 @@ namespace HunterSystem.Game
 
         /// <summary>Regions this world has opened beyond the starting ones (ticket 38; ranks and story open them, ticket 25).</summary>
         public List<string> OpenRegions = new List<string>();
+
+        /// <summary>The guild rank this world has been promoted to (ticket 25): null for a new world, at the first rank.</summary>
+        public string Rank;
     }
 
     /// <summary>The host's bot teammates (ADR 0014), beside the world they play in: characters and experience.</summary>
@@ -440,8 +443,8 @@ namespace HunterSystem.Game
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSWD");
 
-        /// <summary>1: cleared gates. 2: and the story scenes seen. 3: and found gates and open regions.</summary>
-        private const byte Version = 3;
+        /// <summary>1: cleared gates. 2: and the story scenes seen. 3: and found gates and open regions. 4: and the world's rank.</summary>
+        private const byte Version = 4;
 
         private readonly RecordFile<WorldRecord> _file;
 
@@ -481,6 +484,8 @@ namespace HunterSystem.Game
             foreach (var gate in world.FoundGates) w.Write(gate);
             w.Write(world.OpenRegions.Count);
             foreach (var region in world.OpenRegions) w.Write(region);
+            w.Write(world.Rank != null);
+            if (world.Rank != null) w.Write(world.Rank);
             w.Flush();
             return stream.ToArray();
         }
@@ -510,6 +515,7 @@ namespace HunterSystem.Game
                     for (int i = 0, n = Count(); i < n; i++) world.FoundGates.Add(r.ReadString());
                     for (int i = 0, n = Count(); i < n; i++) world.OpenRegions.Add(r.ReadString());
                 }
+                if (version >= 4 && r.ReadBoolean()) world.Rank = r.ReadString();
                 return world;
             }
             catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException)

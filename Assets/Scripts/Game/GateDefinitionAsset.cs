@@ -14,6 +14,8 @@ namespace HunterSystem.Game
     {
         [SerializeField, Tooltip("Stable id used in saves and over the network. Never change it once players have it.")] private string id = "new-gate";
         [SerializeField] private string displayName = "New Gate";
+        [SerializeField, Tooltip("The guild rank this gate is licensed at (\"E\" to \"S\"): the board offers it once the host's world has that rank (ticket 25). Empty for any rank.")]
+        private string rank = "";
         [SerializeField, TextArea(2, 6), Tooltip("What the gate board says about this gate, written as the guild's notice (ticket 20)")]
         private string intel = "[Guild notice for this gate: " + TextSceneAsset.Unwritten + "]";
         [SerializeField, Tooltip("In order from the entrance. The same piece may appear more than once.")] private RoomPieceAsset[] rooms = new RoomPieceAsset[0];
@@ -25,6 +27,7 @@ namespace HunterSystem.Game
 
         public string Id => id;
         public string DisplayName => displayName;
+        public string Rank => rank;
         public string Intel => intel;
         public IReadOnlyList<RoomPieceAsset> Rooms => rooms;
         public IReadOnlyList<ModifierDefinitionAsset> RewardPool => rewardPool;
@@ -35,7 +38,7 @@ namespace HunterSystem.Game
         {
             var gate = new GateDefinition
             {
-                Id = id, Name = displayName, SoloRevives = soloRevives, CheckpointRadius = checkpointRadius, WipeDelaySeconds = wipeDelaySeconds,
+                Id = id, Name = displayName, Rank = string.IsNullOrEmpty(rank) ? null : rank, SoloRevives = soloRevives, CheckpointRadius = checkpointRadius, WipeDelaySeconds = wipeDelaySeconds,
             };
             foreach (var room in rooms)
             {

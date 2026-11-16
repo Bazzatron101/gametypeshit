@@ -100,8 +100,8 @@ namespace HunterSystem.Game
         }
 
         /// <summary>
-        /// Development builds only: F2 gives the local player's character a mount (ticket 42), until the D-rank
-        /// promotion does (ticket 25). On the host or offline; a guest's world is the host's to change.
+        /// Development builds only: F2 gives the local player's character a mount (ticket 42) before the D-rank
+        /// promotion brings it (ticket 25). On the host or offline; a guest's world is the host's to change.
         /// </summary>
         private void GiveMountForTesting(SimulationWorld world)
         {

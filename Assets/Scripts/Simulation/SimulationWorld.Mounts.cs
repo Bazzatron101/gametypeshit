@@ -13,8 +13,8 @@ namespace HunterSystem.Simulation
     public sealed partial class SimulationWorld
     {
         /// <summary>
-        /// Gives <paramref name="id"/>'s character a mount, at the start of the next tick: the D-rank promotion's
-        /// hook (ticket 25), and the test arena's. Host only.
+        /// Gives <paramref name="id"/>'s character a mount, at the start of the next tick: the test arena's and F2's
+        /// shortcut. Reaching the rank that grants one (D) gives it without this (ticket 25). Host only.
         /// </summary>
         public void GrantMount(PlayerId id)
         {

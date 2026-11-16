@@ -27,7 +27,7 @@ namespace HunterSystem.Simulation
         /// <summary>Gates the host's world has found by walking to them, oldest first. Gates known from the start are not listed.</summary>
         public IReadOnlyList<string> FoundGates => _foundGates;
 
-        /// <summary>Regions the host's world has opened (by rank or story, ticket 25), beyond those open from the start.</summary>
+        /// <summary>Regions the host's world has opened (by rank promotions, ticket 25, or story), beyond those open from the start.</summary>
         public IReadOnlyList<string> OpenRegions => _openRegions;
 
         /// <summary>Host only: the gates the host's world has already found (from its save), replacing any here.</summary>
@@ -57,8 +57,19 @@ namespace HunterSystem.Simulation
             return overworld == null || region == null || overworld.StartingRegions.Contains(region) || _openRegions.Contains(region);
         }
 
-        /// <summary>Whether <paramref name="gateId"/> stands in an open region (the licence, until ranks exist). A gate not on the map counts as licensed.</summary>
-        public bool IsGateLicensed(string gateId) => IsRegionOpen(_config.Overworld?.SiteOf(gateId)?.Region);
+        /// <summary>
+        /// Whether the guild licenses <paramref name="gateId"/> for this world: it stands in an open region (a gate not on
+        /// the map counts as in one), and the world has reached the gate's rank (ticket 25).
+        /// </summary>
+        public bool IsGateLicensed(string gateId) =>
+            IsRegionOpen(_config.Overworld?.SiteOf(gateId)?.Region) && HasReachedRank(GateRankOf(gateId));
+
+        private string GateRankOf(string gateId)
+        {
+            foreach (var gate in _config.Gates ?? Array.Empty<GateDefinition>())
+                if (gate != null && gate.Id == gateId) return gate.Rank;
+            return null;
+        }
 
         /// <summary>Whether the board offers <paramref name="gateId"/>: found, and licensed (ADR 0015: the board saves the trip).</summary>
         public bool IsOnBoard(string gateId) => IsGateFound(gateId) && IsGateLicensed(gateId);

@@ -107,6 +107,7 @@ namespace HunterSystem.Netcode
         {
             LocalPlayerId = new PlayerId(_nextPlayerId++);
             World.AddPlayer(LocalPlayerId, _spawnPoint(LocalPlayerId), character ?? CharacterRecord.New());
+            World.SetWorldOwner(LocalPlayerId); // the host's level promotes the host's world (ticket 25)
             return LocalPlayerId;
         }
 

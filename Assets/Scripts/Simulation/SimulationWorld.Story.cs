@@ -11,6 +11,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>The first clear of <see cref="StorySceneDefinition.GateId"/>, once the party is back in the hub.</summary>
         GateCleared,
+
+        /// <summary>The host's world's promotion to <see cref="StorySceneDefinition.RankId"/> (ticket 25), once the party is back in the hub.</summary>
+        RankPromotion,
     }
 
     /// <summary>
@@ -24,6 +27,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>For <see cref="StoryTrigger.GateCleared"/>: which gate.</summary>
         public string GateId { get; set; }
+
+        /// <summary>For <see cref="StoryTrigger.RankPromotion"/>: which rank ("D", "C", ...).</summary>
+        public string RankId { get; set; }
     }
 
     /// <summary>
@@ -67,6 +73,8 @@ namespace HunterSystem.Simulation
                     return InHub;
                 case StoryTrigger.GateCleared:
                     return InHub && scene.GateId != null && _clearedGates.Contains(scene.GateId); // told at home, not mid-gate
+                case StoryTrigger.RankPromotion:
+                    return InHub && scene.RankId != null && _config.Progression.RankIndexOf(scene.RankId) > 0 && HasReachedRank(scene.RankId);
                 default:
                     return false;
             }

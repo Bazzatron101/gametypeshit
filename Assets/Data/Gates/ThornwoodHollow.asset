@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GateDefinitionAsset
   id: thornwood-hollow
   displayName: Thornwood Hollow
+  rank: E
   intel: '[Guild notice for this gate: write me]'
   rooms:
   - {fileID: 11400000, guid: 768e8c3926cd11a4ba1fc1b7083418cd, type: 2}

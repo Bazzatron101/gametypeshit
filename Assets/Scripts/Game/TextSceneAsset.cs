@@ -26,18 +26,24 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Stable id: the host's world remembers by it that the scene has played. Never change it once players have it.")] private string id = "new-scene";
         [SerializeField] private StoryTrigger trigger = StoryTrigger.FirstHubArrival;
         [SerializeField, Tooltip("For a gate-clear trigger: which gate")] private GateDefinitionAsset gate;
+        [SerializeField, Tooltip("For a rank-promotion trigger: which rank (\"D\", \"C\", ...), as in the progression's ranks")] private string rank = "";
         [SerializeField] private Line[] lines = new Line[0];
 
         public string Id => id;
         public StoryTrigger Trigger => trigger;
         public GateDefinitionAsset Gate => gate;
+        public string Rank => rank;
         public IReadOnlyList<Line> Lines => lines;
 
-        public StorySceneDefinition ToDefinition() => new StorySceneDefinition { Id = id, Trigger = trigger, GateId = gate != null ? gate.Id : null };
+        public StorySceneDefinition ToDefinition() => new StorySceneDefinition
+        {
+            Id = id, Trigger = trigger, GateId = gate != null ? gate.Id : null, RankId = string.IsNullOrEmpty(rank) ? null : rank,
+        };
 
         /// <summary>For editor tooling that creates scenes in code.</summary>
-        public void Set(string sceneId, StoryTrigger sceneTrigger, Line[] sceneLines, GateDefinitionAsset forGate = null)
+        public void Set(string sceneId, StoryTrigger sceneTrigger, Line[] sceneLines, GateDefinitionAsset forGate = null, string forRank = null)
         {
+            rank = forRank ?? "";
             id = sceneId;
             trigger = sceneTrigger;
             lines = sceneLines ?? new Line[0];

@@ -66,6 +66,10 @@ MonoBehaviour:
   hub: {fileID: 11400000, guid: 18193dd91d58c354d8fbd5393665ae35, type: 2}
   scenes:
   - {fileID: 11400000, guid: b384ddddeda9e7b48baea347225fdcec, type: 2}
+  - {fileID: 11400000, guid: 917f6a2727f1490f8e8f9405bda70f20, type: 2}
+  - {fileID: 11400000, guid: 83e79ec3d1bc45609cbe546145b69785, type: 2}
+  - {fileID: 11400000, guid: ef58a5e07590491a9330d69314b615aa, type: 2}
+  - {fileID: 11400000, guid: ff9466e35dee4ac69bfdb7423e7302d3, type: 2}
   partyScaling: {fileID: 11400000, guid: 0c27ba66a0ac06047b8392d97a5c6987, type: 2}
   shops:
   - {fileID: 11400000, guid: c6ba4d36de34ccc44ad57a2dd63db4dd, type: 2}

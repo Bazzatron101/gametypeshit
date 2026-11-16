@@ -266,6 +266,7 @@ namespace HunterSystem.Simulation
             FindGates(tick);
             UpdateLeaks(tick);
             UpdateGate(tick);
+            UpdateRanks(tick);
             UpdateStory(tick);
 
             Tick = tick;

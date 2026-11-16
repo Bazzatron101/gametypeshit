@@ -578,4 +578,20 @@ namespace HunterSystem.Simulation
 
         public MountGranted(int tick, PlayerId player) : base(tick) => Player = player;
     }
+
+    /// <summary>
+    /// The host's world was promoted to <see cref="Rank"/> (ticket 25): the guild granted the host a higher
+    /// licence, and the rank's regions are open. Its promotion scene follows once the party is home.
+    /// </summary>
+    public sealed class RankPromoted : SimulationEvent
+    {
+        public string Rank { get; }
+        public PlayerId Player { get; }
+
+        public RankPromoted(int tick, string rank, PlayerId player) : base(tick)
+        {
+            Rank = rank;
+            Player = player;
+        }
+    }
 }

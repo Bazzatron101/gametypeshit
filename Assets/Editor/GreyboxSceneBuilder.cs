@@ -409,7 +409,7 @@ namespace HunterSystem.Editor
             var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() };
             var bosses = new[] { GetOrCreateGoblinWarlord() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
-            var scenes = new[] { GetOrCreateArrivalScene() };
+            var scenes = new[] { GetOrCreateArrivalScene() }.Concat(GetOrCreatePromotionScenes()).ToArray();
             var scaling = GetOrCreateSingle<PartyScalingAsset>(PartyScalingPath); // its defaults are the starting tiers
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
@@ -581,6 +581,32 @@ namespace HunterSystem.Editor
                 Blank("[Guild NPC]", "A guild member greets the new E-rank hunter"),
                 Blank("[Guild NPC]", "Points the hunter to the gate board"),
             }));
+        }
+
+        /// <summary>
+        /// The rank promotion scenes (ticket 25), D to A: each plays once the host's world is promoted and the party
+        /// is home. Blank markers: the words are the developer's (ADR 0009). The S promotion belongs to the S story.
+        /// </summary>
+        private static IEnumerable<TextSceneAsset> GetOrCreatePromotionScenes()
+        {
+            TextSceneAsset.Line Blank(string who, string what) => new TextSceneAsset.Line
+            {
+                speaker = who, text = $"[{what}: {TextSceneAsset.Unwritten}]",
+            };
+            var opens = new Dictionary<string, string>
+            {
+                ["D"] = "work in Fenward mire, and the first mount",
+                ["C"] = "harder work in the regions the hunter knows",
+                ["B"] = "work on the Ashen steppe",
+                ["A"] = "A-rank gates in the regions the hunter knows",
+            };
+            foreach (var rank in opens)
+                yield return GetOrCreate<TextSceneAsset>("Scenes", $"Promotion {rank.Key}", a => a.Set($"promotion-{rank.Key.ToLowerInvariant()}", StoryTrigger.RankPromotion, new[]
+                {
+                    Blank("", $"Narration: the guild calls the hunter in for the {rank.Key}-rank licence"),
+                    Blank("[Guild NPC]", $"The guild grants the {rank.Key}-rank licence"),
+                    Blank("[Guild NPC]", $"What the {rank.Key}-rank licence opens: {rank.Value}"),
+                }, forRank: rank.Key));
         }
 
         /// <summary>A settings asset at a fixed path, created with its field defaults if missing and never overwritten.</summary>

@@ -47,6 +47,12 @@ namespace HunterSystem.Simulation
         public string Name { get; set; }
         public List<RoomDefinition> Rooms { get; } = new List<RoomDefinition>();
 
+        /// <summary>
+        /// The guild rank this gate is licensed at (ticket 25): the board offers it once the host's world has
+        /// that rank. Null for a gate licensed at any rank. A gate above the world's rank can still be walked into (ADR 0015).
+        /// </summary>
+        public string Rank { get; set; }
+
         /// <summary>Solo: how many times a fallen player may revive at the latest checkpoint before the gate starts again.</summary>
         public int SoloRevives { get; set; } = 3;
 

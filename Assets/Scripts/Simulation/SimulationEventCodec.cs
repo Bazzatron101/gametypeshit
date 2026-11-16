@@ -29,6 +29,7 @@ namespace HunterSystem.Simulation
             GateFound,
             LookChanged,
             MountChanged, MountGranted,
+            RankPromoted,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -211,6 +212,9 @@ namespace HunterSystem.Simulation
                 case MountGranted x:
                     Head(w, Code.MountGranted, e); w.Write(x.Player.Value);
                     break;
+                case RankPromoted x:
+                    Head(w, Code.RankPromoted, e); SimulationWorld.WriteNullable(w, x.Rank); w.Write(x.Player.Value);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -352,6 +356,11 @@ namespace HunterSystem.Simulation
                 }
                 case Code.MountChanged: return new MountChanged(tick, Player(), r.ReadBoolean());
                 case Code.MountGranted: return new MountGranted(tick, Player());
+                case Code.RankPromoted:
+                {
+                    var rank = SimulationWorld.ReadNullable(r);
+                    return new RankPromoted(tick, rank, Player());
+                }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }
         }

@@ -227,6 +227,7 @@ namespace HunterSystem.Game
             Host.World.SetSeenStoryScenes(HostWorld.SeenStoryScenes); // so a scene plays once per world
             Host.World.SetFoundGates(HostWorld.FoundGates); // the overworld's found gates and open regions are the host's world's (ticket 38)
             Host.World.SetOpenRegions(HostWorld.OpenRegions);
+            Host.World.SetWorldRank(HostWorld.Rank); // a host already past it is promoted again on the first tick, one rank at a time
             AddCompanions(Math.Clamp(companions, 0, CompanionParty.Size));
             StartLocalInput();
         }
@@ -511,7 +512,7 @@ namespace HunterSystem.Game
             }
         }
 
-        /// <summary>The host's world keeps which gates it has cleared and which story scenes it has played (ADR 0005: host-world progress), saved at once.</summary>
+        /// <summary>The host's world keeps which gates it has cleared and found, which story scenes it has played, and its rank and open regions (ADR 0005: host-world progress), saved at once.</summary>
         private void RecordHostWorldProgress(IReadOnlyList<SimulationEvent> events)
         {
             if (HostWorld == null) return;
@@ -520,6 +521,14 @@ namespace HunterSystem.Game
                 if (e is GateFound found && found.GateId != null && !HostWorld.FoundGates.Contains(found.GateId))
                 {
                     HostWorld.FoundGates.Add(found.GateId);
+                    SaveHostWorld();
+                    continue;
+                }
+                if (e is RankPromoted promoted)
+                {
+                    HostWorld.Rank = promoted.Rank;
+                    HostWorld.OpenRegions.Clear();
+                    HostWorld.OpenRegions.AddRange(Host.World.OpenRegions); // the promotion's regions with any opened before
                     SaveHostWorld();
                     continue;
                 }

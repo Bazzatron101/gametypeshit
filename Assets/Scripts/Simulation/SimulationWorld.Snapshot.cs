@@ -130,6 +130,9 @@ namespace HunterSystem.Simulation
             foreach (var id in _foundGates) w.Write(id);
             w.Write(_openRegions.Count);
             foreach (var id in _openRegions) w.Write(id);
+            w.Write(_worldRank);
+            w.Write(_worldOwner.HasValue);
+            if (_worldOwner.HasValue) w.Write(_worldOwner.Value.Value);
             WriteLeaks(w);
 
             w.Flush();
@@ -186,6 +189,8 @@ namespace HunterSystem.Simulation
             _foundGates.AddRange(parsed.FoundGates);
             _openRegions.Clear();
             _openRegions.AddRange(parsed.OpenRegions);
+            _worldRank = parsed.WorldRank;
+            _worldOwner = parsed.WorldOwner;
             RestoreLeaks(parsed.Leaks);
             _events.Clear();
             _pendingOperations.Clear();
@@ -357,6 +362,8 @@ namespace HunterSystem.Simulation
             public readonly List<string> SeenStoryScenes = new List<string>();
             public readonly List<string> FoundGates = new List<string>();
             public readonly List<string> OpenRegions = new List<string>();
+            public int WorldRank;
+            public PlayerId? WorldOwner;
             public readonly List<(string gate, bool filled, int nextTick)> Leaks = new List<(string, bool, int)>();
         }
 
@@ -459,6 +466,9 @@ namespace HunterSystem.Simulation
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.SeenStoryScenes.Add(r.ReadString());
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.FoundGates.Add(r.ReadString());
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.OpenRegions.Add(r.ReadString());
+            parsed.WorldRank = r.ReadInt32();
+            if (parsed.WorldRank < 0) throw new FormatException("Impossible world rank.");
+            parsed.WorldOwner = r.ReadBoolean() ? new PlayerId(r.ReadInt32()) : (PlayerId?)null;
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.Leaks.Add((r.ReadString(), r.ReadBoolean(), r.ReadInt32()));
 
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");

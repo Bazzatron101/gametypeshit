@@ -356,6 +356,19 @@ namespace HunterSystem.Tests
             Assert.That(loaded.SeenStoryScenes, Is.EqualTo(new[] { "arrival" }));
             Assert.That(loaded.FoundGates, Is.Empty);
             Assert.That(loaded.OpenRegions, Is.Empty);
+            Assert.That(loaded.Rank, Is.Null, "an old world is at the first rank, and catches up with its host on the first tick");
+        }
+
+        [Test]
+        public void TheHostsWorldKeepsItsRank()
+        {
+            var saves = new WorldSaves(_root);
+            var world = saves.LoadOrNew();
+            Assert.That(world.Rank, Is.Null, "a new world");
+            world.Rank = "D";
+            saves.Save(world);
+
+            Assert.That(new WorldSaves(_root).LoadOrNew().Rank, Is.EqualTo("D"));
         }
     }
 }

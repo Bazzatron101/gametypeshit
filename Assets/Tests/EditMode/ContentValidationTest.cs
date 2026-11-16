@@ -163,7 +163,42 @@ namespace HunterSystem.Tests
                 Assert.That(scene.Lines.Select(l => l.text), Has.All.Not.Empty, $"{scene.name}: an empty line");
                 if (scene.Trigger == StoryTrigger.GateCleared)
                     Assert.That(content.Gates, Has.Member(scene.Gate), $"{scene.name}: plays after a gate that is not in the content");
+                if (scene.Trigger == StoryTrigger.RankPromotion)
+                    Assert.That(RankIds(content), Has.Member(scene.Rank).And.Not.EqualTo(RankIds(content).FirstOrDefault()),
+                        $"{scene.name}: plays on a promotion to a rank the progression does not have");
             }
+        }
+
+        private static string[] RankIds(GameContentAsset content)
+        {
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+            return config.Progression.Ranks.Select(r => r.Id).ToArray();
+        }
+
+        [Test]
+        public void TheRanksRiseEToSAndOpenNewRegions()
+        {
+            // Ticket 25: each rank's band and the regions it opens are configuration.
+            var content = Content();
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+            var ranks = config.Progression.Ranks;
+            Assert.That(ranks.Select(r => r.Id), Is.EqualTo(new[] { "E", "D", "C", "B", "A", "S" }), "the spec's ranks, lowest first");
+            Assert.That(ranks[0].FirstLevel, Is.EqualTo(1), "every new hunter is E-rank");
+            Assert.That(ranks.Select(r => r.FirstLevel), Is.Ordered.Ascending.And.Unique, "each band starts above the last");
+            Assert.That(ranks.Single(r => r.Id == "A").FirstLevel, Is.LessThanOrEqualTo(config.Progression.LevelCap), "A-rank is reachable in the main game");
+            Assert.That(ranks.Count(r => r.GrantsMount), Is.EqualTo(1), "one rank brings the first mount");
+
+            var continent = AssetDatabase.LoadAssetAtPath<OverworldAsset>("Assets/Data/Overworld/Continent.asset");
+            Assert.That(continent, Is.Not.Null, "the continent");
+            var starting = continent.ToDefinition().StartingRegions;
+            foreach (var rank in ranks)
+            foreach (var region in rank.OpensRegions)
+                Assert.That(!string.IsNullOrEmpty(region) && !starting.Contains(region), Is.True, $"{rank.Id}-rank opens '{region}', which is empty or open from the start");
+
+            foreach (var gate in content.Gates)
+                Assert.That(string.IsNullOrEmpty(gate.Rank) || ranks.Any(r => r.Id == gate.Rank), Is.True, $"{gate.name}: licensed at a rank the progression does not have");
         }
 
         [Test]
