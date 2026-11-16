@@ -140,6 +140,8 @@ namespace HunterSystem.Simulation
         private static IEnumerable<ModifierDefinition> ModifiersInEffect(Player player)
         {
             foreach (var m in player.Modifiers) yield return m;
+            foreach (var specialty in player.Specialties)
+                foreach (var m in specialty.Passives) yield return m; // always on (ticket 26)
             foreach (var gear in player.Worn)
                 if (gear != null)
                     foreach (var m in gear.Modifiers) yield return m;

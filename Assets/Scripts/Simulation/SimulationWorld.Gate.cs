@@ -429,6 +429,7 @@ namespace HunterSystem.Simulation
                 if (!_clearedGates.Contains(_gate.Definition.Id)) _clearedGates.Add(_gate.Definition.Id);
                 _events.Add(new GateCleared(tick, _gate.Definition.Id));
                 GrantClearRewards(tick);
+                PassTrials(tick);
             }
 
             if (UpdateReturn(tick)) return; // home: the gate is gone

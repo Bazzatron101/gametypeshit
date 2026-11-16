@@ -102,8 +102,10 @@ namespace HunterSystem.Simulation
                 if (skill.UnlockLevel <= 1 && IsForClass(skill, player)) Learn(player, skill);
         }
 
-        /// <summary>A skill this player's class learns: its own class's, or a shared one.</summary>
-        private static bool IsForClass(SkillDefinition skill, Player player) => skill.ClassId == null || skill.ClassId == player.Class?.Id;
+        /// <summary>A skill this player's class learns: its own class's, or a shared one. A specialty's skills only with that specialty.</summary>
+        private static bool IsForClass(SkillDefinition skill, Player player) =>
+            (skill.ClassId == null || skill.ClassId == player.Class?.Id) &&
+            (skill.SpecialtyId == null || player.Specialties.Any(s => s.Id == skill.SpecialtyId)); // a specialty's skills come only with it (ticket 26)
 
         /// <summary>Learns every skill whose unlock level is <paramref name="level"/>, announcing each.</summary>
         private void UnlockSkillsForLevel(Player player, int level, int tick)

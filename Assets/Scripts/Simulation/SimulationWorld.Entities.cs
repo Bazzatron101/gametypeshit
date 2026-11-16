@@ -36,6 +36,12 @@ namespace HunterSystem.Simulation
             /// <summary>The character's class, or null.</summary>
             public ClassDefinition Class;
 
+            /// <summary>The specialties picked (ticket 26), one per tier, lowest first.</summary>
+            public readonly List<SpecialtyDefinition> Specialties = new List<SpecialtyDefinition>();
+
+            /// <summary>The ranks whose class trial this hunter has passed (ticket 26), lowest first.</summary>
+            public readonly List<string> PassedTrials = new List<string>();
+
             /// <summary>Gold from selling duplicates.</summary>
             public int Gold;
 

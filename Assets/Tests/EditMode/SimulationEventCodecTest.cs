@@ -75,6 +75,8 @@ namespace HunterSystem.Tests
             new MountChanged(52, P, true),
             new MountGranted(53, P),
             new RankPromoted(54, "D", P),
+            new SpecialtyUnlocked(55, P, "warrior", "D"),
+            new SpecialtyChosen(56, P, "berserker"),
             new ReadyChanged(42, P, true),
             new ReturnedToHub(43, "goblin-warren", true),
             new StorySceneStarted(44, "arrival"),

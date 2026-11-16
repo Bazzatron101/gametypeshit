@@ -1,3 +1,4 @@
+using System;
 using HunterSystem.Simulation;
 using UnityEngine;
 
@@ -27,6 +28,27 @@ namespace HunterSystem.Game
         [SerializeField, Min(10), Tooltip("Jump height, % of the base jump. A jump higher than an enemy clears it (the Warlord stands 3.5 m; the base jump is 0.9 m).")]
         private int jumpHeightPercent = 100;
 
+        [Header("Specialties (ticket 26)")]
+        [SerializeField, Tooltip("The class's trials, one per tier: clearing one as a hunter of this class, at the gate's rank, lets them pick that tier's specialty. Each gate needs a rank (D, B)")]
+        private GateDefinitionAsset[] trialGates = new GateDefinitionAsset[0];
+        [SerializeField, Tooltip("The class's specialty tree: two at D, and two at B under each D one. Each pick is permanent. A specialty with no skills or passives yet is shown but cannot be picked")]
+        private Specialty[] specialties = new Specialty[0];
+
+        /// <summary>One branch of the class (ticket 26). Its skills are skill assets naming its id.</summary>
+        [Serializable]
+        public struct Specialty
+        {
+            [Tooltip("Stable, unique across all classes. Saves refer to it; never rename it once players have characters")] public string id;
+            public string displayName;
+            [Tooltip("The tier: the rank whose trial unlocks the pick (\"D\" or \"B\")")] public string rank;
+            [Tooltip("At B: the id of the D specialty this one branches from. Empty at D")] public string parent;
+            [TextArea, Tooltip("Shown when a hunter picks a specialty")] public string description;
+            [Tooltip("Always in effect for a hunter with this specialty. Each must also be in the content's modifier list")] public ModifierDefinitionAsset[] passives;
+        }
+
+        public System.Collections.Generic.IReadOnlyList<GateDefinitionAsset> TrialGates => trialGates ?? new GateDefinitionAsset[0];
+        public System.Collections.Generic.IReadOnlyList<Specialty> Specialties => specialties ?? new Specialty[0];
+
         public string Id => id;
         public string DisplayName => displayName;
         public string Description => description;
@@ -40,8 +62,29 @@ namespace HunterSystem.Game
             stats[(int)Stat.Intelligence] = intelligence;
             stats[(int)Stat.Sense] = sense;
             stats[(int)Stat.Luck] = luck;
-            return new ClassDefinition { Id = id, Name = displayName, Description = description, StatsPerLevel = stats, JumpHeightPercent = jumpHeightPercent,
+            var definition = new ClassDefinition { Id = id, Name = displayName, Description = description, StatsPerLevel = stats, JumpHeightPercent = jumpHeightPercent,
                 StartingWeaponId = startingWeapon != null ? startingWeapon.Id : null };
+            foreach (var gate in trialGates ?? new GateDefinitionAsset[0])
+                if (gate != null) definition.TrialGateIds.Add(gate.Id);
+            foreach (var s in specialties ?? new Specialty[0])
+            {
+                var specialty = new SpecialtyDefinition
+                {
+                    Id = s.id, Name = s.displayName, Description = s.description, ClassId = id,
+                    Rank = string.IsNullOrWhiteSpace(s.rank) ? null : s.rank, ParentId = string.IsNullOrWhiteSpace(s.parent) ? null : s.parent,
+                };
+                foreach (var passive in s.passives ?? new ModifierDefinitionAsset[0])
+                    if (passive != null) specialty.Passives.Add(passive.ToDefinition());
+                definition.Specialties.Add(specialty);
+            }
+            return definition;
+        }
+
+        /// <summary>For editor tooling: the class's trials and its specialty tree (ticket 26).</summary>
+        public void SetSpecialties(GateDefinitionAsset[] trials, Specialty[] tree)
+        {
+            trialGates = trials;
+            specialties = tree;
         }
 
         /// <summary>For editor tooling that creates classes in code.</summary>

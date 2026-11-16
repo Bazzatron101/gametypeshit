@@ -14,11 +14,15 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount, ChooseSpecialtyId);
 
         /// <summary>This command with a piece of gear to wear (or none).</summary>
         public PlayerCommand WithEquipGear(string gearId) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, gearId, UnequipSlot, ChangeLook, ToggleMount);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, gearId, UnequipSlot, ChangeLook, ToggleMount, ChooseSpecialtyId);
+
+        /// <summary>This command with a specialty to take (or none), ticket 26.</summary>
+        public PlayerCommand WithChooseSpecialty(string specialtyId) =>
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount, specialtyId);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -67,6 +71,12 @@ namespace HunterSystem.Simulation
         /// <summary>Get on the mount, or off it (ticket 42). A press, like jump.</summary>
         public readonly bool ToggleMount;
 
+        /// <summary>
+        /// Take this specialty, for good (ticket 26): a press, or null for none. Out of a gate, after the
+        /// class's trial, one of the player's own class's specialties; anything else is ignored.
+        /// </summary>
+        public readonly string ChooseSpecialtyId;
+
         /// <summary>Steps of the aim's yaw in a full turn. The aim is stored in these steps, so it is exactly the same after the wire.</summary>
         public const int AimSteps = 65536;
 
@@ -94,8 +104,10 @@ namespace HunterSystem.Simulation
         public PlayerCommand(float moveX, float moveZ, bool lightAttack = false, bool dodge = false, bool heavyAttack = false,
             Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
             bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null, string sellItemId = null,
-            string equipGearId = null, GearSlot? unequipSlot = null, CharacterLook? changeLook = null, bool toggleMount = false)
+            string equipGearId = null, GearSlot? unequipSlot = null, CharacterLook? changeLook = null, bool toggleMount = false,
+            string chooseSpecialtyId = null)
         {
+            ChooseSpecialtyId = chooseSpecialtyId;
             ToggleMount = toggleMount;
             ChangeLook = changeLook;
             SellItemId = sellItemId;

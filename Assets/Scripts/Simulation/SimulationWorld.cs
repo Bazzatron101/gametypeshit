@@ -63,6 +63,7 @@ namespace HunterSystem.Simulation
             _damagePerMillePerAgility = (int)MathF.Round(config.StatEffects.DamagePerAgility * 1000f);
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
             ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
+            ValidateSpecialties();
             IndexLootAndValidateShops();
             IndexAndValidateGear();
             TickDelta = 1f / config.TickRate;
@@ -125,7 +126,7 @@ namespace HunterSystem.Simulation
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
                 p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray(),
                 p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone(), p.Name, p.Look,
-                hasMount: p.HasMount, isMounted: p.Mounted);
+                hasMount: p.HasMount, isMounted: p.Mounted, specialties: p.Specialties.ToArray(), passedTrials: p.PassedTrials.ToArray(), specialtyPickWaiting: PickWaiting(p));
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
@@ -193,6 +194,7 @@ namespace HunterSystem.Simulation
                 if (cmd.UnequipSlot.HasValue) TryUnequip(player, cmd.UnequipSlot.Value, tick);
                 if (cmd.EquipGearId != null) TryEquip(player, cmd.EquipGearId, tick);
                 if (cmd.ChangeLook.HasValue) TryChangeLook(player, cmd.ChangeLook.Value, tick);
+                if (cmd.ChooseSpecialtyId != null) TryChooseSpecialty(player, cmd.ChooseSpecialtyId, tick);
                 if (cmd.AllocateStat.HasValue) TryAllocateStat(player, cmd.AllocateStat.Value, tick);
                 if (cmd.Respawn) TryRespawn(player, tick);
                 if (cmd.SetReady.HasValue) TrySetReady(player, cmd.SetReady.Value, tick);

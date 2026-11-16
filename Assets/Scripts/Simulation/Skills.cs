@@ -37,6 +37,12 @@ namespace HunterSystem.Simulation
         /// <summary>The class that learns this skill, or null for one every character learns.</summary>
         public string ClassId { get; set; }
 
+        /// <summary>
+        /// The specialty that brings this skill (ticket 26), or null for one the whole class learns. A specialty
+        /// skill is learned at its level only by characters with that specialty; its <see cref="ClassId"/> is the specialty's class.
+        /// </summary>
+        public string SpecialtyId { get; set; }
+
         public string[] Tags { get; set; } = Array.Empty<string>();
 
         /// <summary>The stat whose points above the starting value raise this skill's damage.</summary>

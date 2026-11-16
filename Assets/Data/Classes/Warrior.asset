@@ -21,5 +21,49 @@ MonoBehaviour:
   intelligence: 0
   sense: 0
   luck: 0
-  jumpHeightPercent: 100
   startingWeapon: {fileID: 11400000, guid: 3de14642b46a42ce8071afcf8f10da7c, type: 2}
+  jumpHeightPercent: 100
+  trialGates:
+  - {fileID: 11400000, guid: f95e44052f8b5ce4f91bc21f542c17ea, type: 2}
+  - {fileID: 11400000, guid: 4f81c70798c0c0d4492a1a61ff18365a, type: 2}
+  specialties:
+  - id: vanguard
+    displayName: Vanguard
+    rank: D
+    parent: 
+    description: 'Leads the charge. Physical skills hit 10% harder, Shield Bash comes back sooner and reaches further, and a new skill: Overhead Smash, a heavy blow straight ahead.'
+    passives:
+    - {fileID: 11400000, guid: a7a2493df82c8fa4ea135b00205d6467, type: 2}
+    - {fileID: 11400000, guid: 5407dc6b33e4de04a8981c3d433199ff, type: 2}
+  - id: sentinel
+    displayName: Sentinel
+    rank: D
+    parent: 
+    description: 'Not built yet: a D-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
+    passives: []
+  - id: berserker
+    displayName: Berserker
+    rank: B
+    parent: vanguard
+    description: 'All-out offence. Melee skills hit 20% harder, Whirlwind comes back sooner and reaches further, and two new skills: Cleave, a huge swing on a short cooldown, and Earthsplitter (level 62), a quake you can charge.'
+    passives:
+    - {fileID: 11400000, guid: 31c6c74054bf022449ff19a83a52341f, type: 2}
+    - {fileID: 11400000, guid: 9ae45a687c893dd498354c7d0c268fb2, type: 2}
+  - id: champion
+    displayName: Champion
+    rank: B
+    parent: vanguard
+    description: 'Not built yet: a B-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
+    passives: []
+  - id: guardian
+    displayName: Guardian
+    rank: B
+    parent: sentinel
+    description: 'Not built yet: a B-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
+    passives: []
+  - id: bulwark
+    displayName: Bulwark
+    rank: B
+    parent: sentinel
+    description: 'Not built yet: a B-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).'
+    passives: []

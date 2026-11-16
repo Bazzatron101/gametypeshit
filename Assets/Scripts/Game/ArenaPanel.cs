@@ -136,6 +136,9 @@ namespace HunterSystem.Game
         /// <summary>A mount for the character (ticket 42), until the D-rank promotion gives one (ticket 25).</summary>
         public void GiveMount() => _runner.World.GrantMount(Player);
 
+        /// <summary>Passes the class's next trial (ticket 26), so the specialty picker opens. Test only; a class change clears trials and picks.</summary>
+        public void PassTrial() => _runner.World.PassTrialForTesting(Player);
+
         // --- Drawing -----------------------------------------------------------------------
 
         private Vector3 PlayerPosition()
@@ -186,6 +189,13 @@ namespace HunterSystem.Game
                 GUI.enabled = c != state.Class;
                 if (GUILayout.Button(c.Name)) ChangeClass(c.Id);
             }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            var picks = state.Specialties.Count == 0 ? "none" : string.Join(" > ", state.Specialties.Select(s => $"{s.Name} ({s.Rank})"));
+            GUILayout.Label($"Specialties: {picks}{(state.CanChooseSpecialty ? $", {state.SpecialtyPickWaiting}-rank pick waiting (K)" : "")}", _header);
+            GUI.enabled = !state.CanChooseSpecialty && state.Class != null;
+            if (GUILayout.Button("Pass the next trial")) PassTrial();
             GUI.enabled = true;
             GUILayout.EndHorizontal();
 

@@ -219,6 +219,57 @@ namespace HunterSystem.Editor
                 Id = "monarchs-decree", Name = "Monarch's Decree", ClassId = "wizard", Effect = SkillEffectKind.Area, Damage = 80, Radius = 6f,
                 CooldownSeconds = 20f, UnlockLevel = 20, ScalingStat = Stat.Intelligence, Tags = new[] { "magic", "area" },
             },
+
+            // The Warrior's Vanguard specialty (ticket 26, D-rank tier): learned only by Vanguards, from the start of D-rank.
+            new SkillDefinition
+            {
+                // A heavy two-handed blow straight ahead: the Vanguard leads the charge into the first enemy.
+                Id = "overhead-smash", Name = "Overhead Smash", ClassId = "warrior", SpecialtyId = "vanguard", Effect = SkillEffectKind.Cone, Damage = 55, Range = 3f, ArcDegrees = 90f,
+                CooldownSeconds = 6f, UnlockLevel = 16, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical" },
+            },
+
+            // The Warrior's Berserker specialty (ticket 26, B-rank tier, under the Vanguard): learned only by Berserkers, from the start of B-rank.
+            new SkillDefinition
+            {
+                // A huge, short-cooldown swing: the Berserker stands in the crowd and keeps swinging.
+                Id = "cleave", Name = "Cleave", ClassId = "warrior", SpecialtyId = "berserker", Effect = SkillEffectKind.Cone, Damage = 65, Range = 3.5f, ArcDegrees = 220f,
+                CooldownSeconds = 4f, UnlockLevel = 56, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical", "area" },
+            },
+            new SkillDefinition
+            {
+                // Hold to wind up a quake that empties the room around the Berserker.
+                Id = "earthsplitter", Name = "Earthsplitter", ClassId = "warrior", SpecialtyId = "berserker", Effect = SkillEffectKind.Area, Damage = 80, Radius = 4.5f,
+                CooldownSeconds = 11f, UnlockLevel = 62, ScalingStat = Stat.Strength, Tags = new[] { "melee", "physical", "area" },
+                ChargeSeconds = 1.2f, ChargedSizePercent = 60, ChargedDamagePercent = 80,
+            },
+        };
+
+        /// <summary>
+        /// The specialties' passives (ticket 26), as created on a fresh project. Always in effect for a hunter
+        /// with the specialty; listed with the content's modifiers like any other.
+        /// </summary>
+        private static readonly ModifierDefinition[] SpecialtyModifierData =
+        {
+            new ModifierDefinition
+            {
+                Id = "vanguard-edge", Name = "Vanguard's Edge", Description = "Vanguard: physical skills deal 10% more damage.",
+                AppliesToTag = SkillTags.Physical, DamagePercent = 10,
+            },
+            new ModifierDefinition
+            {
+                Id = "vanguard-advance", Name = "Advance", Description = "Vanguard: Shield Bash's cooldown is 30% shorter and it reaches 1 m further.",
+                AppliesToSkillId = "shield-bash", CooldownPercent = -30, RangeAdd = 1f,
+            },
+            new ModifierDefinition
+            {
+                Id = "berserker-fury", Name = "Berserker's Fury", Description = "Berserker: melee skills deal 20% more damage.",
+                AppliesToTag = SkillTags.Melee, DamagePercent = 20,
+            },
+            new ModifierDefinition
+            {
+                Id = "berserker-relentless", Name = "Relentless", Description = "Berserker: Whirlwind's cooldown is 35% shorter and it reaches 1 m further.",
+                AppliesToSkillId = "whirlwind", CooldownPercent = -35, RadiusAdd = 1f,
+            },
         };
 
         /// <summary>
@@ -230,6 +281,10 @@ namespace HunterSystem.Editor
 
         /// <summary>Three Goblins at 25 XP each: enough for the first level-up (50 XP) in one fight.</summary>
         private static readonly Vector3[] GoblinSpawns = { new Vector3(0f, 0f, 8f), new Vector3(-4f, 0f, 10f), new Vector3(4f, 0f, 10f) };
+
+        /// <summary>Creates any missing content assets and refreshes the content list, without touching the scenes.</summary>
+        [MenuItem("Hunter System/Refresh Content")]
+        public static void RefreshContent() => GetOrCreateContent();
 
         [MenuItem("Hunter System/Rebuild All Scenes")]
         public static void BuildAll()
@@ -405,11 +460,15 @@ namespace HunterSystem.Editor
             var classes = ClassData.Select(GetOrCreateClass).ToArray();
             var skills = SkillData.Select(data => GetOrCreateSkill(data, classes)).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
+            var passives = SpecialtyModifierData.Select(GetOrCreateModifier).ToArray();
             var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
-            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() };
+            var trialReward = modifiers.Where(m => m.Id == "deep-rend").ToArray();
+            var warriorTrials = new[] { GetOrCreateWarriorTrial("D", trialReward), GetOrCreateWarriorTrial("B", trialReward) };
+            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() }.Concat(warriorTrials).ToArray();
+            GiveWarriorItsSpecialties(classes.First(c => c.Id == "warrior"), warriorTrials, passives);
             var bosses = new[] { GetOrCreateGoblinWarlord() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
-            var scenes = new[] { GetOrCreateArrivalScene() }.Concat(GetOrCreatePromotionScenes()).ToArray();
+            var scenes = new[] { GetOrCreateArrivalScene() }.Concat(GetOrCreatePromotionScenes()).Concat(warriorTrials.Select(GetOrCreateTrialScene)).ToArray();
             var scaling = GetOrCreateSingle<PartyScalingAsset>(PartyScalingPath); // its defaults are the starting tiers
 
             var content = AssetDatabase.LoadAssetAtPath<GameContentAsset>(ContentPath);
@@ -422,7 +481,7 @@ namespace HunterSystem.Editor
             content.ReplaceContent(tuning, progression,
                 WithEveryProjectAsset(content.Classes, classes),
                 WithEveryProjectAsset(content.Skills, skills),
-                WithEveryProjectAsset(content.Modifiers, modifiers),
+                WithEveryProjectAsset(content.Modifiers, modifiers.Concat(passives)),
                 WithEveryProjectAsset(content.Enemies, enemies),
                 WithEveryProjectAsset(content.Gates, gates),
                 WithEveryProjectAsset(content.Bosses, bosses),
@@ -607,6 +666,85 @@ namespace HunterSystem.Editor
                     Blank("[Guild NPC]", $"The guild grants the {rank.Key}-rank licence"),
                     Blank("[Guild NPC]", $"What the {rank.Key}-rank licence opens: {rank.Value}"),
                 }, forRank: rank.Key));
+        }
+
+        // --- Specialties (ticket 26) ---------------------------------------------------------------
+
+        /// <summary>
+        /// One of the Warrior's trials (ticket 26): a gate at <paramref name="rank"/> (D or B) the guild posts on the board
+        /// (it has no site on the map). Clearing it as a Warrior of that rank unlocks that tier's specialty pick. Like
+        /// every boss gate it gives a clear reward. Greybox content from the kit, ending with the Warlord: the D trial
+        /// a goblin den, the B trial a bigger proving ground of hobgoblins.
+        /// </summary>
+        private static GateDefinitionAsset GetOrCreateWarriorTrial(string rank, ModifierDefinitionAsset[] rewardPool)
+        {
+            var goblin = GetOrCreateGoblinDefinition();
+            var hobgoblin = GetOrCreateHobgoblinDefinition();
+            var entrance = GetOrCreateRoom("Entrance Hall", 10f, 10f, checkpoint: false);
+            var corridor = GetOrCreateRoom("Corridor", 4f, 8f, checkpoint: false);
+            var fight = rank == "D"
+                ? GetOrCreateRoom("Goblin Den", 14f, 18f, checkpoint: true, At(goblin, -4f, 4f), At(goblin, 4f, 4f), At(goblin, 0f, 7f))
+                : GetOrCreateRoom("Proving Ground", 18f, 22f, checkpoint: true,
+                    At(hobgoblin, -5f, 4f), At(hobgoblin, 5f, 4f), At(hobgoblin, -3f, 9f), At(hobgoblin, 3f, 9f),
+                    At(goblin, -7f, 7f), At(goblin, 7f, 7f), At(goblin, 0f, 11f));
+            var antechamber = GetOrCreateRoom("Antechamber", 8f, 8f, checkpoint: true);
+            var bossChamber = GetOrCreate<RoomPieceAsset>("Rooms", "Warlord Chamber",
+                a => a.Set(22f, 26f, new RoomPieceAsset.Spawn[0], checkpoint: false, roomBoss: GetOrCreateGoblinWarlord(), bossAt: new Vector3(0f, 0f, 6f)));
+            return GetOrCreate<GateDefinitionAsset>("Gates", $"Warrior Trial {rank}", a =>
+            {
+                a.Set($"warrior-trial-{rank.ToLowerInvariant()}", $"Warrior's {rank}-rank Trial", new[] { entrance, corridor, fight, corridor, antechamber, bossChamber }, rewardPool);
+                a.SetRankAndIntel(rank, $"[Guild notice: the Warrior's {rank}-rank trial, for {rank}-rank Warriors: {TextSceneAsset.Unwritten}]");
+            });
+        }
+
+        /// <summary>
+        /// The Warrior's specialty tree (ticket 26), set once on the class asset if it has none: two at D, and two at B under
+        /// each D one. The path Vanguard (D) then Berserker (B) is built; the rest are stubs, shown but not pickable until
+        /// they have skills or passives. The names are working names.
+        /// </summary>
+        private static void GiveWarriorItsSpecialties(ClassDefinitionAsset warrior, GateDefinitionAsset[] trials, ModifierDefinitionAsset[] passives)
+        {
+            if (warrior.TrialGates.Count > 0 || warrior.Specialties.Count > 0) return; // the Inspector's values stand
+            ClassDefinitionAsset.Specialty Stub(string id, string name, string rank, string parent) => new ClassDefinitionAsset.Specialty
+            {
+                id = id, displayName = name, rank = rank, parent = parent, passives = new ModifierDefinitionAsset[0],
+                description = $"Not built yet: a {rank}-rank Warrior branch (ticket 26 builds Vanguard, then Berserker, first).",
+            };
+            warrior.SetSpecialties(trials, new[]
+            {
+                new ClassDefinitionAsset.Specialty
+                {
+                    id = "vanguard", displayName = "Vanguard", rank = "D",
+                    description = "Leads the charge. Physical skills hit 10% harder, Shield Bash comes back sooner and reaches further, and a new skill: Overhead Smash, a heavy blow straight ahead.",
+                    passives = passives.Where(p => p.Id.StartsWith("vanguard-")).ToArray(),
+                },
+                Stub("sentinel", "Sentinel", "D", null),
+                new ClassDefinitionAsset.Specialty
+                {
+                    id = "berserker", displayName = "Berserker", rank = "B", parent = "vanguard",
+                    description = "All-out offence. Melee skills hit 20% harder, Whirlwind comes back sooner and reaches further, and two new skills: Cleave, a huge swing on a short cooldown, and Earthsplitter (level 62), a quake you can charge.",
+                    passives = passives.Where(p => p.Id.StartsWith("berserker-")).ToArray(),
+                },
+                Stub("champion", "Champion", "B", "vanguard"),
+                Stub("guardian", "Guardian", "B", "sentinel"),
+                Stub("bulwark", "Bulwark", "B", "sentinel"),
+            });
+            EditorUtility.SetDirty(warrior);
+        }
+
+        /// <summary>A trial's scene (ticket 26): plays after the first clear of that trial in a world. Blank markers (ADR 0009).</summary>
+        private static TextSceneAsset GetOrCreateTrialScene(GateDefinitionAsset trial)
+        {
+            TextSceneAsset.Line Blank(string who, string what) => new TextSceneAsset.Line
+            {
+                speaker = who, text = $"[{what}: {TextSceneAsset.Unwritten}]",
+            };
+            return GetOrCreate<TextSceneAsset>("Scenes", $"Warrior Trial {trial.Rank} Cleared", a => a.Set($"{trial.Id}-cleared", StoryTrigger.GateCleared, new[]
+            {
+                Blank("", $"Narration: back at the guild after the Warrior's {trial.Rank}-rank trial"),
+                Blank("[Guild NPC]", "The guild says the trial is passed"),
+                Blank("[Guild NPC]", $"The paths a {trial.Rank}-rank Warrior can take from here, and that the choice is for good"),
+            }, forGate: trial));
         }
 
         /// <summary>A settings asset at a fixed path, created with its field defaults if missing and never overwritten.</summary>

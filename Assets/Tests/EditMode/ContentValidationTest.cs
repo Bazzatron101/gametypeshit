@@ -202,6 +202,43 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void EveryClassesSpecialtyTreeHasATrialPerTier()
+        {
+            // Ticket 26: a tree of two tiers, two at D and two at B under each D one, each tier unlocked by the class's
+            // trial at that rank. A class whose tree is all stubs may have no trials yet; one with a built specialty must.
+            var content = Content();
+            var config = new SimulationConfig();
+            content.ApplyTo(config);
+            var world = new SimulationWorld(config); // also validates the trees, the trials and the specialty skills
+            var progression = config.Progression;
+            var continent = AssetDatabase.LoadAssetAtPath<OverworldAsset>("Assets/Data/Overworld/Continent.asset").ToDefinition();
+            foreach (var c in config.Classes)
+            {
+                if (!c.Specialties.Any(world.IsSpecialtyBuilt)) continue;
+                var d = c.Specialties.Where(s => s.Rank == "D").ToList();
+                Assert.That(d.Count, Is.EqualTo(2), $"{c.Name}: two D-rank specialties");
+                Assert.That(d.All(s => s.ParentId == null), Is.True, $"{c.Name}: the D tier is the root");
+                foreach (var root in d)
+                    Assert.That(c.Specialties.Count(s => s.Rank == "B" && s.ParentId == root.Id), Is.EqualTo(2), $"{c.Name}: two B-rank branches under {root.Name}");
+                Assert.That(c.Specialties.All(s => s.Rank == "D" || s.Rank == "B"), Is.True, $"{c.Name}: the tiers are D and B");
+
+                var trials = c.TrialGateIds.Select(id => config.Gates.Single(g => g.Id == id)).ToList();
+                Assert.That(trials.Select(g => g.Rank), Is.EquivalentTo(new[] { "D", "B" }), $"{c.Name}: one trial per tier");
+                foreach (var trial in trials)
+                    Assert.That(continent.SiteOf(trial.Id), Is.Null, $"{c.Name}: the guild posts {trial.Name}; it has no site to find");
+                foreach (var built in c.Specialties.Where(s => s.ParentId != null && world.IsSpecialtyBuilt(s)))
+                    Assert.That(world.IsSpecialtyBuilt(c.Specialties.Single(s => s.Id == built.ParentId)), Is.True, $"{c.Name}: {built.Name} is built, so the way to it must be too");
+            }
+            var warrior = config.Classes.Single(c => c.Id == "warrior");
+            Assert.That(warrior.Specialties.Where(world.IsSpecialtyBuilt).Select(s => s.Id), Is.EqualTo(new[] { "vanguard", "berserker" }), "ticket 26 builds one path, Vanguard then Berserker");
+            foreach (var skill in config.Skills.Where(s => s.SpecialtyId != null))
+            {
+                var tier = config.SpecialtyById(skill.SpecialtyId).Rank;
+                Assert.That(progression.RankIndexAt(skill.UnlockLevel), Is.GreaterThanOrEqualTo(progression.RankIndexOf(tier)), $"{skill.Name}: a {tier}-rank specialty's skill comes at {tier}-rank or later");
+            }
+        }
+
+        [Test]
         public void ListTheWritingStillToDo()
         {
             // Not a failure: a list for the developer of every text slot still holding its "write me" marker.

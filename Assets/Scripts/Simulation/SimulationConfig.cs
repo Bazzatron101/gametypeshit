@@ -86,6 +86,17 @@ namespace HunterSystem.Simulation
             return null;
         }
 
+        /// <summary>The specialty with this id, from any class (ticket 26), or null.</summary>
+        public SpecialtyDefinition SpecialtyById(string id)
+        {
+            if (id == null || Classes == null) return null;
+            foreach (var c in Classes)
+                if (c != null)
+                    foreach (var s in c.Specialties)
+                        if (s != null && s.Id == id) return s;
+            return null;
+        }
+
         /// <summary>Every gate in the game. Like skills, gates are named by id in snapshots, so host and clients must hold the same list.</summary>
         public IReadOnlyList<GateDefinition> Gates { get; set; } = Array.Empty<GateDefinition>();
 

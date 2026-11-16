@@ -37,11 +37,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e6b56001c56c2da4d81cfe40389bc2ee, type: 2}
   - {fileID: 11400000, guid: f8e25b4dceaf3f641b80922f1377ef7f, type: 2}
   - {fileID: 11400000, guid: 2bdaef055b867434f9a4e6a513716946, type: 2}
+  - {fileID: 11400000, guid: ccf46a7bed7b9e042b20047de8a153ab, type: 2}
+  - {fileID: 11400000, guid: 1c80bfbad9cf4ca468c9ee444bbfe340, type: 2}
+  - {fileID: 11400000, guid: 099f22b9dde31204880da5588cd71b68, type: 2}
   modifiers:
   - {fileID: 11400000, guid: 00261d8cc31b452459507cdd56036305, type: 2}
   - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}
   - {fileID: 11400000, guid: c27b3a3b1a9038b4589fb03218ff0cc0, type: 2}
   - {fileID: 11400000, guid: 8d7f52e4a7a38da4195ded7bbc7bbe54, type: 2}
+  - {fileID: 11400000, guid: 31c6c74054bf022449ff19a83a52341f, type: 2}
+  - {fileID: 11400000, guid: 9ae45a687c893dd498354c7d0c268fb2, type: 2}
+  - {fileID: 11400000, guid: a7a2493df82c8fa4ea135b00205d6467, type: 2}
+  - {fileID: 11400000, guid: 5407dc6b33e4de04a8981c3d433199ff, type: 2}
   gear:
   - {fileID: 11400000, guid: 1e342c880a364122878fb28921d84ce5, type: 2}
   - {fileID: 11400000, guid: eb100f56ff6947c198ea634065dd70b3, type: 2}
@@ -61,6 +68,8 @@ MonoBehaviour:
   gates:
   - {fileID: 11400000, guid: d5eca38938261a44dbd68e555dfdd752, type: 2}
   - {fileID: 11400000, guid: 80328a60c46581d44968c1af6689f3ef, type: 2}
+  - {fileID: 11400000, guid: f95e44052f8b5ce4f91bc21f542c17ea, type: 2}
+  - {fileID: 11400000, guid: 4f81c70798c0c0d4492a1a61ff18365a, type: 2}
   bosses:
   - {fileID: 11400000, guid: 7f9a054aa1138ab43957f11c2db0c5d1, type: 2}
   hub: {fileID: 11400000, guid: 18193dd91d58c354d8fbd5393665ae35, type: 2}
@@ -70,6 +79,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 83e79ec3d1bc45609cbe546145b69785, type: 2}
   - {fileID: 11400000, guid: ef58a5e07590491a9330d69314b615aa, type: 2}
   - {fileID: 11400000, guid: ff9466e35dee4ac69bfdb7423e7302d3, type: 2}
+  - {fileID: 11400000, guid: ba050248f8a1613458067d2f83e25554, type: 2}
+  - {fileID: 11400000, guid: b8702a6bd74a8fb41948587542f0d79b, type: 2}
   partyScaling: {fileID: 11400000, guid: 0c27ba66a0ac06047b8392d97a5c6987, type: 2}
   shops:
   - {fileID: 11400000, guid: c6ba4d36de34ccc44ad57a2dd63db4dd, type: 2}

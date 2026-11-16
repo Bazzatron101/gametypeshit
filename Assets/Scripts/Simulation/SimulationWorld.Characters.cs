@@ -21,6 +21,8 @@ namespace HunterSystem.Simulation
                 Stats = (int[])player.Stats.Clone(),
                 HasMount = player.HasMount,
             };
+            record.Specialties.AddRange(player.Specialties.Select(s => s.Id));
+            record.PassedTrials.AddRange(player.PassedTrials);
             record.KnownSkills.AddRange(player.KnownSkills.Select(s => s.Id));
             for (var i = 0; i < SkillSlotCount; i++) record.SkillBar[i] = player.SkillSlots[i]?.Id;
             record.Modifiers.AddRange(player.Modifiers);
@@ -112,6 +114,11 @@ namespace HunterSystem.Simulation
             var pastLevels = Math.Max(0, player.Level - 1);
             for (var i = 0; i < record.Stats.Length; i++)
                 record.Stats[i] += (chosen.StatPerLevel(i) - (player.Class?.StatPerLevel(i) ?? 0)) * pastLevels;
+            if (record.ClassId != chosen.Id)
+            {
+                record.Specialties.Clear(); // specialties and trials belong to their class
+                record.PassedTrials.Clear();
+            }
             record.ClassId = chosen.Id;
             if (GearById(chosen.StartingWeaponId) is { } weapon)
             {
@@ -133,6 +140,10 @@ namespace HunterSystem.Simulation
                 var saved = character.Stats != null && i < character.Stats.Length ? character.Stats[i] : progression.StartingStatValue;
                 player.Stats[i] = Math.Max(saved, progression.StartingStatValue);
             }
+
+            // Specialties (ticket 26), before skills: they decide which specialty skills the character keeps.
+            // One the game no longer has, from another class, or whose parent was dropped, is dropped; passed trials stay passed.
+            RestoreSpecialties(player, character);
 
             // Skills: what it knew and the game still has, in the order it learned them...
             player.KnownSkills.Clear();

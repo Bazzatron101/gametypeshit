@@ -25,6 +25,7 @@ namespace HunterSystem.Game
         private readonly Queue<(string equip, GearSlot? unequip)> _gearChanges = new Queue<(string, GearSlot?)>();
         private bool? _setReadyPending;
         private CharacterLook? _lookPending;
+        private string _specialtyPending;
         private int? _skillSlotPending;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
         private readonly Queue<SkillAssignment> _skillAssignments = new Queue<SkillAssignment>();
@@ -52,7 +53,11 @@ namespace HunterSystem.Game
             if (sampled.SellItemId != null) _sales.Enqueue(sampled.SellItemId);
             if (sampled.EquipGearId != null || sampled.UnequipSlot.HasValue) _gearChanges.Enqueue((sampled.EquipGearId, sampled.UnequipSlot));
             if (sampled.ChangeLook.HasValue) _lookPending = sampled.ChangeLook;
+            if (sampled.ChooseSpecialtyId != null) _specialtyPending = sampled.ChooseSpecialtyId;
         }
+
+        /// <summary>After the class's trial: take a specialty, for good (ticket 26). It goes out with the next tick.</summary>
+        public void QueueSpecialty(string specialtyId) => _specialtyPending = specialtyId;
 
         /// <summary>In the hub: change looks (the creator's restyle). The latest choice wins; it goes out with the next tick.</summary>
         public void QueueLook(CharacterLook look) => _lookPending = look;
@@ -88,8 +93,10 @@ namespace HunterSystem.Game
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
                 allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld, aimYawDegrees: _aimYawDegrees, sellItemId: sell,
-                equipGearId: gear.equip, unequipSlot: gear.unequip, changeLook: _lookPending, toggleMount: _mountPending);
+                equipGearId: gear.equip, unequipSlot: gear.unequip, changeLook: _lookPending, toggleMount: _mountPending,
+                chooseSpecialtyId: _specialtyPending);
             _lookPending = null;
+            _specialtyPending = null;
             _jumpPending = false;
             _mountPending = false;
             _respawnPending = false;

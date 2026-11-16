@@ -26,7 +26,47 @@ namespace HunterSystem.Simulation
         /// </summary>
         public string StartingWeaponId { get; set; }
 
+        /// <summary>
+        /// The class's trials (ticket 26), by gate id: one per specialty tier, and the gate's rank is the tier's
+        /// (D, then B). Clearing one, at its rank, unlocks that tier's pick. Empty for a class with no trials yet.
+        /// </summary>
+        public List<string> TrialGateIds { get; } = new List<string>();
+
+        /// <summary>
+        /// The specialties this class branches into (ticket 26), as a tree: two at D, and two at B under each D
+        /// specialty. One is picked for good at each tier, after that tier's trial.
+        /// </summary>
+        public List<SpecialtyDefinition> Specialties { get; } = new List<SpecialtyDefinition>();
+
         public int StatPerLevel(int stat) => StatsPerLevel != null && stat < StatsPerLevel.Length ? StatsPerLevel[stat] : 0;
+    }
+
+    /// <summary>
+    /// A specialty (ticket 26): a branch a class takes at a rank (D or B) once that rank's trial is cleared. The
+    /// pick is permanent. A specialty brings its own skills (skills whose <see cref="SkillDefinition.SpecialtyId"/>
+    /// is this one, learned at their levels) and passive modifiers on the class's skills, always in effect.
+    /// The B-rank specialties branch from the D-rank ones: only those under the hunter's D pick are offered.
+    /// </summary>
+    public sealed class SpecialtyDefinition
+    {
+        /// <summary>Stable, unique across all classes. Saves refer to it; never rename it once characters have it.</summary>
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+
+        /// <summary>The class it branches from.</summary>
+        public string ClassId { get; set; }
+
+        /// <summary>The tier: the rank whose trial unlocks the pick ("D" or "B").</summary>
+        public string Rank { get; set; }
+
+        /// <summary>The specialty of the tier below that this one branches from, or null at the first tier.</summary>
+        public string ParentId { get; set; }
+
+        /// <summary>Always in effect for a character with this specialty, on top of its own modifiers and its gear's.</summary>
+        public List<ModifierDefinition> Passives { get; } = new List<ModifierDefinition>();
+
+        public override string ToString() => Id;
     }
 
     public sealed partial class CharacterRecord
@@ -56,6 +96,8 @@ namespace HunterSystem.Simulation
                 Name = Name,
                 Look = Look,
                 ClassId = chosen.Id,
+                Specialties = new List<string>(Specialties ?? new List<string>()),
+                PassedTrials = new List<string>(PassedTrials ?? new List<string>()),
                 Level = Level,
                 Xp = Xp,
                 UnspentStatPoints = UnspentStatPoints,

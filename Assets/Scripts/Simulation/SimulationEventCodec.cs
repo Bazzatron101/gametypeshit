@@ -30,6 +30,7 @@ namespace HunterSystem.Simulation
             LookChanged,
             MountChanged, MountGranted,
             RankPromoted,
+            SpecialtyUnlocked, SpecialtyChosen,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -215,6 +216,12 @@ namespace HunterSystem.Simulation
                 case RankPromoted x:
                     Head(w, Code.RankPromoted, e); SimulationWorld.WriteNullable(w, x.Rank); w.Write(x.Player.Value);
                     break;
+                case SpecialtyUnlocked x:
+                    Head(w, Code.SpecialtyUnlocked, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.ClassId); SimulationWorld.WriteNullable(w, x.Rank);
+                    break;
+                case SpecialtyChosen x:
+                    Head(w, Code.SpecialtyChosen, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.SpecialtyId);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -360,6 +367,17 @@ namespace HunterSystem.Simulation
                 {
                     var rank = SimulationWorld.ReadNullable(r);
                     return new RankPromoted(tick, rank, Player());
+                }
+                case Code.SpecialtyUnlocked:
+                {
+                    var player = Player();
+                    var classId = SimulationWorld.ReadNullable(r);
+                    return new SpecialtyUnlocked(tick, player, classId, SimulationWorld.ReadNullable(r));
+                }
+                case Code.SpecialtyChosen:
+                {
+                    var player = Player();
+                    return new SpecialtyChosen(tick, player, SimulationWorld.ReadNullable(r));
                 }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }

@@ -58,6 +58,13 @@ namespace HunterSystem.Game
             return gate;
         }
 
+        /// <summary>For editor tooling: the gate's licence rank (ticket 25) and its board notice.</summary>
+        public void SetRankAndIntel(string gateRank, string notice)
+        {
+            rank = gateRank ?? "";
+            intel = notice ?? "";
+        }
+
         /// <summary>For editor tooling that creates gates in code.</summary>
         public void Set(string gateId, string gateName, RoomPieceAsset[] gateRooms, ModifierDefinitionAsset[] reward = null)
         {

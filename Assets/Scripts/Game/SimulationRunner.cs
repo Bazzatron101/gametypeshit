@@ -114,6 +114,9 @@ namespace HunterSystem.Game
         /// <summary>In the hub: change how the player looks (ticket 28). A command like any other, so the host decides.</summary>
         public void RequestLook(PlayerId id, CharacterLook look) => BufferFor(id).QueueLook(look);
 
+        /// <summary>After the class's trial: take a specialty, for good (ticket 26). A command like any other, so the host decides.</summary>
+        public void RequestSpecialty(PlayerId id, string specialtyId) => BufferFor(id).QueueSpecialty(specialtyId);
+
         /// <summary>True when the scene has its own local player playing offline (the greybox, the arena).</summary>
         public bool PlaysOffline => _offlineLocalId.HasValue;
 
@@ -167,6 +170,7 @@ namespace HunterSystem.Game
             if (GetComponent<CharacterCreator>() == null) gameObject.AddComponent<CharacterCreator>(); // and make a hunter, and restyle in the hub (ticket 28)
             if (GetComponent<Nameplates>() == null) gameObject.AddComponent<Nameplates>();
             if (GetComponent<DamageNumbers>() == null) gameObject.AddComponent<DamageNumbers>(); // a landed hit shows its number (ticket 47)
+            if (GetComponent<SpecialtyPicker>() == null) gameObject.AddComponent<SpecialtyPicker>(); // the pick after a class's trial (ticket 26)
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
             var overworldScene = FindAnyObjectByType<OverworldScene>(); // an overworld scene's ground and markers (ticket 39)

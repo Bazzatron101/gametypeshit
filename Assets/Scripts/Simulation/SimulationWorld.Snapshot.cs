@@ -252,6 +252,10 @@ namespace HunterSystem.Simulation
             w.Write((byte)p.Look.Build);
             w.Write(p.HasMount);
             w.Write(p.Mounted);
+            w.Write(p.Specialties.Count);
+            foreach (var s in p.Specialties) w.Write(s.Id);
+            w.Write(p.PassedTrials.Count);
+            foreach (var rank in p.PassedTrials) w.Write(rank);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -542,6 +546,12 @@ namespace HunterSystem.Simulation
             p.Look = new CharacterLook(r.ReadByte(), (Build)r.ReadByte());
             p.HasMount = r.ReadBoolean();
             p.Mounted = r.ReadBoolean();
+            for (int i = 0, n = ReadCount(r); i < n; i++)
+            {
+                var specialtyId = r.ReadString();
+                p.Specialties.Add(_config.SpecialtyById(specialtyId) ?? throw new FormatException($"The snapshot names specialty '{specialtyId}', which this game does not have."));
+            }
+            for (int i = 0, n = ReadCount(r); i < n; i++) p.PassedTrials.Add(r.ReadString());
             return p;
         }
 

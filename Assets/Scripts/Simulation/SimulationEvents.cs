@@ -594,4 +594,35 @@ namespace HunterSystem.Simulation
             Player = player;
         }
     }
+
+    /// <summary>
+    /// <see cref="Player"/> passed their class's <see cref="Rank"/>-rank trial (ticket 26): they may now pick one of
+    /// <see cref="ClassId"/>'s specialties at that tier, for good.
+    /// </summary>
+    public sealed class SpecialtyUnlocked : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public string ClassId { get; }
+        public string Rank { get; }
+
+        public SpecialtyUnlocked(int tick, PlayerId player, string classId, string rank) : base(tick)
+        {
+            Player = player;
+            ClassId = classId;
+            Rank = rank;
+        }
+    }
+
+    /// <summary><see cref="Player"/> took the specialty <see cref="SpecialtyId"/> (ticket 26). Permanent.</summary>
+    public sealed class SpecialtyChosen : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public string SpecialtyId { get; }
+
+        public SpecialtyChosen(int tick, PlayerId player, string specialtyId) : base(tick)
+        {
+            Player = player;
+            SpecialtyId = specialtyId;
+        }
+    }
 }

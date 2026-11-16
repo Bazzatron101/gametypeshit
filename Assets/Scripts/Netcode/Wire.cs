@@ -149,6 +149,8 @@ namespace HunterSystem.Netcode
                 w.Write((byte)command.ChangeLook.Value.Build);
             }
             w.Write((byte)(command.ToggleMount ? 1 : 0));
+            w.Write(command.ChooseSpecialtyId != null);
+            if (command.ChooseSpecialtyId != null) w.Write(command.ChooseSpecialtyId);
         });
 
         public static byte[] Refused(string reason) => Write(MessageType.Refused, w => w.Write(reason));
@@ -180,6 +182,7 @@ namespace HunterSystem.Netcode
             var unequip = r.ReadSByte();
             CharacterLook? look = r.ReadBoolean() ? new CharacterLook(r.ReadByte(), (Build)r.ReadByte()) : (CharacterLook?)null;
             var more = r.ReadByte();
+            var specialty = r.ReadBoolean() ? r.ReadString() : null;
             return (sequence, new PlayerCommand(moveX, moveZ,
                 lightAttack: (buttons & LightAttackBit) != 0, dodge: (buttons & DodgeBit) != 0, heavyAttack: (buttons & HeavyAttackBit) != 0,
                 allocateStat: stat >= 0 && stat < PlayerStats.Count ? (Stat)stat : (Stat?)null,
@@ -188,7 +191,7 @@ namespace HunterSystem.Netcode
                 setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null,
                 jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0, aimYawDegrees: aim, sellItemId: sell,
                 equipGearId: equip, unequipSlot: unequip >= 0 && unequip < GearDefinition.SlotCount ? (GearSlot)unequip : (GearSlot?)null,
-                changeLook: look, toggleMount: (more & 1) != 0));
+                changeLook: look, toggleMount: (more & 1) != 0, chooseSpecialtyId: specialty));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;

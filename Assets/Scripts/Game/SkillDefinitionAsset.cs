@@ -12,6 +12,7 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f)] private float cooldownSeconds = 5f;
         [SerializeField, Min(1), Tooltip("1 = a starter skill")] private int unlockLevel = 1;
         [SerializeField, Tooltip("The class that learns it; empty = every class")] private ClassDefinitionAsset characterClass;
+        [SerializeField, Tooltip("A specialty id from the class's specialties (ticket 26): only hunters with that specialty learn it. Empty = the whole class")] private string specialty = "";
         [SerializeField, Tooltip("Free-form tags for modifiers, e.g. fire, projectile, melee, area")] private string[] tags = new string[0];
         [SerializeField] private Stat scalingStat = Stat.Strength;
 
@@ -32,6 +33,7 @@ namespace HunterSystem.Game
         public string Id => id;
         public string DisplayName => displayName;
         public ClassDefinitionAsset Class => characterClass;
+        public string Specialty => string.IsNullOrWhiteSpace(specialty) ? null : specialty;
 
         public SkillDefinition ToDefinition() => new SkillDefinition
         {
@@ -40,6 +42,7 @@ namespace HunterSystem.Game
             CooldownSeconds = cooldownSeconds,
             UnlockLevel = unlockLevel,
             ClassId = characterClass != null ? characterClass.Id : null,
+            SpecialtyId = string.IsNullOrWhiteSpace(specialty) ? null : specialty,
             Tags = (string[])tags.Clone(),
             ScalingStat = scalingStat,
             Effect = effect,
@@ -73,6 +76,7 @@ namespace HunterSystem.Game
             displayName = d.Name;
             cooldownSeconds = d.CooldownSeconds;
             unlockLevel = d.UnlockLevel;
+            specialty = d.SpecialtyId ?? "";
             tags = (string[])d.Tags.Clone();
             scalingStat = d.ScalingStat;
             effect = d.Effect;

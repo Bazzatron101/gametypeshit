@@ -82,6 +82,8 @@ namespace HunterSystem.Game
             GearEquipped g => g.Player == me,
             GearUnequipped g => g.Player == me,
             LookChanged l => l.Player == me,
+            SpecialtyUnlocked s => s.Player == me,
+            SpecialtyChosen s => s.Player == me,
             _ => false,
         };
     }

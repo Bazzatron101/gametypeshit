@@ -171,7 +171,7 @@ A premium PC game with a finite main campaign and an endgame built around delibe
 - **Ranks:** E, D, C, B, A (main game), then S (end story). SS is a possible future DLC. Ranks are tied to level bands, with some promotions gated by quests.
 - **Provisional level bands:** E 1 to 15, D 16 to 35, C 36 to 55, B 56 to 75, A 76 to 95, S 96 to 100. Main-game cap 95, raised to 100 by the S story. **[assumption, tunable]**
 - **Stats:** Strength, Agility, Vitality, Intelligence, Sense, Luck. Allocation is hybrid (a few free points per level plus class bonuses). Luck can nudge drop odds.
-- **Classes:** four base classes (Warrior, Rogue, Archer, Wizard), chosen when the character is made (changed by the developer, ADR 0012; it was classless through E with three base classes at D). Two specialties per base class at B (quest-gated), six in total. A hidden class at the end of S, played on a fresh slot. Classes share one base animation set. **Start with the recommended tree and extend later.**
+- **Classes:** four base classes (Warrior, Rogue, Archer, Wizard), chosen when the character is made (changed by the developer, ADR 0012; it was classless through E with three base classes at D). Specialties are a tree per class: two at D, and two at B under each D one, 24 in total. Each tier is unlocked by the class's trial gate at that rank and picked for good (ADR 0022; it was two per class at B, six in total). A hidden class at the end of S, played on a fresh slot. Classes share one base animation set. **Start with the recommended tree and extend later.**
 - **Post-cap progression** is gear and skill modifiers.
 
 ### Combat

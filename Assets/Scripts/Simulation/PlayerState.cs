@@ -102,6 +102,18 @@ namespace HunterSystem.Simulation
         /// <summary>Riding it now: faster, and no fighting from the saddle.</summary>
         public bool IsMounted { get; }
 
+        /// <summary>The specialties picked (ticket 26), one per tier, lowest first.</summary>
+        public IReadOnlyList<SpecialtyDefinition> Specialties { get; }
+
+        /// <summary>The ranks whose class trial this hunter has passed (ticket 26).</summary>
+        public IReadOnlyList<string> PassedTrials { get; }
+
+        /// <summary>The rank of the tier whose pick is waiting (its trial passed, nothing picked there yet), or null.</summary>
+        public string SpecialtyPickWaiting { get; }
+
+        /// <summary>A pick is waiting.</summary>
+        public bool CanChooseSpecialty => SpecialtyPickWaiting != null;
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
@@ -109,8 +121,12 @@ namespace HunterSystem.Simulation
             IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false,
             ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<LootDefinition> duplicates = null,
             IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null, string name = null, CharacterLook look = default,
-            bool hasMount = false, bool isMounted = false)
+            bool hasMount = false, bool isMounted = false,
+            IReadOnlyList<SpecialtyDefinition> specialties = null, IReadOnlyList<string> passedTrials = null, string specialtyPickWaiting = null)
         {
+            Specialties = specialties ?? System.Array.Empty<SpecialtyDefinition>();
+            PassedTrials = passedTrials ?? System.Array.Empty<string>();
+            SpecialtyPickWaiting = specialtyPickWaiting;
             HasMount = hasMount;
             IsMounted = isMounted;
             Name = name;
