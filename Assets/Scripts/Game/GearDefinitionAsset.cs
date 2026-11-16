@@ -95,6 +95,7 @@ namespace HunterSystem.Game
 
         public string Id => id;
         public string DisplayName => displayName;
+        public GearSlot Slot => slot;
 
         /// <summary>
         /// The piece as the simulation sees it, made once per config: a gate's pool and the game's

@@ -44,3 +44,5 @@
 - The town has no buildings, only the board: town art is content work.
 - The baked ground is one file for the whole area (5 MB for 1 km²). The full map (about 50 km² of land) needs it per tile, read as players move: tickets 40 and 45. The terrain data and base heights are about 12 MB for the patch, not in Git LFS. Consider LFS for `*.bytes` and terrain data before the full map.
 - The shown ground has no colliders; nothing needs them, since movement is the simulation's.
+
+**2026-11-15 (developer playtest, recorded by agent):** The open world feels big at the current movement speed, and it will need buildings and environment to look good. Scale is noted on ticket 36; the dressing is ticket 49.

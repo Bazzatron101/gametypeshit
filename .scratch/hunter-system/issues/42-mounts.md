@@ -4,7 +4,7 @@
 
 **Blocked by:** 38: The overworld as a third kind of place, 40: Load the overworld in tiles around players
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Mount and dismount commands in the simulation, predicted like other movement (ADR 0004)
 - [ ] Mounted speed is a configuration value (16 m/s to start), beside walking and sprint
@@ -13,3 +13,5 @@
 - [ ] The mount is saved on the character record and given at the D-rank promotion (ticket 25)
 - [ ] Mounted riders follow the same ground rules as walkers (ticket 37); whether a mount can climb is decided in triage
 - [ ] Tests: mounting, speed, dismount on entering a gate, an E-rank character has no mount, the save round trip
+
+**2026-11-16 (developer, recorded by agent):** Triaged: build now ("this still feels very basic").

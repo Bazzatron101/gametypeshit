@@ -27,6 +27,7 @@ namespace HunterSystem.Game
         private ThirdPersonCamera _camera;
         private readonly List<EnemyView> _spawned = new List<EnemyView>();
         private Vector2 _scroll;
+        private bool _weaponsGiven;
         private GUIStyle _label, _header;
 
         public bool IsOpen { get; private set; }
@@ -45,6 +46,12 @@ namespace HunterSystem.Game
 
         private void Update()
         {
+            // Every weapon is in the bag from the start, so each one can be tried (I opens the gear menu).
+            if (!_weaponsGiven && _runner != null && _runner.World != null && _runner.World.HasPlayer(Player) && Content != null)
+            {
+                GiveAllWeapons();
+                _weaponsGiven = true;
+            }
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
             if (keyboard.f1Key.wasPressedThisFrame) SetOpen(!IsOpen);
@@ -106,8 +113,21 @@ namespace HunterSystem.Game
                 if (gear != null) _runner.World.GiveGear(Player, gear.Id);
         }
 
+        /// <summary>Puts every weapon in the game in the bag, without changing the one worn. The arena does this as it opens.</summary>
+        public void GiveAllWeapons()
+        {
+            foreach (var gear in Content.Gear)
+                if (gear != null && gear.Slot == GearSlot.Weapon) _runner.World.GiveGear(Player, gear.Id);
+        }
+
         /// <summary>Gives a piece (if it is not in the bag yet) and wears it.</summary>
         public void Wear(GearDefinitionAsset gear) => _runner.World.GiveGear(Player, gear.Id, equip: true);
+
+        /// <summary>
+        /// Makes the player another class here, for trying each one (normally the choice is permanent).
+        /// Their stats, skills and weapon follow the new class; nothing is saved, as the arena never saves.
+        /// </summary>
+        public void ChangeClass(string classId) => _runner.World.ChangeClassForTesting(Player, classId);
 
         public void ResetCooldowns() => _runner.World.ResetCooldowns(Player);
 
@@ -155,6 +175,16 @@ namespace HunterSystem.Game
                 GUILayout.EndHorizontal();
             }
             if (GUILayout.Button("Clear all enemies")) ClearEnemies();
+
+            GUILayout.Label($"Class: {state.Class?.Name ?? "none"} (test only, not saved)", _header);
+            GUILayout.BeginHorizontal();
+            foreach (var c in _runner.Classes ?? System.Array.Empty<ClassDefinition>())
+            {
+                GUI.enabled = c != state.Class;
+                if (GUILayout.Button(c.Name)) ChangeClass(c.Id);
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
 
             GUILayout.Label($"Level {state.Level}", _header);
             GUILayout.BeginHorizontal();

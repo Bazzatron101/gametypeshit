@@ -16,3 +16,5 @@ D-rank". The developer chose four classes, picked at the start. See ADR 0012.
 - [x] Only the Rogue's jump clears an enemy
 - [x] Every class solos the first gate
 - [x] All classes share one base animation set (there is one greybox body; nothing class-specific was added)
+
+**2026-11-15 (developer asked, agent built):** The test arena panel (F1) can change class for testing, though the choice is otherwise permanent. A row of class buttons under "Class" swaps the old class's per-level stats for the new class's (placed points stay), its skills for the new class's up to your level, and gives and wears the new class's weapon. Bag, gold and modifiers stay. The arena never saves, so your real hunter keeps their class. `SimulationWorld.ChangeClassForTesting`; tests in `ClassTest` and `WeaponTest`. EditMode: 625 passed, 0 failed.

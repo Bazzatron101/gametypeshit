@@ -55,3 +55,5 @@ Not done:
   - **Once the pool is owned the clear gives nothing.** That is deferred to loot in M4, as ADR 0007 says.
 - **Evidence:** 375 EditMode and 22 PlayMode tests pass. Bots beat the boss headless, and a built host and guest cleared the gate over local UDP with rewards kept.
 
+
+**2026-11-16 (developer, recorded by agent):** A line for the Warlord, for now: "Get out of my home, you pesky humans!" The developer will think more about boss text later. Nothing shows boss lines yet; see ticket 20.

@@ -4,9 +4,11 @@
 
 **Blocked by:** 40: Load the overworld in tiles around players, 41: Send each client only what is near it
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Bots walk and ride to different parts of the map and stay apart for a configured time
 - [ ] Measured and recorded: host simulation time per tick, host memory, host upload, and how long tiles take to load on a client at mount speed
 - [ ] Guards in the test for each figure, set from the first measurement
 - [ ] Results written up in `docs/measurements/`
+
+**2026-11-16 (developer, recorded by agent):** Triaged: build now ("this still feels very basic").

@@ -339,3 +339,7 @@ Still to settle: which crossed swords are which gate (the region table predates 
 - Each event spawns a few new gates (with their leaks), so danger rises in steps: the player pushes back, an event brings a new wave, the player pushes back again.
 - This replaces "a big story event" above. Each event's gates are listed with the event when the story beats are written (ticket 16).
 - Still to settle: which numbered sites (1–26) are story-spawned, and which event spawns each.
+
+**2026-11-15 (developer playtest, recorded by agent):** Walking the test patch, the map "feels big with the movement speed". Nothing changed yet. Options when this is decided: leave it until mounts (ticket 42) and buildings (ticket 49) make the ground feel less empty, raise walking or sprint speed (the map stays the same size; crossing time drops), or shrink the map before ticket 45 builds it.
+
+**2026-11-16 (developer, recorded by agent):** Towns and the land need nature and buildings; they are empty for now. That is ticket 49 (placeholders first).

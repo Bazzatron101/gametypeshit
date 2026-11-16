@@ -4,7 +4,7 @@
 
 **Blocked by:** 39: Terrain pipeline and a 1 km test patch, 40: Load the overworld in tiles around players
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Every region's ground generated and baked into tiles, with the sea, the mountain ranges, passes and climbable faces where ticket 36 puts them
 - [ ] Every settlement and gate from ticket 36 placed as a marker; the nine missing gate spots once the developer marks them on the map
@@ -15,3 +15,5 @@
 ## Notes
 
 - If playtests find the map too close, grow it by scaling the terrain (keep the drawing), or wind the roads more, which is cheaper (ticket 36).
+
+**2026-11-16 (developer, recorded by agent):** Triaged: build now ("this still feels very basic").

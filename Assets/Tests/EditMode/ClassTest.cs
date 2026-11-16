@@ -205,6 +205,32 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void TheTestArenaCanChangeAClassSwappingItsStatsAndSkills()
+        {
+            // Level 4: three levels of the Warrior's Strength and Vitality, and one point placed in Luck.
+            var warrior = new CharacterRecord { ClassId = "warrior", Level = 4, Stats = Stats(str: 13, agi: 10, vit: 13, intel: 10, sense: 10, luck: 11) };
+            var world = WorldWith(warrior);
+
+            world.ChangeClassForTesting(P, "wizard");
+
+            var player = world.GetPlayer(P);
+            Assert.That(player.Class.Id, Is.EqualTo("wizard"));
+            Assert.That(player.Level, Is.EqualTo(4));
+            Assert.That(player.Stats[Stat.Strength], Is.EqualTo(10), "the Warrior's stats are gone");
+            Assert.That(player.Stats[Stat.Intelligence], Is.EqualTo(13), "the Wizard's are given for the same levels");
+            Assert.That(player.Stats[Stat.Luck], Is.EqualTo(11), "placed points stay");
+            Assert.That(Known(world), Is.EquivalentTo(new[] { "fireball", "flame-burst", "first-aid" }), "the Wizard's skills up to its level");
+        }
+
+        [Test]
+        public void ChangingClassNamesAClassTheGameHas()
+        {
+            var world = WorldWith(NewCharacter("warrior"));
+
+            Assert.Throws<ArgumentException>(() => world.ChangeClassForTesting(P, "bard"));
+        }
+
+        [Test]
         public void ContentChecksEachClassesStartersFitTheBar()
         {
             var config = Config();

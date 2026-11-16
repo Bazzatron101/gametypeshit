@@ -96,6 +96,30 @@ namespace HunterSystem.Simulation
             if (defeated) player.Health = 0; // swapping characters is not a revive
         }
 
+        /// <summary>
+        /// For testing only (the test arena): makes the player a <paramref name="classId"/> where
+        /// they stand, though a class is otherwise permanent. The old class's stats for past levels
+        /// are swapped for the new class's (placed points stay), its skills for the new class's up
+        /// to the player's level, and the new class's weapon is given and worn. Bag, gold and
+        /// modifiers stay. Nothing here saves; the arena does not autosave.
+        /// </summary>
+        public void ChangeClassForTesting(PlayerId id, string classId)
+        {
+            var player = FindPlayer(id);
+            var chosen = _config.ClassById(classId) ?? throw new ArgumentException($"There is no class '{classId}'.", nameof(classId));
+            var record = CaptureCharacter(id);
+            var pastLevels = Math.Max(0, player.Level - 1);
+            for (var i = 0; i < record.Stats.Length; i++)
+                record.Stats[i] += (chosen.StatPerLevel(i) - (player.Class?.StatPerLevel(i) ?? 0)) * pastLevels;
+            record.ClassId = chosen.Id;
+            if (GearById(chosen.StartingWeaponId) is { } weapon)
+            {
+                if (!record.Gear.Contains(weapon.Id)) record.Gear.Add(weapon.Id);
+                record.Worn[(int)GearSlot.Weapon] = weapon.Id;
+            }
+            ReplaceCharacter(id, record);
+        }
+
         private void Apply(Player player, CharacterRecord character)
         {
             var progression = _config.Progression;

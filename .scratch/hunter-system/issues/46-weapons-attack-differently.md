@@ -56,3 +56,7 @@ Not done:
 - `CompanionTest.ExperiencedTeammatesPlayBetterThanRookies` failed: in its single fight, the rookie tank held the boss 88% of the time. With Agility off, the same fight gave 71%, and the elites gave 79% either way. Across other dice, rookies range from 13% to 88%, so the test now plays four fights each and compares the totals: elites 73%, rookies 61%. The claim is the same, measured less noisily.
 - `pwsh scripts/test.ps1` (EditMode): 561 passed, 0 failed.
 - **To watch:** Agility now gives both damage and move speed, so the Archer and the Rogue may feel strong.
+
+**2026-11-15 (developer playtest, recorded by agent):** "Using the main attack feels very difficult." Followed up in ticket 47 (which weapon, and what makes it hard, still to find out).
+
+**2026-11-15 (developer asked, agent built):** The test arena puts every weapon in the bag as it opens (`ArenaPanel.GiveAllWeapons`), so each can be picked in the gear menu (I) without the panel. The class's own weapon stays worn. PlayMode `ArenaTest`: 4 passed; EditMode: 625 passed.

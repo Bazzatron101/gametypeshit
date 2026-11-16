@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
 - [x] Decision recorded: gates lock when started, or players may join at checkpoints
 - [x] Reasoning and any consequences for checkpoint revives are noted
@@ -18,3 +18,5 @@
 - Open for the death rules (17): whether co-op "respawn at the entrance" should become "respawn at the latest checkpoint". This decision makes the checkpoint the natural choice.
 
 **2026-11-13 (developer, recorded by agent):** The open point above is settled: co-op players respawn at the closest checkpoint (see ticket 17).
+
+**2026-11-15 (developer, recorded by agent):** Closed. Both boxes are ticked and the open point is settled.

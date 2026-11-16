@@ -73,3 +73,7 @@ Still open:
 - **To close box 1:** get the game its own Steam app ID (Steamworks, $100 fee) and test invites and Join Game again.
 - **Still untried:** whether "Join Game" reaches a copy of our game that is already running.
 - **Also untried:** play across the internet. The test above was on one home network.
+
+**2026-11-15 (developer playtest, recorded by agent):** "The coop test feels fun to play." The main attack feels very difficult to use; that is followed up in ticket 47.
+
+**2026-11-16 (developer, recorded by agent):** Not ready for a friend to test yet; the game still feels too basic. Box 1 waits for that and for the Steam app ID.

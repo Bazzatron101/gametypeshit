@@ -43,6 +43,17 @@ namespace HunterSystem.Tests
         private PlayerState Player => _runner.World.GetPlayer(LocalPlayer);
 
         [UnityTest]
+        public IEnumerator EveryWeaponIsInTheBagFromTheStart()
+        {
+            yield return null;
+            var weapons = _runner.Content.Gear.Where(g => g != null && g.Slot == GearSlot.Weapon).Select(g => g.Id).ToList();
+
+            Assert.That(weapons.Count, Is.GreaterThanOrEqualTo(3), "sword, bow and staff");
+            Assert.That(Player.Bag.Select(g => g.Id), Is.SupersetOf(weapons));
+            Assert.That(Player.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo(Player.Class?.StartingWeaponId), "still wearing the class's own weapon");
+        }
+
+        [UnityTest]
         public IEnumerator SpawnsAChosenEnemyTypeAndClearsThem()
         {
             var hobgoblin = _runner.Content.Enemies.Single(e => e.name == "Hobgoblin");

@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
-- [ ] Premise written in a few sentences, with the mystery or hook that makes it original
+- [x] Premise written in a few sentences, with the mystery or hook that makes it original
 - [x] Tone for the first gate noted (the System and its voice were removed; see the 2026-11-15 note)
 
 ## Comments
@@ -94,3 +94,8 @@ Follows from this, to settle with the premise:
 - The hook no longer asks why the world has a System; it is about the gates. The demon king who controls them already answers much of it.
 - Box 1 stays open: write the premise in a few sentences, with its hook. Still to decide: does the player know about the demon king from the start, or is he revealed?
 - Changed to match: the spec (stories 2 and 59, the art notes and the open questions), ticket 20, the arrival scene (its System line is gone), and the level-up toast (no "[ SYSTEM ]" label).
+
+**2026-11-16 (developer, recorded by agent):** **The premise.** The world is being taken over by monsters, and the player has signed up with the guild to protect the land. Possibly: an older sibling joined first and went missing, and the player finds them later on.
+- With the earlier notes: the monsters come through gates that the demon king controls; the main campaign ends with his death at A-rank, and the S story follows with the demon princes and the best guild.
+- **The hook** is personal: a missing older sibling who went ahead into the same work. It gives the player a reason to climb the ranks beyond duty, and a thread to pull through the story.
+- Box 1 is ticked; the ticket is closed. Still open for when the story is written (not blocking): whether the sibling is confirmed, where and at what rank they are found, what happened to them (captured, lost, or working for the demon king), and whether the player knows about the demon king from the start.

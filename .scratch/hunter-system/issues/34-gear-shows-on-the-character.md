@@ -4,8 +4,10 @@
 
 **Blocked by:** 23: Gear and tag synergies
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Each equipped item has a look, drawn on the character in every scene
 - [ ] Other players and bot teammates are seen with their own gear (it travels in snapshots)
 - [ ] Bot teammates equip gear that suits their role
+
+**2026-11-16 (developer, recorded by agent):** Triaged: build now ("this still feels very basic").

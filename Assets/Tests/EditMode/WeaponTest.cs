@@ -307,6 +307,23 @@ namespace HunterSystem.Tests
             Assert.That(world.GetPlayer(new PlayerId(2)).Bag, Is.EqualTo(new[] { Staff }));
         }
 
+        [Test]
+        public void ChangingClassInTheTestArenaWearsTheNewClassesWeapon()
+        {
+            var world = new SimulationWorld(Config());
+            world.AddPlayer(P1, Vec3.Zero, new CharacterRecord { IsNew = true, ClassId = "warrior" });
+
+            world.ChangeClassForTesting(P1, "archer");
+
+            Assert.That(world.GetPlayer(P1).Worn[(int)GearSlot.Weapon], Is.SameAs(Bow));
+            Assert.That(world.GetPlayer(P1).Bag, Is.EquivalentTo(new[] { Sword, Bow }), "the sword stays in the bag");
+
+            world.ChangeClassForTesting(P1, "warrior");
+
+            Assert.That(world.GetPlayer(P1).Worn[(int)GearSlot.Weapon], Is.SameAs(Sword));
+            Assert.That(world.GetPlayer(P1).Bag, Is.EquivalentTo(new[] { Sword, Bow }), "no second sword");
+        }
+
         // --- Validation -------------------------------------------------------------------
 
         [Test]

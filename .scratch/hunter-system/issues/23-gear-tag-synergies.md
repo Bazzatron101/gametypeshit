@@ -49,3 +49,5 @@ Not done:
 - **`DebugModifierToggles`** (F5 to F8) is still there; it can go once gear has been tried in the game.
 - **Changed from the plan above:** gear is read when a skill is used instead of going through `GrantModifier`, so a save never mixes gear modifiers with the character's own.
 - **Showing gear** on the character is ticket 34.
+
+**2026-11-15 (developer playtest, recorded by agent):** The inventory and gear "feels weird", and has had little use so far. It needs more work so you can better see what you have, and equip and unequip things. Followed up in ticket 48.

@@ -4,7 +4,7 @@
 
 **Blocked by:** 16: Decide the story premise, 19: Hub
 
-**Status:** ready-for-human (write the intel and the arrival scene; settle ticket 16)
+**Status:** ready-for-human (write the intel and the arrival scene)
 
 - [ ] Mission board shows intel for available gates, written as the guild's notices
 - [x] A scripted text scene plays in-engine with no cutscene animation
@@ -50,3 +50,5 @@ Boxes left open:
 
 
 **2026-11-15 (developer, recorded by agent):** The System is gone (ticket 16), so the board's intel is no longer in its voice; it reads as the guild's own notices. The arrival scene's System line is removed. The words are still the developer's to write.
+
+**2026-11-16 (developer, recorded by agent):** The premise is settled (ticket 16): monsters are taking over the world, the player signs up to protect the land, and an older sibling who joined first may have gone missing. The arrival scene and the Goblin Warren intel can be written to that. A first boss line for the Warlord: "Get out of my home, you pesky humans!" (more boss text later). Boss lines have no place in the game yet; a short text line when a boss fight starts would fit the text-only scenes.

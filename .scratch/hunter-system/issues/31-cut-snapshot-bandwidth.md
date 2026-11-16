@@ -4,7 +4,7 @@
 
 **Blocked by:** 14: Bot clients and 10-bot stress test
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Ten-player host upload is measured well under the current 880 KB/s by `BotStressTest` and `scripts/coop-bot-stress.ps1` (a target to agree in triage; compression alone measured about 23% of today's size)
 - [ ] Late join, rejoin and reconciliation still work (the session tests pass)
@@ -17,3 +17,5 @@
 2. **Delta snapshots** against the last snapshot each client acknowledged. Clients already acknowledge by command number, so they would also need to acknowledge the snapshot tick.
 3. **Fewer full snapshots:** for example, send deltas every 3 ticks and a full snapshot every second.
 4. **Area-of-interest culling** for big raid gates (29).
+
+**2026-11-16 (developer, recorded by agent):** Triaged: build now ("this still feels very basic").
