@@ -29,7 +29,7 @@ MonoBehaviour:
     - physical
     scalingStat: 0
     damage: 12
-    range: 2.4
+    range: 3.2
     arcDegrees: 150
     radius: 0.5
     projectileSpeed: 20
@@ -45,7 +45,7 @@ MonoBehaviour:
     - physical
     scalingStat: 0
     damage: 30
-    range: 3.6
+    range: 4.4
     arcDegrees: 35
     radius: 0.5
     projectileSpeed: 20

@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** ready-for-human (try the sword in the arena)
 
 - [x] Find out what makes it hard (see the questions below)
-- [ ] Tune or change the attack so it lands reliably, in data where possible (`PlayerTuning.asset`, the weapon assets)
+- [x] Tune or change the attack so it lands reliably, in data where possible (`PlayerTuning.asset`, the weapon assets)
 - [ ] The developer tries it again and it feels good
 
 ## Questions for the developer
@@ -26,3 +26,10 @@
 3. **As the host,** so this is not lag or prediction.
 
 Next: give the sword's light slash more reach (`IronSword.asset`, tests in `WeaponTest`), and make a landed hit clearer until animations come (a hit flash or a short pause on the enemy, a sound, a damage number).
+
+**2026-11-16 (agent):** Built.
+- **Reach:** the Iron Sword's slash goes from 2.4 m to 3.2 m, and its thrust from 3.6 m to 4.4 m (`IronSword.asset`). Soft lock-on reaches 4.5 m (was 4) so it turns you toward anything the thrust can hit (`PlayerTuning.asset`). All data; change them in the Inspector to taste.
+- **Seeing a hit land:** every hit shows a damage number over the enemy, rising and fading (`DamageNumbers`, added by the runner in every scene). Your own hits are big and yellow and pop in; other players' and teammates' are small and white. The enemy's white flash lasts a little longer (0.15 s), and its body swells for a moment when hit (`EnemyView`).
+- Not done: a hit sound (the game has no audio yet) and a hit pause.
+- Tests: PlayMode `ArenaTest.TheSwordReachesAnEnemyAFewMetresAwayAndTheHitShowsItsNumber` (a goblin 3 m away, out of the old reach, is hit, and your number shows). EditMode: 637 passed; PlayMode: 36 passed.
+- **To check:** play the arena as a Warrior and see whether the slash now feels easy to land, and whether the numbers are too much.

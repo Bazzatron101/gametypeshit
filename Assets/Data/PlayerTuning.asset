@@ -25,7 +25,7 @@ MonoBehaviour:
   heavyAttackWindupSeconds: 0.35
   heavyAttackCooldownSeconds: 1
   softLockOnEnabled: 1
-  softLockOnRange: 4
+  softLockOnRange: 4.5
   softLockOnConeDegrees: 90
   dodgeDistance: 3
   dodgeDurationSeconds: 0.25

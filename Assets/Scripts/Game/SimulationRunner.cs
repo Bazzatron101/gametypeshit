@@ -166,6 +166,7 @@ namespace HunterSystem.Game
             if (GetComponent<GearPanel>() == null) gameObject.AddComponent<GearPanel>(); // every scene with a runner can change gear (ticket 23)
             if (GetComponent<CharacterCreator>() == null) gameObject.AddComponent<CharacterCreator>(); // and make a hunter, and restyle in the hub (ticket 28)
             if (GetComponent<Nameplates>() == null) gameObject.AddComponent<Nameplates>();
+            if (GetComponent<DamageNumbers>() == null) gameObject.AddComponent<DamageNumbers>(); // a landed hit shows its number (ticket 47)
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
             var overworldScene = FindAnyObjectByType<OverworldScene>(); // an overworld scene's ground and markers (ticket 39)

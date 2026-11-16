@@ -54,6 +54,26 @@ namespace HunterSystem.Tests
         }
 
         [UnityTest]
+        public IEnumerator TheSwordReachesAnEnemyAFewMetresAwayAndTheHitShowsItsNumber()
+        {
+            var goblin = _runner.Content.Enemies.Single(e => e.name == "Goblin");
+            var sword = _runner.Content.Gear.Single(g => g.Id == "iron-sword");
+            _panel.Wear(sword);
+            var p = Player.Position;
+            _runner.SpawnEnemy(goblin, new Vector3(p.X, 0f, p.Z + 3f), null); // 3 m ahead: out of the old 2.4 m slash
+            yield return null;
+            var numbers = _runner.GetComponent<DamageNumbers>();
+            Assert.That(numbers, Is.Not.Null, "every runner shows damage numbers");
+
+            _runner.SetCommandSource(LocalPlayer, new ConstantCommandSource(new PlayerCommand(0f, 0f, lightAttack: true)));
+            yield return Until(() => numbers.Popups.Count > 0);
+
+            Assert.That(numbers.Popups, Is.Not.Empty, "the slash landed and its number shows");
+            Assert.That(numbers.Popups[0].Mine, Is.True, "your own hit, drawn big and yellow");
+            Assert.That(numbers.Popups[0].Amount, Is.GreaterThan(0));
+        }
+
+        [UnityTest]
         public IEnumerator SpawnsAChosenEnemyTypeAndClearsThem()
         {
             var hobgoblin = _runner.Content.Enemies.Single(e => e.name == "Hobgoblin");
