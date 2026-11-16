@@ -52,3 +52,14 @@ Boxes left open:
 **2026-11-15 (developer, recorded by agent):** The System is gone (ticket 16), so the board's intel is no longer in its voice; it reads as the guild's own notices. The arrival scene's System line is removed. The words are still the developer's to write.
 
 **2026-11-16 (developer, recorded by agent):** The premise is settled (ticket 16): monsters are taking over the world, the player signs up to protect the land, and an older sibling who joined first may have gone missing. The arrival scene and the Goblin Warren intel can be written to that. A first boss line for the Warlord: "Get out of my home, you pesky humans!" (more boss text later). Boss lines have no place in the game yet; a short text line when a boss fight starts would fit the text-only scenes.
+
+**2026-11-16 (developer, recorded by agent):** How the story opens, the first mission, and the tone.
+- **Opening:** the game starts with the player looking at a board of posters calling for recruits to the Adventurers Guild. The player signs up and sets out with their friends (the bot teammates, ticket 33), who take part in the story.
+- **First mission:** a training mission to clear out goblins; the guild sends the new adventurers to that gate (Goblin Warren).
+- **Tone:** some dark moments, but most missions end well, with the player doing something to help people. A player who skips the side quests has only helped themselves, not the people of the world.
+- **Beyond this ticket:** dialog between the player and their friends reveals the main character's past and what they are looking for (the missing older sibling, ticket 16). The friends as story characters and side quests are not built yet; they are ticket 52 (friends in the story) and ticket 53 (side quests).
+
+**2026-11-16 (agent):** Reshaped the blank markers to match (still markers, not drafts, per ADR 0009):
+- **Arrival scene** (five lines): narration at the poster board, the recruiting poster, narration of signing up and setting out with friends, a friend's line, and the guild giving the training mission at Goblin Warren.
+- **Goblin Warren intel:** a guild notice for the training mission (it had no slot of its own and fell back to the default).
+- The "System intel" wording is gone from Thornwood Hollow, the default intel marker, and the gate board's comments.

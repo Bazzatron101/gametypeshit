@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GateDefinitionAsset
   id: goblin-warren
   displayName: Goblin Warren
+  intel: '[Guild notice: training mission for new adventurers, clear out the goblins: write me]'
   rooms:
   - {fileID: 11400000, guid: 768e8c3926cd11a4ba1fc1b7083418cd, type: 2}
   - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}

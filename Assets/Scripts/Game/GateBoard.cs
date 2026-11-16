@@ -7,7 +7,7 @@ namespace HunterSystem.Game
 {
     /// <summary>
     /// The gate board in the hub (tickets 19 and 20). Walk up to it and press E: it lists the gates
-    /// (with the ones this host's world has cleared) and the System's intel on each, shows who in the
+    /// (with the ones this host's world has cleared) and the guild's notice on each, shows who in the
     /// party is ready, and lets each player mark themselves ready. The host takes the party in once everyone present is ready.
     /// Readiness goes to the simulation as a command, like any input; starting is the host's.
     /// With an overworld (ticket 38) the board lists only found gates in open regions, and the same

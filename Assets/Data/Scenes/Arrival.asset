@@ -16,9 +16,13 @@ MonoBehaviour:
   trigger: 0
   gate: {fileID: 0}
   lines:
-  - speaker: 
-    text: '[Narration: arriving at the guild hall: write me]'
+  - speaker:
+    text: '[Narration: the player stands before a board of posters: write me]'
+  - speaker: '[Poster]'
+    text: '[The recruiting poster: join the Adventurers Guild: write me]'
+  - speaker:
+    text: '[Narration: the player signs up and sets out with their friends: write me]'
+  - speaker: '[Friend]'
+    text: '[A friend speaks as the adventure begins: write me]'
   - speaker: '[Guild NPC]'
-    text: '[A guild member greets the new E-rank hunter: write me]'
-  - speaker: '[Guild NPC]'
-    text: '[Points the hunter to the gate board: write me]'
+    text: '[The guild gives the new adventurers a training mission: clear out the goblins at the Goblin Warren gate: write me]'

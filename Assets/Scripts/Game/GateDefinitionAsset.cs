@@ -14,8 +14,8 @@ namespace HunterSystem.Game
     {
         [SerializeField, Tooltip("Stable id used in saves and over the network. Never change it once players have it.")] private string id = "new-gate";
         [SerializeField] private string displayName = "New Gate";
-        [SerializeField, TextArea(2, 6), Tooltip("What the gate board says about this gate, in the System's voice (ticket 20)")]
-        private string intel = "[System intel for this gate: " + TextSceneAsset.Unwritten + "]";
+        [SerializeField, TextArea(2, 6), Tooltip("What the gate board says about this gate, written as the guild's notice (ticket 20)")]
+        private string intel = "[Guild notice for this gate: " + TextSceneAsset.Unwritten + "]";
         [SerializeField, Tooltip("In order from the entrance. The same piece may appear more than once.")] private RoomPieceAsset[] rooms = new RoomPieceAsset[0];
         [SerializeField, Min(0), Tooltip("Solo: revives at the latest checkpoint before the gate starts again")] private int soloRevives = 3;
         [SerializeField, Min(0.5f), Tooltip("How close a player must come to a checkpoint to reach it, in metres")] private float checkpointRadius = 2f;
