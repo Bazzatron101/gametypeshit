@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using HunterSystem.Simulation;
 
 namespace HunterSystem.Netcode
@@ -65,6 +66,17 @@ namespace HunterSystem.Netcode
         }
 
         public SimulationWorld World { get; }
+
+        /// <summary>
+        /// Out in the overworld, each client is sent only the players, enemies and projectiles within this many metres of
+        /// its player, and only the events about them (ticket 41). In a gate or the hub, everything.
+        /// </summary>
+        public float InterestRadius { get; set; } = 200f;
+
+        /// <summary>How often (in snapshots) far party members' positions ride along, for the map: 20 at 20 a second is once a second.</summary>
+        public int FarPlayersEverySnapshots { get; set; } = 20;
+
+        private int _snapshotsSent;
 
         /// <summary>The host's own player, once added.</summary>
         public PlayerId LocalPlayerId { get; private set; }
@@ -152,12 +164,8 @@ namespace HunterSystem.Netcode
             if (++_ticksSinceSnapshot >= _snapshotEveryTicks)
             {
                 _ticksSinceSnapshot = 0;
-                var snapshot = CurrentSnapshot();
-                snapshot.Events = SimulationEventCodec.Encode(_eventsSinceSnapshot);
+                SendSnapshots();
                 _eventsSinceSnapshot.Clear();
-                var message = Wire.Snapshot(snapshot);
-                LastSnapshotSize = message.Length;
-                foreach (var connection in _byConnection.Keys) Send(connection, message);
             }
         }
 
@@ -303,7 +311,7 @@ namespace HunterSystem.Netcode
             remote.ResetConnection(connection);
             World.SetAway(remote.Id, false);
             _byConnection[connection] = remote;
-            Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot()));
+            Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot(World.InterestOf(remote.Id, InterestRadius))));
         }
 
         private void BringNewerCharacter(PlayerId id, byte[] characterBytes)
@@ -326,10 +334,44 @@ namespace HunterSystem.Netcode
             _transport.Send(connection, message);
         }
 
-        private SnapshotMessage CurrentSnapshot()
+        /// <summary>
+        /// Everyone together (a gate, the hub): one snapshot, the same bytes to every client. Out in the overworld: each
+        /// client its own, cut down to what is near its player (ticket 41), with far party members' positions now and then.
+        /// </summary>
+        private void SendSnapshots()
         {
-            var snapshot = new SnapshotMessage { Tick = World.Tick, World = World.CaptureSnapshot() };
-            foreach (var remote in _remotes) snapshot.LastProcessedSequence[remote.Id.Value] = remote.LastProcessed;
+            _snapshotsSent++;
+            if (!World.InOverworld)
+            {
+                var snapshot = CurrentSnapshot(SnapshotInterest.Everything);
+                snapshot.Events = SimulationEventCodec.Encode(_eventsSinceSnapshot);
+                var message = Wire.Snapshot(snapshot);
+                LastSnapshotSize = message.Length;
+                foreach (var connection in _byConnection.Keys) Send(connection, message);
+                return;
+            }
+
+            var withFarPlayers = FarPlayersEverySnapshots > 0 && _snapshotsSent % FarPlayersEverySnapshots == 0;
+            foreach (var (connection, remote) in _byConnection)
+            {
+                var interest = World.InterestOf(remote.Id, InterestRadius);
+                var snapshot = CurrentSnapshot(interest);
+                snapshot.Events = SimulationEventCodec.Encode(_eventsSinceSnapshot.Where(interest.Includes));
+                if (withFarPlayers)
+                    foreach (var (id, position) in World.PlayerPositions())
+                        if (!interest.Includes(id)) snapshot.FarPlayers[id.Value] = (position.X, position.Z);
+                var message = Wire.Snapshot(snapshot);
+                LastSnapshotSize = message.Length;
+                Send(connection, message);
+            }
+        }
+
+        private SnapshotMessage CurrentSnapshot(SnapshotInterest interest)
+        {
+            var snapshot = new SnapshotMessage { Tick = World.Tick, World = World.CaptureSnapshot(interest) };
+            foreach (var remote in _remotes)
+                if (interest.IsEverything || interest.Viewer == remote.Id) // a cut-down snapshot only needs its own client's
+                    snapshot.LastProcessedSequence[remote.Id.Value] = remote.LastProcessed;
             return snapshot;
         }
     }

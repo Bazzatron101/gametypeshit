@@ -27,8 +27,19 @@ namespace HunterSystem.Simulation
             return world;
         }
 
-        public byte[] CaptureSnapshot()
+        public byte[] CaptureSnapshot() => CaptureSnapshot(SnapshotInterest.Everything);
+
+        /// <summary>
+        /// A snapshot holding only what <paramref name="interest"/> includes (ticket 41). Everything else in the world
+        /// is the same, so it restores as a whole world without the left-out players, enemies and projectiles.
+        /// </summary>
+        public byte[] CaptureSnapshot(SnapshotInterest interest)
         {
+            interest ??= SnapshotInterest.Everything;
+            var players = _players.Where(p => interest.Includes(p.Id)).ToList();
+            var enemies = _enemies.Where(e => interest.Includes(e.Id)).ToList();
+            var projectiles = _projectiles.Where(p => interest.IncludesProjectile(p.Id)).ToList();
+
             using var stream = new MemoryStream();
             using var w = new BinaryWriter(stream);
             w.Write(SnapshotMagic);
@@ -39,18 +50,18 @@ namespace HunterSystem.Simulation
             // Definitions shared by several enemies, and per-use skill records shared by several
             // bolts, are written once and referred to by index, so the sharing survives a restore.
             // A boss's adds are in the table too (and referred to by index), so they stay shared after a restore.
-            var enemyDefinitions = _enemies.Select(e => e.Definition)
+            var enemyDefinitions = enemies.Select(e => e.Definition)
                 .SelectMany(d => d.Boss == null ? new[] { d } : new[] { d }.Concat(d.Boss.EnrageAdds.Select(a => a.Enemy)))
                 .Distinct().ToList();
-            var resolvedSkills = _projectiles.Select(p => p.Resolved).Distinct().ToList();
+            var resolvedSkills = projectiles.Select(p => p.Resolved).Distinct().ToList();
 
-            w.Write(_players.Count);
-            foreach (var p in _players) WritePlayer(w, p);
+            w.Write(players.Count);
+            foreach (var p in players) WritePlayer(w, p);
 
             w.Write(enemyDefinitions.Count);
             foreach (var d in enemyDefinitions) WriteEnemyDefinition(w, d, enemyDefinitions);
-            w.Write(_enemies.Count);
-            foreach (var e in _enemies)
+            w.Write(enemies.Count);
+            foreach (var e in enemies)
             {
                 w.Write(e.Id.Value);
                 w.Write(enemyDefinitions.IndexOf(e.Definition));
@@ -88,11 +99,11 @@ namespace HunterSystem.Simulation
                 w.Write(r.SpreadDegrees);
                 w.Write(r.ExplosionRadius);
                 w.Write(r.ExplosionDamagePercent);
-                WriteIds(w, r.DirectlyHit.Select(e => e.Id.Value));
-                WriteIds(w, r.Burned.Select(e => e.Id.Value));
+                WriteIds(w, r.DirectlyHit.Where(e => interest.Includes(e.Id)).Select(e => e.Id.Value));
+                WriteIds(w, r.Burned.Where(e => interest.Includes(e.Id)).Select(e => e.Id.Value));
             }
-            w.Write(_projectiles.Count);
-            foreach (var p in _projectiles)
+            w.Write(projectiles.Count);
+            foreach (var p in projectiles)
             {
                 w.Write(p.Id);
                 w.Write(p.Owner.Id.Value);

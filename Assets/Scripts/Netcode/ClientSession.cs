@@ -119,6 +119,14 @@ namespace HunterSystem.Netcode
 
         public void Disconnect() => _transport.Disconnect();
 
+        private readonly Dictionary<PlayerId, Vec3> _farPlayers = new Dictionary<PlayerId, Vec3>();
+
+        /// <summary>
+        /// Party members too far away to be in this client's world (ticket 41): where they were last heard of, on the
+        /// floor, for a map. Updated about once a second; a player who comes near is in the world instead.
+        /// </summary>
+        public IReadOnlyDictionary<PlayerId, Vec3> FarPlayers => _farPlayers;
+
         private void ReceiveAll()
         {
             SnapshotMessage latest = null;
@@ -141,6 +149,7 @@ namespace HunterSystem.Netcode
                     case MessageType.Snapshot when IsJoined:
                         latest = Wire.ReadSnapshot(payload); // only the newest world matters...
                         ShowHostEvents(latest);              // ...but every snapshot's events do
+                        foreach (var pair in latest.FarPlayers) _farPlayers[new PlayerId(pair.Key)] = new Vec3(pair.Value.x, 0f, pair.Value.z);
                         break;
                     case MessageType.Refused:
                         RefusalReason = Wire.ReadRefused(payload);
@@ -148,6 +157,7 @@ namespace HunterSystem.Netcode
                 }
             }
             if (latest != null) Reconcile(latest);
+            if (IsJoined) foreach (var id in World.PlayerIds) _farPlayers.Remove(id); // near again: the world has them in full
         }
 
         private void Reconcile(SnapshotMessage snapshot)

@@ -34,6 +34,12 @@ namespace HunterSystem.Netcode
         public readonly Dictionary<int, int> LastProcessedSequence = new Dictionary<int, int>();
         public byte[] World;
         public byte[] Events = Array.Empty<byte>();
+
+        /// <summary>
+        /// Party members the cut-down world leaves out, far away in the overworld (ticket 41): where they stand on the
+        /// floor, for a map. Sent only now and then; empty in most snapshots.
+        /// </summary>
+        public readonly Dictionary<int, (float x, float z)> FarPlayers = new Dictionary<int, (float x, float z)>();
     }
 
     /// <summary>Message encoding. Compact binary, little-endian, no reflection.</summary>
@@ -164,6 +170,13 @@ namespace HunterSystem.Netcode
             w.Write(s.World);
             w.Write(s.Events.Length);
             w.Write(s.Events);
+            w.Write(s.FarPlayers.Count);
+            foreach (var pair in s.FarPlayers)
+            {
+                w.Write(pair.Key);
+                w.Write(pair.Value.x);
+                w.Write(pair.Value.z);
+            }
         }
 
         private static SnapshotMessage ReadSnapshot(BinaryReader r)
@@ -172,6 +185,7 @@ namespace HunterSystem.Netcode
             for (int i = 0, n = r.ReadInt32(); i < n; i++) s.LastProcessedSequence[r.ReadInt32()] = r.ReadInt32();
             s.World = r.ReadBytes(r.ReadInt32());
             s.Events = r.ReadBytes(r.ReadInt32());
+            for (int i = 0, n = r.ReadInt32(); i < n; i++) s.FarPlayers[r.ReadInt32()] = (r.ReadSingle(), r.ReadSingle());
             return s;
         }
 
