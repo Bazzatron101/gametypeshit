@@ -43,6 +43,79 @@ MonoBehaviour:
   landmarks:
   - label: Lookout Hill
     position: {x: -180, y: 52.837063, z: 160}
+  buildings:
+  - kindId: guild-hall
+    position: {x: -400, y: 10.170299, z: -79}
+    yaw: 180
+    footprint: {x: 12, y: 9}
+  - kindId: inn
+    position: {x: -418.5456, y: 10.170299, z: -93.97417}
+    yaw: 108.00001
+    footprint: {x: 9, y: 7}
+  - kindId: shop
+    position: {x: -383.68274, y: 10.170299, z: -107.59911}
+    yaw: -65.02815
+    footprint: {x: 6, y: 6}
+  - kindId: well
+    position: {x: -400, y: 10.170299, z: -108.4}
+    yaw: 0
+    footprint: {x: 2.4, y: 2.4}
+  - kindId: cottage
+    position: {x: -416.1779, y: 10.170299, z: -106.67278}
+    yaw: 67.585655
+    footprint: {x: 5, y: 4.5}
+  - kindId: cottage
+    position: {x: -409.95337, y: 10.170299, z: -114.39376}
+    yaw: 34.664112
+    footprint: {x: 5, y: 4.5}
+  - kindId: house
+    position: {x: -399.77148, y: 10.170299, z: -117.99855}
+    yaw: -0.72741586
+    footprint: {x: 6, y: 5}
+  - kindId: house
+    position: {x: -418.9802, y: 10.170299, z: -80.79709}
+    yaw: 135.33418
+    footprint: {x: 6, y: 5}
+  - kindId: long-house
+    position: {x: -385.50037, y: 10.170299, z: -73.7367}
+    yaw: -151.09749
+    footprint: {x: 8, y: 5}
+  - kindId: long-house
+    position: {x: -427.7332, y: 10.170299, z: -88.56013}
+    yaw: 112.41604
+    footprint: {x: 8, y: 5}
+  - kindId: long-house
+    position: {x: -429.98203, y: 10.170299, z: -101.038475}
+    yaw: 88.016266
+    footprint: {x: 8, y: 5}
+  - kindId: house
+    position: {x: -379.03314, y: 10.170299, z: -82.988525}
+    yaw: -129.05415
+    footprint: {x: 6, y: 5}
+  - kindId: house
+    position: {x: -424.67017, y: 10.170299, z: -110.9719}
+    yaw: 66.0232
+    footprint: {x: 6, y: 5}
+  - kindId: cottage
+    position: {x: -382.72784, y: 10.170299, z: -118.75961}
+    yaw: -42.636063
+    footprint: {x: 5, y: 4.5}
+  - kindId: long-house
+    position: {x: -420.23965, y: 10.170299, z: -122.14398}
+    yaw: 42.42741
+    footprint: {x: 8, y: 5}
+  - kindId: long-house
+    position: {x: -370.6955, y: 10.170299, z: -106.422295}
+    yaw: -77.63865
+    footprint: {x: 8, y: 5}
+  - kindId: house
+    position: {x: -390.32825, y: 10.170299, z: -125.20828}
+    yaw: -20.990473
+    footprint: {x: 6, y: 5}
+  - kindId: long-house
+    position: {x: -409.39798, y: 10.170299, z: -128.48996}
+    yaw: 18.25614
+    footprint: {x: 8, y: 5}
   startingRegions:
   - greenmarch
   entranceRadius: 3

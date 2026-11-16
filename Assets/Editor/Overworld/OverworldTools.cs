@@ -35,6 +35,20 @@ namespace HunterSystem.Editor
         [MenuItem("Hunter System/Overworld/Bake")]
         public static void BakeFromMenu() => Bake(SceneOverworld(), SceneSource());
 
+        /// <summary>
+        /// For batch mode: opens the scene named by -scene (default the test patch), bakes it and saves it. Unlike a
+        /// rebuild it leaves the game content alone. Unity -batchmode -quit -executeMethod HunterSystem.Editor.OverworldTools.BakeSceneBatch -scene Assets/Scenes/OverworldPatch.unity
+        /// </summary>
+        public static void BakeSceneBatch()
+        {
+            var args = Environment.GetCommandLineArgs();
+            var at = Array.IndexOf(args, "-scene");
+            var path = at >= 0 && at + 1 < args.Length ? args[at + 1] : GreyboxSceneBuilder.OverworldPatchScenePath;
+            var opened = EditorSceneManager.OpenScene(path);
+            Bake(SceneOverworld(), SceneSource());
+            EditorSceneManager.SaveScene(opened);
+        }
+
         private static OverworldScene SceneOverworld()
         {
             var scene = Object.FindAnyObjectByType<OverworldScene>();
@@ -143,6 +157,13 @@ namespace HunterSystem.Editor
 
         public static OverworldAsset Bake(OverworldScene scene, OverworldSourceAsset source)
         {
+            // A scene made before ticket 49 is given the environment, so it is dressed once baked.
+            if (scene.Environment == null && AssetDatabase.LoadAssetAtPath<EnvironmentAsset>(EnvironmentArtSetup.EnvironmentPath) is { } environment)
+            {
+                scene.SetEnvironment(environment);
+                EditorUtility.SetDirty(scene);
+                EditorSceneManager.MarkSceneDirty(scene.gameObject.scene);
+            }
             source.heights.Refresh();
             if (source.bakeFromRecipe) return BakeFromRecipe(source);
             var root = GameObject.Find(TerrainRootName) ?? throw new System.InvalidOperationException("Generate the terrain tiles first.");
@@ -181,6 +202,11 @@ namespace HunterSystem.Editor
             var kinds = GroundBake.Classify(heights, columns, rows, cellSize, source.rules, (c, r) => climbable[r * columns + c],
                 (c, r) => source.heights.IsPaintedWater(areaMin.x + (c + 0.5f) * cellSize, areaMin.y + (r + 0.5f) * cellSize, areaMin, areaSize));
             var ground = new HeightmapGround(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds);
+
+            // Towns and villages get their buildings (ticket 49), and nobody walks through them: their footprints are blocked.
+            var buildings = PlanBuildings(source, (x, z) => ground.HeightAt(new Vec3(x, 0f, z)), (x, z) => ground.KindAt(new Vec3(x, 0f, z)) == GroundKind.Walkable);
+            BlockFootprints(kinds, columns, rows, source.origin.x, source.origin.y, cellSize, buildings);
+            ground = new HeightmapGround(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds);
 
             // One file per tile, streamed in as players move (ticket 40, ADR 0020); each holds its own edge samples.
             EnsureFolders(source.TileFolderAsset);
@@ -221,7 +247,7 @@ namespace HunterSystem.Editor
             AssetDatabase.Refresh();
             var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
 
-            var asset = WriteOverworldAsset(source, coarseAsset, p => OnGround(ground, p), out var gateCount, out var roadCount);
+            var asset = WriteOverworldAsset(source, coarseAsset, p => OnGround(ground, p), buildings, out var gateCount, out var roadCount);
             Debug.Log($"Baked {source.outputName}: {columns} × {rows} cells of {cellSize:0.###} m, {gateCount} gates, {roadCount} roads, " +
                       $"{kinds.Count(k => k == GroundKind.Blocked)} blocked, {kinds.Count(k => k == GroundKind.Water)} water, {kinds.Count(k => k == GroundKind.Climbable)} climbable cells.");
             return asset;
@@ -256,6 +282,11 @@ namespace HunterSystem.Editor
             var tileClimb = new bool[cellsPerTile * cellsPerTile];
             var total = source.tilesX * source.tilesZ;
             var interactive = !Application.isBatchMode;
+
+            // Towns and villages get their buildings (ticket 49), planned on the recipe's ground; each tile blocks the footprints on it.
+            var dryAbove = source.rules.seaLevel + 1.5f;
+            var buildings = PlanBuildings(source, (x, z) => heights.Sample(x, z, areaMin, areaSize),
+                (x, z) => heights.Sample(x, z, areaMin, areaSize) >= dryAbove && !heights.IsPaintedWater(x, z, areaMin, areaSize));
             try
             {
                 for (var j = 0; j < source.tilesZ; j++)
@@ -295,6 +326,7 @@ namespace HunterSystem.Editor
                     var kinds = GroundBake.Classify(tileHeights, cellsPerTile, cellsPerTile, cellSize, source.rules,
                         (c, r) => tileClimb[r * cellsPerTile + c],
                         (c, r) => heights.IsPaintedWater(minX + (c + 0.5f) * cellSize, minZ + (r + 0.5f) * cellSize, areaMin, areaSize));
+                    BlockFootprints(kinds, cellsPerTile, cellsPerTile, minX, minZ, cellSize, buildings);
                     foreach (var k in kinds)
                     {
                         if (k == GroundKind.Blocked) blocked++;
@@ -326,14 +358,15 @@ namespace HunterSystem.Editor
             var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
 
             Vector3 OnRecipe(Vector3 p) => new Vector3(p.x, heights.Sample(p.x, p.z, areaMin, areaSize), p.z);
-            var asset = WriteOverworldAsset(source, coarseAsset, OnRecipe, out var gateCount, out var roadCount);
+            var asset = WriteOverworldAsset(source, coarseAsset, OnRecipe, buildings, out var gateCount, out var roadCount);
             Debug.Log($"Baked {source.outputName} from its recipe in {clock.Elapsed.TotalSeconds:0.0} s: {total} tiles ({sculpted} sculpted), " +
-                      $"{gateCount} gates, {roadCount} roads, {blocked} blocked, {water} water, {climbable} climbable cells.");
+                      $"{gateCount} gates, {roadCount} roads, {buildings.Count} buildings, {blocked} blocked, {water} water, {climbable} climbable cells.");
             return asset;
         }
 
         /// <summary>The overworld asset from the scene's markers: gates, the town, roads and landmarks, each put on the ground.</summary>
-        private static OverworldAsset WriteOverworldAsset(OverworldSourceAsset source, TextAsset coarseAsset, Func<Vector3, Vector3> onGround, out int gateCount, out int roadCount)
+        private static OverworldAsset WriteOverworldAsset(OverworldSourceAsset source, TextAsset coarseAsset, Func<Vector3, Vector3> onGround,
+            List<OverworldAsset.BuildingData> buildings, out int gateCount, out int roadCount)
         {
             var gates = new List<OverworldAsset.GateSiteData>();
             var roads = new List<OverworldAsset.RoadData>();
@@ -355,6 +388,7 @@ namespace HunterSystem.Editor
                         roads.Add(new OverworldAsset.RoadData { halfWidth = marker.Radius, points = marker.RoadPoints().Select(onGround).ToList() });
                         break;
                     case OverworldMarkerKind.Landmark:
+                    case OverworldMarkerKind.Village: // a village is named on the map like any landmark
                         landmarks.Add(new OverworldAsset.LandmarkData { label = marker.Label, position = at });
                         break;
                 }
@@ -369,12 +403,92 @@ namespace HunterSystem.Editor
             }
             asset.Set(source.origin, source.tileSize, source.tilesX, source.tilesZ, source.TileFolder, coarseAsset,
                 gates, town != null, town != null ? onGround(town.transform.position) : Vector3.zero, town != null ? town.Radius : 0f,
-                roads, landmarks, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize);
+                roads, landmarks, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize, buildings);
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
             gateCount = gates.Count;
             roadCount = roads.Count;
             return AssetDatabase.LoadAssetAtPath<OverworldAsset>(source.OverworldPath);
+        }
+
+        // --- Buildings (ticket 49) ------------------------------------------------------------------------
+
+        /// <summary>
+        /// Lays out the buildings of the scene's town and villages (<see cref="TownPlanner"/>) from the environment's
+        /// building kinds, on the ground given, off the roads and clear of the gate board. None without an environment.
+        /// </summary>
+        public static List<OverworldAsset.BuildingData> PlanBuildings(OverworldSourceAsset source, Func<float, float, float> heightAt, Func<float, float, bool> buildable)
+        {
+            var result = new List<OverworldAsset.BuildingData>();
+            var environment = AssetDatabase.LoadAssetAtPath<EnvironmentAsset>(EnvironmentArtSetup.EnvironmentPath);
+            if (environment == null || environment.buildings.Length == 0) return result;
+            var kinds = environment.buildings.Where(b => b != null && !string.IsNullOrEmpty(b.id))
+                .Select(b => new TownPlanner.Kind(b.id, b.role, b.footprint)).ToList();
+
+            var markers = Object.FindObjectsByType<OverworldMarker>(FindObjectsSortMode.InstanceID);
+            var roads = markers.Where(m => m.Kind == OverworldMarkerKind.Road)
+                .Select(m => (line: m.RoadPoints().Select(p => new Vector2(p.x, p.z)).ToList(), halfWidth: m.Radius)).ToList();
+            float DistanceToRoad(float x, float z)
+            {
+                var best = float.PositiveInfinity;
+                foreach (var (line, halfWidth) in roads) best = Mathf.Min(best, HeightSource.DistanceToLine(new Vector2(x, z), line, out _) - halfWidth);
+                return best;
+            }
+
+            var hubGuid = AssetDatabase.FindAssets("t:HubAsset").FirstOrDefault();
+            var hubAsset = hubGuid != null ? AssetDatabase.LoadAssetAtPath<HubAsset>(AssetDatabase.GUIDToAssetPath(hubGuid)) : null;
+            var hub = hubAsset != null ? hubAsset.ToDefinition() : null;
+            var board = hub != null ? new Vector2(hub.BoardOffset.X, hub.BoardOffset.Z) : new Vector2(0f, 7f);
+
+            foreach (var marker in markers.Where(m => m.Kind == OverworldMarkerKind.Town || m.Kind == OverworldMarkerKind.Village))
+            {
+                var centre = new Vector2(marker.transform.position.x, marker.transform.position.z);
+                var isTown = marker.Kind == OverworldMarkerKind.Town;
+                var site = new TownPlanner.Site
+                {
+                    Centre = centre,
+                    Radius = marker.Radius,
+                    Style = isTown ? TownStyle.GuildTown : marker.Castle ? TownStyle.Castle : TownStyle.Village,
+                    SquareRadius = isTown ? environment.squareRadius : environment.squareRadius * 0.6f,
+                    RoadClearance = environment.roadClearance,
+                    Gap = environment.buildingGap,
+                    HeightAt = heightAt,
+                    Buildable = buildable,
+                };
+                if (roads.Count > 0) site.DistanceToRoad = DistanceToRoad;
+                if (isTown) site.KeepClear.Add((centre + board, 4f));
+                foreach (var p in TownPlanner.Plan(site, kinds))
+                {
+                    // It stands on its lowest corner, so no gap shows underneath on a gentle slope.
+                    var low = TownPlanner.Corners(p, 0f).Append(p.Centre).Min(c => heightAt(c.x, c.y));
+                    result.Add(new OverworldAsset.BuildingData { kindId = p.Id, position = new Vector3(p.Centre.x, low, p.Centre.y), yaw = p.Yaw, footprint = p.Footprint });
+                }
+            }
+            return result;
+        }
+
+        /// <summary>Marks every cell whose middle lies under a building as blocked. Returns how many it changed.</summary>
+        public static int BlockFootprints(GroundKind[] kinds, int columns, int rows, float minX, float minZ, float cellSize, IReadOnlyList<OverworldAsset.BuildingData> buildings)
+        {
+            var count = 0;
+            foreach (var b in buildings)
+            {
+                var reach = b.footprint.magnitude / 2f;
+                var c0 = Mathf.Max(0, Mathf.FloorToInt((b.position.x - reach - minX) / cellSize));
+                var c1 = Mathf.Min(columns - 1, Mathf.FloorToInt((b.position.x + reach - minX) / cellSize));
+                var r0 = Mathf.Max(0, Mathf.FloorToInt((b.position.z - reach - minZ) / cellSize));
+                var r1 = Mathf.Min(rows - 1, Mathf.FloorToInt((b.position.z + reach - minZ) / cellSize));
+                for (var r = r0; r <= r1; r++)
+                for (var c = c0; c <= c1; c++)
+                {
+                    var x = minX + (c + 0.5f) * cellSize;
+                    var z = minZ + (r + 0.5f) * cellSize;
+                    if (!TownPlanner.Contains(new Vector2(b.position.x, b.position.z), b.yaw, b.footprint, x, z)) continue;
+                    if (kinds[r * columns + c] != GroundKind.Blocked) count++;
+                    kinds[r * columns + c] = GroundKind.Blocked;
+                }
+            }
+            return count;
         }
 
         // --- Helpers ---------------------------------------------------------------------------------

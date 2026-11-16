@@ -28,6 +28,7 @@ namespace HunterSystem.Editor
         public static void BuildOverworldPatch()
         {
             var source = GetOrCreatePatchSource();
+            EnvironmentArtSetup.SetUp(); // nature and buildings (ticket 49)
             BuildScene(OverworldPatchScenePath, simulation =>
             {
                 Object.DestroyImmediate(GameObject.Find("Floor")); // the ground is the overworld's
@@ -61,13 +62,14 @@ namespace HunterSystem.Editor
                 };
                 var sea = GetOrCreateMaterial("Overworld_Sea", new Color(0.2f, 0.42f, 0.65f));
                 var gateMarker = GetOrCreateMaterial("Greybox_Portal", new Color(0.55f, 0.95f, 1f));
+                var environment = AssetDatabase.LoadAssetAtPath<EnvironmentAsset>(EnvironmentArtSetup.EnvironmentPath);
                 var overworld = new GameObject("Overworld").AddComponent<OverworldScene>();
-                overworld.Set(null, source, surfaces, sea, gateMarker);
+                overworld.Set(null, source, surfaces, sea, gateMarker, environment);
                 PlacePatchMarkers(overworld.transform);
 
                 OverworldTools.Generate(overworld, source);
                 var baked = OverworldTools.Bake(overworld, source);
-                overworld.Set(baked, source, surfaces, sea, gateMarker);
+                overworld.Set(baked, source, surfaces, sea, gateMarker, environment);
 
                 // The board stands in the town, where the hub puts it.
                 var hub = AssetDatabase.LoadAssetAtPath<HubAsset>(HubPath);

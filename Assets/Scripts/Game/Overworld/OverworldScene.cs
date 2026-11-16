@@ -24,14 +24,28 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Tiles this close to a player are loaded. Set for a mount (16 m/s), not walking.")] private float loadRadius = 600f;
         [SerializeField, Min(0f), Tooltip("Tiles further than this from every player are dropped")] private float unloadRadius = 800f;
         [SerializeField, Tooltip("Editor only: where the heights come from (an OverworldSourceAsset), for the menu's generate and bake")] private ScriptableObject source;
+        [SerializeField, Tooltip("Nature and buildings to dress the world with (ticket 49); none leaves it bare")] private EnvironmentAsset environment;
 
         private TiledGround _ground;
         private TileStreamer _streamer;
         private SimulationRunner _runner;
         private readonly Dictionary<TileCoord, (MeshRenderer far, GameObject near)> _shown = new Dictionary<TileCoord, (MeshRenderer, GameObject)>();
+        private EnvironmentView _environmentView;
+        private EnvironmentScatter.World _scatter;
+
+        /// <summary>What a tile brings besides its ground: its near mesh, and its nature (ticket 49).</summary>
+        private sealed class TileShown
+        {
+            public FlatTerrainMesh.MeshData Mesh;
+            public Matrix4x4[][] Props;
+        }
 
         public OverworldAsset Overworld => overworld;
         public ScriptableObject Source => source;
+        public EnvironmentAsset Environment => environment;
+
+        /// <summary>The nature on the loaded tiles, once the scene is playing (null with no environment).</summary>
+        public EnvironmentView EnvironmentView => _environmentView;
         public TiledGround Ground => _ground;
         public TileStreamer Streamer => _streamer;
 
@@ -68,7 +82,11 @@ namespace HunterSystem.Game
             if (overworld == null || !overworld.IsBaked) return;
             _ground ??= overworld.CreateTiledGround();
             overworld.DistanceToRoad(0f, 0f); // fills its cache here, so tile meshes can read it off the main thread
+            overworld.IsUnderBuilding(0f, 0f); // likewise
+            _scatter = ScatterWorld(environment, overworld);
+            _environmentView = environment != null ? new EnvironmentView(environment, _ground.TileSize) : null;
             Shown = BuildFarGround();
+            EnvironmentView.PlaceBuildings(environment, overworld, Shown.transform);
             _streamer = NewStreamer();
 
             // The first tiles load before anyone moves: around the scene's players and the town.
@@ -88,6 +106,36 @@ namespace HunterSystem.Game
         }
 
         private void Start() => _runner = FindAnyObjectByType<SimulationRunner>();
+
+        private void LateUpdate()
+        {
+            if (_environmentView == null) return;
+            var eye = Camera.main != null ? Camera.main.transform.position : Vector3.zero;
+            _environmentView.Draw(eye);
+        }
+
+        /// <summary>
+        /// The scatter's view of this world (ticket 49), made on the main thread: the kinds' rules, the sea and
+        /// beach, roads, and the clear areas (the town, each gate entrance, each building).
+        /// </summary>
+        public static EnvironmentScatter.World ScatterWorld(EnvironmentAsset environment, OverworldAsset overworld)
+        {
+            if (environment == null || overworld == null) return null;
+            var clear = new List<EnvironmentScatter.ClearArea>();
+            if (overworld.HasTown) clear.Add(new EnvironmentScatter.ClearArea(overworld.TownCentre.x, overworld.TownCentre.z, overworld.TownRadius));
+            foreach (var gate in overworld.Gates) clear.Add(new EnvironmentScatter.ClearArea(gate.entrance.x, gate.entrance.z, 6f));
+            foreach (var b in overworld.Buildings)
+                if (b != null) clear.Add(new EnvironmentScatter.ClearArea(b.position.x, b.position.z, b.footprint.magnitude / 2f + 1f));
+            var kinds = new EnvironmentScatter.Rules[environment.props.Length];
+            for (var i = 0; i < kinds.Length; i++)
+                kinds[i] = environment.props[i] != null ? EnvironmentScatter.Rules.From(environment.props[i], i) : default;
+            overworld.DistanceToRoad(0f, 0f);
+            return new EnvironmentScatter.World
+            {
+                Seed = environment.seed, Kinds = kinds, SeaLevel = overworld.SeaLevel, SandAboveSea = overworld.SandAboveSea,
+                DistanceToRoad = overworld.DistanceToRoad, Clear = clear.ToArray(),
+            };
+        }
 
         private void Update()
         {
@@ -134,26 +182,31 @@ namespace HunterSystem.Game
             var sea = overworld.SeaLevel;
             var sand = overworld.SandAboveSea;
             var asset = overworld;
+            var scatter = _scatter;
             return Task.Run(() =>
             {
                 var ground = GroundBake.Decode(System.IO.File.ReadAllBytes(path));
                 var mesh = FlatTerrainMesh.BuildData(ground, corner.X, corner.Z, size, cell,
-                    at => FlatTerrainMesh.SurfaceAt(ground, at, sea, sand, asset.DistanceToRoad));
-                return new TilePayload { Ground = ground, Extra = mesh };
+                    at => FlatTerrainMesh.SurfaceAt(ground, at, sea, sand, asset.DistanceToRoad, asset.IsUnderBuilding));
+                var props = scatter != null ? EnvironmentScatter.Scatter(ground, corner.X, corner.Z, size, scatter) : null;
+                return new TilePayload { Ground = ground, Extra = new TileShown { Mesh = mesh, Props = props } };
             });
         }
 
         private void OnTileLoaded(TileCoord tile, TilePayload payload)
         {
-            if (!_shown.TryGetValue(tile, out var shown) || payload.Extra is not FlatTerrainMesh.MeshData data) return;
+            if (!_shown.TryGetValue(tile, out var shown) || payload.Extra is not TileShown extra) return;
             if (shown.near != null) Destroy(shown.near);
-            var near = MeshObject("Near", shown.far.transform.parent, FlatTerrainMesh.ToMesh(data), SurfaceMaterials());
+            var near = MeshObject("Near", shown.far.transform.parent, FlatTerrainMesh.ToMesh(extra.Mesh), SurfaceMaterials());
             shown.far.enabled = false;
             _shown[tile] = (shown.far, near.gameObject);
+            var corner = _ground.CornerOf(tile);
+            _environmentView?.AddTile(tile, new Vector3(corner.X + _ground.TileSize / 2f, 0f, corner.Z + _ground.TileSize / 2f), extra.Props);
         }
 
         private void OnTileUnloaded(TileCoord tile)
         {
+            _environmentView?.RemoveTile(tile);
             if (!_shown.TryGetValue(tile, out var shown)) return;
             if (shown.near != null)
             {
@@ -180,7 +233,7 @@ namespace HunterSystem.Game
                 tileObject.transform.position = new Vector3(corner.X, 0f, corner.Z);
                 var far = MeshObject("Far", tileObject.transform,
                     FlatTerrainMesh.Build(coarse, corner.X, corner.Z, _ground.TileSize, overworld.FarMeshCellSize,
-                        at => FlatTerrainMesh.SurfaceAt(coarse, at, overworld.SeaLevel, overworld.SandAboveSea, overworld.DistanceToRoad)),
+                        at => FlatTerrainMesh.SurfaceAt(coarse, at, overworld.SeaLevel, overworld.SandAboveSea, overworld.DistanceToRoad, overworld.IsUnderBuilding)),
                     SurfaceMaterials());
                 _shown[tile] = (far, null);
             }
@@ -234,8 +287,12 @@ namespace HunterSystem.Game
         private static Vec3 ToVec3(Vector3 v) => new Vec3(v.x, v.y, v.z);
 
         /// <summary>For editor tooling.</summary>
-        public void Set(OverworldAsset asset, ScriptableObject heightSource, Material[] surfaces, Material water, Material gates)
+        public void SetEnvironment(EnvironmentAsset dressing) => environment = dressing;
+
+        /// <summary>For editor tooling.</summary>
+        public void Set(OverworldAsset asset, ScriptableObject heightSource, Material[] surfaces, Material water, Material gates, EnvironmentAsset dressing = null)
         {
+            if (dressing != null) environment = dressing;
             overworld = asset;
             source = heightSource;
             surfaceMaterials = surfaces;

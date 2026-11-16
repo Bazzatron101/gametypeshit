@@ -112,11 +112,13 @@ namespace HunterSystem.Game
         /// The usual choice of surface: the ground's kind (rock where it cannot be walked, climbable faces their
         /// own), rivers and lakes above the sea, a road within its width, sand just above the sea, grass otherwise.
         /// </summary>
-        public static TerrainSurface SurfaceAt(IGround ground, Vector3 at, float seaLevel, float sandAboveSea, Func<float, float, float> distanceToRoad)
+        /// <param name="underBuilding">Where a building stands (ticket 49): its blocked ground is drawn as a trodden plot, not rock.</param>
+        public static TerrainSurface SurfaceAt(IGround ground, Vector3 at, float seaLevel, float sandAboveSea, Func<float, float, float> distanceToRoad,
+            Func<float, float, bool> underBuilding = null)
         {
             var kind = ground.KindAt(new Vec3(at.x, 0f, at.z));
             if (kind == GroundKind.Climbable) return TerrainSurface.Climbable;
-            if (kind == GroundKind.Blocked) return TerrainSurface.Rock;
+            if (kind == GroundKind.Blocked) return underBuilding != null && underBuilding(at.x, at.z) ? TerrainSurface.Road : TerrainSurface.Rock;
             if (kind == GroundKind.Water && at.y >= seaLevel) return TerrainSurface.Water;
             if (at.y < seaLevel + sandAboveSea) return TerrainSurface.Sand;
             if (distanceToRoad != null && distanceToRoad(at.x, at.z) <= 0f) return TerrainSurface.Road;

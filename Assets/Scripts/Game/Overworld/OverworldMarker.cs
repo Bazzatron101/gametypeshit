@@ -16,6 +16,9 @@ namespace HunterSystem.Game
 
         /// <summary>A named place worth seeing from afar (a hilltop, a ruin).</summary>
         Landmark,
+
+        /// <summary>A village or castle town (ticket 49): a named place the bake lays buildings out in, within its radius.</summary>
+        Village,
     }
 
     /// <summary>
@@ -29,7 +32,8 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Gate: the region it stands in (ticket 36)")] private string region = "greenmarch";
         [SerializeField, Tooltip("Gate: known to the guild from the start (story gates, each region's first)")] private bool knownFromStart;
         [SerializeField, Min(0f), Tooltip("Town: how far its edge reaches. Road: its half-width.")] private float radius = 40f;
-        [SerializeField, Tooltip("Landmark: its name")] private string label;
+        [SerializeField, Tooltip("Landmark or village: its name")] private string label;
+        [SerializeField, Tooltip("Village: a castle town (a keep and towers) rather than a village")] private bool castle;
 
         public OverworldMarkerKind Kind => kind;
         public GateDefinitionAsset Gate => gate;
@@ -37,6 +41,7 @@ namespace HunterSystem.Game
         public bool KnownFromStart => knownFromStart;
         public float Radius => radius;
         public string Label => string.IsNullOrEmpty(label) ? name : label;
+        public bool Castle => castle;
 
         /// <summary>A road's points: this marker, then its children in order.</summary>
         public IEnumerable<Vector3> RoadPoints()
@@ -46,8 +51,9 @@ namespace HunterSystem.Game
         }
 
         /// <summary>For editor tooling that places markers in code.</summary>
-        public void Set(OverworldMarkerKind markerKind, GateDefinitionAsset markerGate = null, string markerRegion = null, bool known = false, float markerRadius = 40f, string markerLabel = null)
+        public void Set(OverworldMarkerKind markerKind, GateDefinitionAsset markerGate = null, string markerRegion = null, bool known = false, float markerRadius = 40f, string markerLabel = null, bool isCastle = false)
         {
+            castle = isCastle;
             kind = markerKind;
             gate = markerGate;
             region = markerRegion ?? region;
@@ -76,6 +82,10 @@ namespace HunterSystem.Game
                         if (previous.HasValue) Gizmos.DrawLine(previous.Value + Vector3.up, p + Vector3.up);
                         previous = p;
                     }
+                    break;
+                case OverworldMarkerKind.Village:
+                    Gizmos.color = new Color(0.95f, 0.7f, 0.4f);
+                    Gizmos.DrawWireSphere(transform.position, radius);
                     break;
                 case OverworldMarkerKind.Landmark:
                     Gizmos.color = Color.white;

@@ -31,6 +31,16 @@ namespace HunterSystem.Game
             public List<Vector3> points = new List<Vector3>();
         }
 
+        /// <summary>A building the bake placed (ticket 49): which kind, where, turned how, and the ground it blocks.</summary>
+        [Serializable]
+        public sealed class BuildingData
+        {
+            public string kindId;
+            public Vector3 position;
+            [Tooltip("Degrees about Y; 0 has the door facing +Z")] public float yaw;
+            public Vector2 footprint;
+        }
+
         [Serializable]
         public sealed class LandmarkData
         {
@@ -53,6 +63,7 @@ namespace HunterSystem.Game
         [SerializeField] private float townRadius;
         [SerializeField] private List<RoadData> roads = new List<RoadData>();
         [SerializeField] private List<LandmarkData> landmarks = new List<LandmarkData>();
+        [SerializeField, Tooltip("Laid out by the bake from the environment's buildings (ticket 49); their footprints are blocked in the tiles")] private List<BuildingData> buildings = new List<BuildingData>();
 
         [Header("Rules")]
         [SerializeField] private List<string> startingRegions = new List<string> { "greenmarch" };
@@ -67,6 +78,8 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Ground this far above the sea is drawn as sand")] private float sandAboveSea = 1.2f;
 
         [NonSerialized] private List<(List<Vector2> line, float halfWidth)> _roadLines;
+        [NonSerialized] private Dictionary<long, List<BuildingData>> _buildingCells;
+        private const float BuildingCellSize = 32f;
 
         public Vector2 Origin => origin;
         public float TileSize => tileSize;
@@ -80,6 +93,7 @@ namespace HunterSystem.Game
         public float TownRadius => townRadius;
         public IReadOnlyList<RoadData> Roads => roads;
         public IReadOnlyList<LandmarkData> Landmarks => landmarks;
+        public IReadOnlyList<BuildingData> Buildings => buildings;
         public float MeshCellSize => meshCellSize;
         public float FarMeshCellSize => farMeshCellSize;
         public float SeaLevel => seaLevel;
@@ -99,6 +113,35 @@ namespace HunterSystem.Game
                 best = Mathf.Min(best, HeightSource.DistanceToLine(p, line, out _) - halfWidth);
             return best;
         }
+
+        /// <summary>Whether a building stands on (x, z). Safe off the main thread once called once on it.</summary>
+        public bool IsUnderBuilding(float x, float z)
+        {
+            if (_buildingCells == null)
+            {
+                var cells = new Dictionary<long, List<BuildingData>>();
+                foreach (var b in buildings)
+                {
+                    if (b == null) continue;
+                    var reach = b.footprint.magnitude / 2f;
+                    for (var cz = Cell(b.position.z - reach); cz <= Cell(b.position.z + reach); cz++)
+                    for (var cx = Cell(b.position.x - reach); cx <= Cell(b.position.x + reach); cx++)
+                    {
+                        var key = Key(cx, cz);
+                        if (!cells.TryGetValue(key, out var list)) cells[key] = list = new List<BuildingData>();
+                        list.Add(b);
+                    }
+                }
+                _buildingCells = cells;
+            }
+            if (!_buildingCells.TryGetValue(Key(Cell(x), Cell(z)), out var near)) return false;
+            foreach (var b in near)
+                if (TownPlanner.Contains(new Vector2(b.position.x, b.position.z), b.yaw, b.footprint, x, z)) return true;
+            return false;
+        }
+
+        private static int Cell(float v) => Mathf.FloorToInt(v / BuildingCellSize);
+        private static long Key(int x, int z) => ((long)x << 32) ^ (uint)z;
 
         // --- Ground ------------------------------------------------------------------------------------
 
@@ -186,8 +229,10 @@ namespace HunterSystem.Game
         /// <summary>For the bake, which writes the whole asset at once.</summary>
         public void Set(Vector2 mapOrigin, float tile, int countX, int countZ, string folder, TextAsset coarseGround,
             List<GateSiteData> gateSites, bool town, Vector3 townAt, float townReach, List<RoadData> roadList, List<LandmarkData> landmarkList,
-            float sea, float nearCell, float farCell)
+            float sea, float nearCell, float farCell, List<BuildingData> buildingList = null)
         {
+            buildings = buildingList ?? new List<BuildingData>();
+            _buildingCells = null;
             origin = mapOrigin;
             tileSize = tile;
             tilesX = countX;

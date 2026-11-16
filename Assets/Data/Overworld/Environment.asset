@@ -1,0 +1,190 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35e9fcdef16d2f54cbea5f101d457c2a, type: 3}
+  m_Name: Environment
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.EnvironmentAsset
+  seed: 49
+  props:
+  - id: pine
+    mesh: {fileID: 4300000, guid: 10d1fecb6ba71894ead7ab188c30c8eb, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 08c9a0bc3b14a834ea70d4f3094b4244, type: 2}
+    - {fileID: 2100000, guid: 461721c9d07469145b3de6cfebd620a9, type: 2}
+    perHectare: 70
+    cover: 0.35
+    patchSize: 160
+    patchGroup: 1
+    minScale: 0.8
+    maxScale: 1.4
+    maxSlope: 30
+    clearance: 4
+    sink: 0.3
+    drawDistance: 600
+    castShadows: 1
+  - id: leafy-tree
+    mesh: {fileID: 4300000, guid: 284d27ae62cd3824d9f91f06015bf351, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 08c9a0bc3b14a834ea70d4f3094b4244, type: 2}
+    - {fileID: 2100000, guid: 6b5b31deb104c604aab117c6ff2cb087, type: 2}
+    perHectare: 25
+    cover: 0.4
+    patchSize: 200
+    patchGroup: 2
+    minScale: 0.8
+    maxScale: 1.3
+    maxSlope: 22
+    clearance: 4
+    sink: 0.3
+    drawDistance: 600
+    castShadows: 1
+  - id: bush
+    mesh: {fileID: 4300000, guid: 7cad314bdb4a95542b84f684df8651f9, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 55e11615de1dbdd4ba95db7cce5eeb7c, type: 2}
+    perHectare: 40
+    cover: 0.5
+    patchSize: 120
+    patchGroup: 1
+    minScale: 0.7
+    maxScale: 1.3
+    maxSlope: 30
+    clearance: 2
+    sink: 0.2
+    drawDistance: 250
+    castShadows: 1
+  - id: rock
+    mesh: {fileID: 4300000, guid: f0b220e1c7a176a4fbfb4b2f6667371a, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c5a260be1d5ce3f4aba317eb2418a170, type: 2}
+    perHectare: 6
+    cover: 0.6
+    patchSize: 90
+    patchGroup: 3
+    minScale: 0.6
+    maxScale: 1.6
+    maxSlope: 45
+    clearance: 2
+    sink: 0.3
+    drawDistance: 400
+    castShadows: 1
+  - id: boulder
+    mesh: {fileID: 4300000, guid: 2ad95f4c43e8e0e4b9295dfe19a918a7, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c5a260be1d5ce3f4aba317eb2418a170, type: 2}
+    perHectare: 1.2
+    cover: 0.5
+    patchSize: 140
+    patchGroup: 4
+    minScale: 2
+    maxScale: 3.5
+    maxSlope: 40
+    clearance: 4
+    sink: 0.6
+    drawDistance: 600
+    castShadows: 1
+  - id: grass
+    mesh: {fileID: 4300000, guid: 2679d617f67d1834289cd2c2bbdc081c, type: 2}
+    materials:
+    - {fileID: 2100000, guid: d60fe23bae634834cbfd0f15b0f2f250, type: 2}
+    perHectare: 900
+    cover: 0.75
+    patchSize: 60
+    patchGroup: 5
+    minScale: 0.7
+    maxScale: 1.3
+    maxSlope: 35
+    clearance: 0.5
+    sink: 0.05
+    drawDistance: 90
+    castShadows: 0
+  buildings:
+  - id: guild-hall
+    mesh: {fileID: 4300000, guid: ca9f58871d5ebc34980906a08f45d879, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: 7e9368e82d9f568408ff81804db002ae, type: 2}
+    footprint: {x: 12, y: 9}
+    role: hall
+  - id: inn
+    mesh: {fileID: 4300000, guid: 9e9c858846d99384483df015a150af3b, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 9, y: 7}
+    role: inn
+  - id: shop
+    mesh: {fileID: 4300000, guid: 4e8962e65ce385742b174bcc06b2acf3, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: 7e9368e82d9f568408ff81804db002ae, type: 2}
+    footprint: {x: 6, y: 6}
+    role: shop
+  - id: house
+    mesh: {fileID: 4300000, guid: 169df3db67ce18a4588f4c96237051d4, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 6, y: 5}
+    role: house
+  - id: cottage
+    mesh: {fileID: 4300000, guid: e78d602c95820ee41ab83cc40d0e867a, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 5, y: 4.5}
+    role: house
+  - id: long-house
+    mesh: {fileID: 4300000, guid: 60b1a0392c91b7c4899a88ed4a903d64, type: 2}
+    materials:
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    - {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    footprint: {x: 8, y: 5}
+    role: house
+  - id: well
+    mesh: {fileID: 4300000, guid: c693e0d9894b8ad4a94f76814a5b25db, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 2.4, y: 2.4}
+    role: well
+  - id: tower
+    mesh: {fileID: 4300000, guid: 154fed454c4bc4649b829b1c09056ba5, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    footprint: {x: 5.5, y: 5.5}
+    role: tower
+  - id: keep
+    mesh: {fileID: 4300000, guid: 8a8f1cce158c90b4fa2ded0e7d56fa95, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: 7e9368e82d9f568408ff81804db002ae, type: 2}
+    footprint: {x: 11, y: 11}
+    role: keep
+  squareRadius: 12
+  roadClearance: 3
+  buildingGap: 3

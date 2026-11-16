@@ -468,6 +468,7 @@ MonoBehaviour:
   loadRadius: 600
   unloadRadius: 800
   source: {fileID: 11400000, guid: cb27590c4f6365741914abed379c360d, type: 2}
+  environment: {fileID: 11400000, guid: 7eb4a4aa7f31c0c4883afc01cd73a6e4, type: 2}
 --- !u!4 &631544180
 Transform:
   m_ObjectHideFlags: 0
@@ -822,6 +823,7 @@ MonoBehaviour:
   knownFromStart: 1
   radius: 40
   label: 
+  castle: 0
 --- !u!1 &1110433546
 GameObject:
   m_ObjectHideFlags: 0
@@ -1347,6 +1349,7 @@ MonoBehaviour:
   knownFromStart: 0
   radius: 40
   label: Guild town
+  castle: 0
 --- !u!1 &1278827881
 GameObject:
   m_ObjectHideFlags: 0
@@ -2330,6 +2333,7 @@ MonoBehaviour:
   knownFromStart: 0
   radius: 4
   label: East road
+  castle: 0
 --- !u!1 &1882210449
 GameObject:
   m_ObjectHideFlags: 0
@@ -2474,6 +2478,7 @@ MonoBehaviour:
   knownFromStart: 0
   radius: 40
   label: 
+  castle: 0
 --- !u!1 &1990036919
 GameObject:
   m_ObjectHideFlags: 0
@@ -2618,6 +2623,7 @@ MonoBehaviour:
   knownFromStart: 0
   radius: 40
   label: Lookout Hill
+  castle: 0
 --- !u!1 &2012472607
 GameObject:
   m_ObjectHideFlags: 0

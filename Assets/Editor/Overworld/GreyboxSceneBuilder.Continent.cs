@@ -22,6 +22,7 @@ namespace HunterSystem.Editor
         public static void BuildContinent()
         {
             var source = ContinentSetup.SetUp();
+            EnvironmentArtSetup.SetUp(); // nature and buildings (ticket 49)
             var min = source.origin;
             var size = source.AreaSize;
             Vector3 At(Vector2 pixel)
@@ -66,12 +67,13 @@ namespace HunterSystem.Editor
                 var sea = GetOrCreateMaterial("Overworld_Sea", new Color(0.2f, 0.42f, 0.65f));
                 var gateMarker = GetOrCreateMaterial("Greybox_Portal", new Color(0.55f, 0.95f, 1f));
                 source = AssetDatabase.LoadAssetAtPath<OverworldSourceAsset>(ContinentSetup.SourcePath); // the new scene unloaded what was loaded before
+                var environment = AssetDatabase.LoadAssetAtPath<EnvironmentAsset>(EnvironmentArtSetup.EnvironmentPath);
                 var overworld = new GameObject("Overworld").AddComponent<OverworldScene>();
-                overworld.Set(null, source, surfaces, sea, gateMarker);
+                overworld.Set(null, source, surfaces, sea, gateMarker, environment);
                 PlaceContinentMarkers(overworld.transform, At);
 
                 var baked = OverworldTools.BakeFromRecipe(source);
-                overworld.Set(baked, source, surfaces, sea, gateMarker);
+                overworld.Set(baked, source, surfaces, sea, gateMarker, environment);
 
                 // The board stands in the guild town, where the hub puts it.
                 var hub = AssetDatabase.LoadAssetAtPath<HubAsset>(HubPath);
@@ -94,8 +96,10 @@ namespace HunterSystem.Editor
 
             Marker("Town: " + ContinentLayout.GuildTown.Name, at(ContinentLayout.GuildTown.Pixel))
                 .Set(OverworldMarkerKind.Town, markerRadius: 60f, markerLabel: ContinentLayout.GuildTown.Name);
+            // Villages and castle towns get buildings from the bake (ticket 49), inside their flattened squares.
             foreach (var place in ContinentLayout.Settlements)
-                Marker("Landmark: " + place.Name, at(place.Pixel)).Set(OverworldMarkerKind.Landmark, markerLabel: place.Name);
+                Marker((place.Castle ? "Castle: " : "Village: ") + place.Name, at(place.Pixel))
+                    .Set(OverworldMarkerKind.Village, markerRadius: place.Castle ? 40f : 32f, markerLabel: place.Name, isCastle: place.Castle);
 
             var gates = AssetDatabase.FindAssets("t:GateDefinitionAsset")
                 .Select(guid => AssetDatabase.LoadAssetAtPath<GateDefinitionAsset>(AssetDatabase.GUIDToAssetPath(guid)))
