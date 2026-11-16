@@ -19,7 +19,9 @@ namespace HunterSystem.Simulation
         {
             if (!TryGetMoveDirection(cmd, out var direction, out var magnitude)) return;
 
-            var speed = speedFactor * _config.PlayerMoveSpeed * (1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
+            var speed = player.Mounted
+                ? _config.MountSpeed // the mount's pace, whatever the rider's agility
+                : speedFactor * _config.PlayerMoveSpeed * (1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
             player.Position += direction * (magnitude * speed * TickDelta);
             player.Facing = direction;
         }

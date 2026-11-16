@@ -557,4 +557,25 @@ namespace HunterSystem.Simulation
             Player = player;
         }
     }
+
+    /// <summary>A player got on their mount, or off it (ticket 42): by choice, a hit, fighting, or riding where riding ends.</summary>
+    public sealed class MountChanged : SimulationEvent
+    {
+        public PlayerId Player { get; }
+        public bool Mounted { get; }
+
+        public MountChanged(int tick, PlayerId player, bool mounted) : base(tick)
+        {
+            Player = player;
+            Mounted = mounted;
+        }
+    }
+
+    /// <summary>A player's character was given a mount (ticket 42; the D-rank promotion, ticket 25).</summary>
+    public sealed class MountGranted : SimulationEvent
+    {
+        public PlayerId Player { get; }
+
+        public MountGranted(int tick, PlayerId player) : base(tick) => Player = player;
+    }
 }

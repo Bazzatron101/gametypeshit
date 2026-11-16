@@ -52,6 +52,9 @@ namespace HunterSystem.Simulation
         /// <summary>The id of the piece worn in each <see cref="GearSlot"/>; null for an empty slot.</summary>
         public string[] Worn = new string[GearDefinition.SlotCount];
 
+        /// <summary>The character owns a mount (ticket 42): given at the D-rank promotion (ticket 25).</summary>
+        public bool HasMount;
+
         /// <summary>
         /// True for a character that has never been played. Bringing one in gives exactly what a
         /// player with no save gets: level 1, starting stats, the starter skills on the bar.
@@ -83,7 +86,7 @@ namespace HunterSystem.Simulation
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSCH");
 
         /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates. Version 4: and gear, and modifiers that count worn gear. Version 5: and the name and look.</summary>
-        public const byte Version = 5;
+        public const byte Version = 6;
 
         public static byte[] Encode(CharacterRecord c) => Encode(c, Version);
 
@@ -98,6 +101,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>Writes a character as the game before names and looks did (for tests of loading old saves).</summary>
         public static byte[] EncodeVersion4ForTests(CharacterRecord c) => Encode(c, 4);
+
+        /// <summary>Writes a character as the game before mounts did (for tests of loading old saves).</summary>
+        public static byte[] EncodeVersion5ForTests(CharacterRecord c) => Encode(c, 5);
 
         private static byte[] Encode(CharacterRecord c, byte version)
         {
@@ -140,6 +146,7 @@ namespace HunterSystem.Simulation
                 w.Write(c.Look.Colour);
                 w.Write((byte)c.Look.Build);
             }
+            if (version >= 6) w.Write(c.HasMount);
             w.Flush();
             return stream.ToArray();
         }
@@ -190,6 +197,7 @@ namespace HunterSystem.Simulation
                     c.Name = HunterNames.Clean(SimulationWorld.ReadNullable(r));
                     c.Look = new CharacterLook(r.ReadByte(), (Build)r.ReadByte());
                 }
+                if (version >= 6) c.HasMount = r.ReadBoolean();
                 return c;
             }
             catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException)

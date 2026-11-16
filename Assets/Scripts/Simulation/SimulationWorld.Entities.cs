@@ -17,6 +17,12 @@ namespace HunterSystem.Simulation
             /// <summary>Where they stood when this tick began: walls and steep ground slide them back from here (ticket 37). Not in snapshots: it is always the position between ticks.</summary>
             public Vec3 SetOffFrom;
             public Vec3 Facing;
+
+            /// <summary>The character owns a mount (ticket 42; saved with it).</summary>
+            public bool HasMount;
+
+            /// <summary>Riding it now.</summary>
+            public bool Mounted;
             public int Health;
             public int MaxHealth;
             public PlayerLifeState LifeState;

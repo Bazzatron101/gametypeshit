@@ -11,7 +11,7 @@ namespace HunterSystem.Game
     /// "Player/Attack" (left mouse or gamepad west), "Player/HeavyAttack" (right mouse or
     /// right trigger), "Player/Dodge" (left Ctrl or gamepad east), "Player/Jump" (space or gamepad
     /// south), "Player/Sprint" (hold left Shift, or press the left stick) and "Player/Skill1" to
-    /// "Skill6" (keys 1 to 6). All input is ignored while the
+    /// "Skill6" (keys 1 to 6), and R to get on or off a mount (ticket 42). All input is ignored while the
     /// cursor is free (a menu is open, or after Escape).
     /// </summary>
     public sealed class LocalInputCommandSource : IPlayerCommandSource
@@ -56,6 +56,7 @@ namespace HunterSystem.Game
                 lightAttack: Pressed(_attack), dodge: Pressed(_dodge), heavyAttack: Pressed(_heavyAttack),
                 useSkillSlot: skillSlot, heldSkillSlots: held,
                 jump: Pressed(_jump), sprint: _sprint != null && _sprint.IsPressed(),
+                toggleMount: Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame,
                 aimYawDegrees: camera != null ? camera.transform.eulerAngles.y : (float?)null); // skills fire where the camera looks
         }
 

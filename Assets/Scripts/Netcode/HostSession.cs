@@ -263,7 +263,7 @@ namespace HunterSystem.Netcode
         }
 
         private static bool IsMovementOnly(PlayerCommand c) =>
-            !c.LightAttack && !c.HeavyAttack && !c.Dodge && !c.Jump && !c.Respawn && !c.SetReady.HasValue && !c.UseSkillSlot.HasValue && !c.AllocateStat.HasValue && !c.AssignSkill.HasValue;
+            !c.LightAttack && !c.HeavyAttack && !c.Dodge && !c.Jump && !c.Respawn && !c.SetReady.HasValue && !c.UseSkillSlot.HasValue && !c.AllocateStat.HasValue && !c.AssignSkill.HasValue && !c.ToggleMount;
 
         /// <summary>
         /// A new player arrives with the character they sent. A returning one gets back the character

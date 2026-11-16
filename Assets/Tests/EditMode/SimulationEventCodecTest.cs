@@ -72,6 +72,8 @@ namespace HunterSystem.Tests
             new GearUnequipped(49, P, GearSlot.Weapon, "staff"),
             new LookChanged(50, P, new CharacterLook(3, Build.Slim)),
             new GateFound(51, "bridge", P),
+            new MountChanged(52, P, true),
+            new MountGranted(53, P),
             new ReadyChanged(42, P, true),
             new ReturnedToHub(43, "goblin-warren", true),
             new StorySceneStarted(44, "arrival"),

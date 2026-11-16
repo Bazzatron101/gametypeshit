@@ -159,6 +159,7 @@ namespace HunterSystem.Game
             {
                 EntranceRadius = entranceRadius, FindRadius = findRadius, UnopenedRegionXpPercent = unopenedRegionXpPercent,
             };
+            if (hasTown) overworld.TownRadius = townRadius;
             overworld.StartingRegions.AddRange(startingRegions);
             foreach (var site in gates)
                 overworld.Gates.Add(new GateSite

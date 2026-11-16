@@ -96,6 +96,19 @@ namespace HunterSystem.Game
             var world = _runner != null ? _runner.World : null;
             if (world == null) return;
             _streamer.Update(Centres(world));
+            GiveMountForTesting(world);
+        }
+
+        /// <summary>
+        /// Development builds only: F2 gives the local player's character a mount (ticket 42), until the D-rank
+        /// promotion does (ticket 25). On the host or offline; a guest's world is the host's to change.
+        /// </summary>
+        private void GiveMountForTesting(SimulationWorld world)
+        {
+            if (!Debug.isDebugBuild || UnityEngine.InputSystem.Keyboard.current == null || !UnityEngine.InputSystem.Keyboard.current.f2Key.wasPressedThisFrame) return;
+            if (_runner.IsOnline && _runner.Host == null) return;
+            var me = _runner.LocalPlayerId;
+            if (me.HasValue && world.HasPlayer(me.Value)) world.GrantMount(me.Value);
         }
 
         /// <summary>Who tiles are loaded for: a client's own player; on the host or offline, every player (ADR 0020).</summary>

@@ -30,11 +30,20 @@ namespace HunterSystem.Simulation
             foreach (var player in _players)
             {
                 var lift = HeightAboveGround(player);
-                var settled = ground.Confine(player.SetOffFrom, player.Position);
+                var settled = (player.Mounted ? RidingGround(ground) : ground).Confine(player.SetOffFrom, player.Position);
                 player.Position = new Vec3(settled.X, ground.HeightAt(settled) + lift, settled.Z);
             }
             foreach (var enemy in _enemies)
                 enemy.Position = OnGround(ground.Confine(enemy.SetOffFrom, enemy.Position));
+        }
+
+        private NoClimbingGround _ridingGround;
+
+        /// <summary>The ground as a mounted rider sees it: climbable faces are cliffs (ticket 42).</summary>
+        private IGround RidingGround(IGround ground)
+        {
+            if (_ridingGround == null || !ReferenceEquals(_ridingGround.Inner, ground)) _ridingGround = new NoClimbingGround(ground);
+            return _ridingGround;
         }
 
         /// <summary><paramref name="p"/> at the ground's height there.</summary>

@@ -133,6 +133,9 @@ namespace HunterSystem.Game
 
         public void Heal() => _runner.World.RestoreHealth(Player);
 
+        /// <summary>A mount for the character (ticket 42), until the D-rank promotion gives one (ticket 25).</summary>
+        public void GiveMount() => _runner.World.GrantMount(Player);
+
         // --- Drawing -----------------------------------------------------------------------
 
         private Vector3 PlayerPosition()
@@ -226,6 +229,8 @@ namespace HunterSystem.Game
             if (GUILayout.Button("Reset cooldowns")) ResetCooldowns();
             if (GUILayout.Button("Heal")) Heal();
             GUILayout.EndHorizontal();
+            var hasMount = _runner.World.GetPlayer(Player).HasMount;
+            if (GUILayout.Button(hasMount ? "Has a mount (R in the overworld)" : "Give a mount")) GiveMount();
 
             GUILayout.EndScrollView();
             GUILayout.EndArea();

@@ -98,6 +98,7 @@ namespace HunterSystem.Simulation
             player.ClearCharge();
             player.DodgeEndsAtTick = 0;
             player.InvulnerableUntilTick = 0;
+            player.Mounted = false; // back on their feet, on foot
             Land(player);
         }
 

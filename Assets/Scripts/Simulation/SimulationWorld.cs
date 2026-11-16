@@ -124,7 +124,8 @@ namespace HunterSystem.Simulation
                 p.Level, p.Xp, XpToNextLevel(p), p.Level >= _config.Progression.LevelCap, p.UnspentStatPoints, new PlayerStats(p.Stats),
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
                 p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray(),
-                p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone(), p.Name, p.Look);
+                p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone(), p.Name, p.Look,
+                hasMount: p.HasMount, isMounted: p.Mounted);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);
@@ -205,6 +206,10 @@ namespace HunterSystem.Simulation
                 if (cmd.SellItemId != null) TrySell(player, cmd.SellItemId, tick);
                 player.Sprinting = false;
 
+                // No fighting from the saddle (ticket 42): starting an attack, a skill or a dodge puts the rider on foot first.
+                if (player.Mounted && (cmd.LightAttack || cmd.HeavyAttack || cmd.Dodge || cmd.UseSkillSlot.HasValue)) Dismount(player, tick);
+                else if (cmd.ToggleMount) TryToggleMount(player, tick);
+
                 if (cmd.Dodge && !player.IsAirborne) TryDodge(player, cmd, tick); // a dodge keeps any charge going
 
                 // Letting go of the key fires the charge, even mid-dash.
@@ -234,7 +239,7 @@ namespace HunterSystem.Simulation
 
                 if (cmd.Jump) TryJump(player, tick);
                 // Sprint while held, except just after an attack or skill has started: fighting breaks the run.
-                var sprinting = cmd.Sprint && tick >= player.SprintResumesAtTick;
+                var sprinting = cmd.Sprint && tick >= player.SprintResumesAtTick && !player.Mounted;
                 MovePlayer(player, cmd, sprinting ? _config.SprintSpeedPercent / 100f : 1f);
                 player.Sprinting = sprinting && TryGetMoveDirection(cmd, out _, out _);
                 if (player.IsAirborne) continue; // no attacks or skills in the air (a jump keeps its run-up)
@@ -257,6 +262,7 @@ namespace HunterSystem.Simulation
             ApplyEnrages(tick);
 
             SettleOnGround();
+            DismountWhereRidingEnds(tick);
             FindGates(tick);
             UpdateGate(tick);
             UpdateStory(tick);

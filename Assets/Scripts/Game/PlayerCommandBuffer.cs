@@ -18,6 +18,7 @@ namespace HunterSystem.Game
         private bool _dodgePending;
         private bool _respawnPending;
         private bool _jumpPending;
+        private bool _mountPending;
         private bool _sprintHeld;
         private float? _aimYawDegrees;
         private readonly Queue<string> _sales = new Queue<string>();
@@ -39,6 +40,7 @@ namespace HunterSystem.Game
             _dodgePending |= sampled.Dodge;
             _respawnPending |= sampled.Respawn;
             _jumpPending |= sampled.Jump;
+            _mountPending |= sampled.ToggleMount;
             _sprintHeld = sampled.Sprint; // held, like movement: the latest state
             _aimYawDegrees = sampled.AimYawDegrees; // where the camera looks now
             if (sampled.SetReady.HasValue) _setReadyPending = sampled.SetReady;
@@ -86,9 +88,10 @@ namespace HunterSystem.Game
             var command = new PlayerCommand(_moveX, _moveZ,
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
                 allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld, aimYawDegrees: _aimYawDegrees, sellItemId: sell,
-                equipGearId: gear.equip, unequipSlot: gear.unequip, changeLook: _lookPending);
+                equipGearId: gear.equip, unequipSlot: gear.unequip, changeLook: _lookPending, toggleMount: _mountPending);
             _lookPending = null;
             _jumpPending = false;
+            _mountPending = false;
             _respawnPending = false;
             _setReadyPending = null;
             _lightAttackPending = false;

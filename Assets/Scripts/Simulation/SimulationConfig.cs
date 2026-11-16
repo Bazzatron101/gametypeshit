@@ -12,6 +12,9 @@ namespace HunterSystem.Simulation
         /// <summary>Player movement speed in metres per second at full input.</summary>
         public float PlayerMoveSpeed { get; set; } = 5f;
 
+        /// <summary>A mounted rider's speed in metres per second (ticket 42: 2× sprint). Sprint and agility do not change it.</summary>
+        public float MountSpeed { get; set; } = 16f;
+
         /// <summary>Holding sprint: move speed as a percentage of walking.</summary>
         public int SprintSpeedPercent { get; set; } = 160;
 

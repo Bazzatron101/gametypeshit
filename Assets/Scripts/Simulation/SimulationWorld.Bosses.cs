@@ -198,6 +198,7 @@ namespace HunterSystem.Simulation
             }
             var amount = player.TakeDamage(PartyScalingDefinition.Scale(attack.Damage, boss.DamagePercent), out var defeated);
             if (amount == 0) return;
+            Dismount(player, tick); // a hit knocks a rider off (ticket 42)
             _events.Add(new PlayerDamaged(tick, boss.Id, player.Id, amount, player.Health));
             if (defeated) _events.Add(new PlayerDefeated(tick, player.Id, boss.Id));
         }

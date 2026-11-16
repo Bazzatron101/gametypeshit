@@ -28,6 +28,7 @@ namespace HunterSystem.Simulation
             GearEquipped, GearUnequipped,
             GateFound,
             LookChanged,
+            MountChanged, MountGranted,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -204,6 +205,12 @@ namespace HunterSystem.Simulation
                 case GateFound x:
                     Head(w, Code.GateFound, e); SimulationWorld.WriteNullable(w, x.GateId); w.Write(x.Player.Value);
                     break;
+                case MountChanged x:
+                    Head(w, Code.MountChanged, e); w.Write(x.Player.Value); w.Write(x.Mounted);
+                    break;
+                case MountGranted x:
+                    Head(w, Code.MountGranted, e); w.Write(x.Player.Value);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -343,6 +350,8 @@ namespace HunterSystem.Simulation
                     var gateId = SimulationWorld.ReadNullable(r);
                     return new GateFound(tick, gateId, Player());
                 }
+                case Code.MountChanged: return new MountChanged(tick, Player(), r.ReadBoolean());
+                case Code.MountGranted: return new MountGranted(tick, Player());
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }
         }

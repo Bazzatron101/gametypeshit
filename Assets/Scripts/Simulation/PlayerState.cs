@@ -96,14 +96,23 @@ namespace HunterSystem.Simulation
         /// <summary>How the hunter looks (ticket 28).</summary>
         public readonly CharacterLook Look;
 
+        /// <summary>The character owns a mount (ticket 42).</summary>
+        public bool HasMount { get; }
+
+        /// <summary>Riding it now: faster, and no fighting from the saddle.</summary>
+        public bool IsMounted { get; }
+
         public PlayerState(PlayerId id, Vec3 position, Vec3 facing, int health, int maxHealth,
             PlayerLifeState lifeState, bool isDodging, bool isInvulnerable, bool isWindingUp,
             int level, int xp, int xpToNextLevel, bool isAtLevelCap, int unspentStatPoints, PlayerStats stats,
             IReadOnlyList<SkillSlotState> skillSlots, IReadOnlyList<SkillDefinition> knownSkills,
             IReadOnlyList<ModifierDefinition> activeModifiers, int? chargingSlot = null, float chargeFraction = 0f, bool isAway = false, bool isReady = false, bool isAirborne = false, bool isSprinting = false,
             ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<LootDefinition> duplicates = null,
-            IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null, string name = null, CharacterLook look = default)
+            IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null, string name = null, CharacterLook look = default,
+            bool hasMount = false, bool isMounted = false)
         {
+            HasMount = hasMount;
+            IsMounted = isMounted;
             Name = name;
             Look = look;
             Gold = gold;

@@ -29,6 +29,10 @@ namespace HunterSystem.Game
         private Vector3 _swingScale;
         private Vector3 _bodyScale;
         private Vector3 _bodyPosition;
+        private GameObject _mount;
+
+        /// <summary>How much higher a rider sits (ticket 42).</summary>
+        private const float SaddleHeight = 0.9f;
 
         public PlayerId PlayerId => new PlayerId(playerId);
         public bool IsLocal => isLocal;
@@ -84,6 +88,26 @@ namespace HunterSystem.Game
             transform.rotation = Quaternion.LookRotation(new Vector3(state.Facing.X, 0f, state.Facing.Z), Vector3.up);
             if (swingMarker != null) swingMarker.SetActive(!state.IsDefeated && Time.time < _swingUntil);
             if (body != null) PoseBody(state);
+            ShowMount(state.IsMounted && !state.IsDefeated);
+        }
+
+        /// <summary>A greybox mount under a rider (ticket 42): a long brown block, until there is a model.</summary>
+        private void ShowMount(bool riding)
+        {
+            if (riding && _mount == null && body != null)
+            {
+                _mount = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                _mount.name = "Mount";
+                Destroy(_mount.GetComponent<Collider>());
+                _mount.transform.SetParent(transform, false);
+                _mount.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+                _mount.transform.localScale = new Vector3(0.9f, 1.1f, 2.2f);
+                var renderer = _mount.GetComponent<Renderer>();
+                renderer.sharedMaterial = body.sharedMaterial;
+                renderer.material.color = new Color(0.45f, 0.3f, 0.18f);
+            }
+            if (_mount != null) _mount.SetActive(riding);
+            if (riding && body != null) body.transform.localPosition += Vector3.up * SaddleHeight;
         }
 
         private void PoseBody(PlayerState state)

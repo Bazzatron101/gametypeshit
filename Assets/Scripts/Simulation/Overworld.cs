@@ -17,6 +17,9 @@ namespace HunterSystem.Simulation
         /// <summary>Regions open from the start (the Greenmarch). Others open by rank and story (ticket 25), kept in the host's world.</summary>
         public List<string> StartingRegions { get; } = new List<string>();
 
+        /// <summary>How far the guild town reaches from the hub's centre: nobody rides inside it (ticket 42).</summary>
+        public float TownRadius { get; set; } = 40f;
+
         /// <summary>How close the host must stand to a gate's entrance to take the party in.</summary>
         public float EntranceRadius { get; set; } = 3f;
 

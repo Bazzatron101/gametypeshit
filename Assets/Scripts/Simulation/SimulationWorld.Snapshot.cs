@@ -239,6 +239,8 @@ namespace HunterSystem.Simulation
             WriteNullable(w, p.Name);
             w.Write(p.Look.Colour);
             w.Write((byte)p.Look.Build);
+            w.Write(p.HasMount);
+            w.Write(p.Mounted);
         }
 
         private static void WriteEnemyDefinition(BinaryWriter w, EnemyDefinition d, List<EnemyDefinition> table)
@@ -517,6 +519,8 @@ namespace HunterSystem.Simulation
             }
             p.Name = HunterNames.Clean(ReadNullable(r));
             p.Look = new CharacterLook(r.ReadByte(), (Build)r.ReadByte());
+            p.HasMount = r.ReadBoolean();
+            p.Mounted = r.ReadBoolean();
             return p;
         }
 

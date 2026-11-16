@@ -88,6 +88,29 @@ namespace HunterSystem.Simulation
         }
     }
 
+    /// <summary>
+    /// Another ground with its climbable faces turned to cliffs: what a mounted rider can go over (ticket 42).
+    /// Riders dismount to climb.
+    /// </summary>
+    public sealed class NoClimbingGround : IGround
+    {
+        public NoClimbingGround(IGround inner) => Inner = inner ?? throw new ArgumentNullException(nameof(inner));
+
+        public IGround Inner { get; }
+
+        public float HeightAt(Vec3 p) => Inner.HeightAt(p);
+
+        public GroundKind KindAt(Vec3 p)
+        {
+            var kind = Inner.KindAt(p);
+            return kind == GroundKind.Climbable ? GroundKind.Blocked : kind;
+        }
+
+        public Vec3 Confine(Vec3 from, Vec3 to) => GroundExtensions.Slide(this, from, to);
+
+        public float ReachAlong(Vec3 origin, Vec3 direction, float range) => GroundExtensions.StepAlong(this, origin, direction, range, 0.1f);
+    }
+
     /// <summary>Flat ground at height 0 that goes on for ever: the arena and tests with no hub, gate or world.</summary>
     public sealed class OpenGround : IGround
     {

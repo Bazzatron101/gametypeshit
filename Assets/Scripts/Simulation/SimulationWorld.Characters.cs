@@ -19,6 +19,7 @@ namespace HunterSystem.Simulation
                 Xp = player.Xp,
                 UnspentStatPoints = player.UnspentStatPoints,
                 Stats = (int[])player.Stats.Clone(),
+                HasMount = player.HasMount,
             };
             record.KnownSkills.AddRange(player.KnownSkills.Select(s => s.Id));
             for (var i = 0; i < SkillSlotCount; i++) record.SkillBar[i] = player.SkillSlots[i]?.Id;
@@ -160,6 +161,8 @@ namespace HunterSystem.Simulation
                 if (modifier != null && !player.Modifiers.Any(m => m.Id == modifier.Id)) player.Modifiers.Add(modifier);
 
             // Gold, and duplicates the game still drops (one it no longer has cannot be priced, so it is dropped).
+            player.HasMount = character.HasMount;
+            player.Mounted = false; // a character arrives on foot
             player.Gold = Math.Max(0, character.Gold);
             player.Duplicates.Clear();
             foreach (var id in character.Duplicates ?? Enumerable.Empty<string>())
