@@ -19,7 +19,9 @@ namespace HunterSystem.Netcode
     /// </list>
     /// Everyone charges skills when it is safe (a dodge mid-charge is a perfect-dodge counter). Against
     /// a boss's marked area, the front line dodges through at the last moment and the back line walks
-    /// out. With the leader down, they push on to the next checkpoint to bring them back.
+    /// out. With the leader down, they push on to the next checkpoint to bring them back. A teammate
+    /// with a heal (the Cleric, ticket 59) heals before it attacks: its heal bolt goes to the most hurt
+    /// ally in range, its heal area when it or an ally inside it is hurt.
     /// </para>
     /// <para>
     /// A rookie still plays its role, but notices fewer hits, swings and casts on a slow rhythm,
@@ -204,6 +206,7 @@ namespace HunterSystem.Netcode
 
             if (TryAvoidBoss(self, tick, p, out var avoid)) return avoid;
             if (TryDodgeHit(self, tick, out var dodge)) return dodge;
+            if (!_chargingSlot.HasValue && TryHeal(world, me, self, tick, p, out var heal)) return heal; // in a fight or after it
 
             _engaged.Clear();
             foreach (var enemy in _enemies)
@@ -601,7 +604,7 @@ namespace HunterSystem.Netcode
             hitsBoss = false;
             var aim = Direction(self.Position, target.Position);
             var hits = 0;
-            if (skill.Heals) return 0; // a heal hits no enemy; bots do not heal yet (ticket 56)
+            if (skill.Heals) return 0; // a heal hits no enemy: it is cast for allies (TryHeal)
             switch (skill.Effect)
             {
                 case SkillEffectKind.Summon: // a summon is worth calling once there is a fight near (ticket 57)
@@ -632,6 +635,106 @@ namespace HunterSystem.Netcode
                     }
                     return hits;
             }
+        }
+
+        // --- Healing (ticket 59) ----------------------------------------------------------------
+
+        /// <summary>
+        /// A ready heal, when someone needs it: a heal bolt aimed at the most hurt ally in range (it flies to
+        /// the first ally along its path, so only an aim whose first ally needs it), a heal area when it or an
+        /// ally inside it is hurt. Heals come before damage. A rookie thinks about it now and then, heals the
+        /// nearest and tops up scratches; later it heals the worst hurt and waits until most of a heal counts.
+        /// </summary>
+        private bool TryHeal(SimulationWorld world, PlayerId me, PlayerState self, int tick, float p, out PlayerCommand command)
+        {
+            command = default;
+            var thinkEvery = Math.Max(1, (int)MathF.Round(Lerp(40f, 1f, p)));
+            if ((tick + _phase) % thinkEvery != 0) return false;
+
+            var slots = self.SkillSlots;
+            for (var i = 0; i < slots.Count; i++)
+            {
+                var skill = slots[i].Skill;
+                if (skill == null || !skill.Heals || slots[i].ReadyAtTick > tick) continue;
+                switch (skill.Effect)
+                {
+                    case SkillEffectKind.Projectile when HealBoltAim(world, me, self, skill, p) is { } aim:
+                        command = Command(Vec3.Zero, skillSlot: i, aim: aim);
+                        return true;
+                    case SkillEffectKind.Area when HurtInArea(world, self, skill, p):
+                        command = Command(Vec3.Zero, skillSlot: i);
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Hurt enough for this heal: standing, here, and missing a good part of what it restores (any of it, for a rookie).</summary>
+        private static bool NeedsHealing(PlayerState who, SkillDefinition skill, float p)
+        {
+            if (who.IsDefeated || who.IsAway) return false;
+            var missing = who.MaxHealth - who.Health;
+            return missing >= MathF.Max(1f, skill.Healing * Lerp(0f, 0.6f, p));
+        }
+
+        /// <summary>Which way to fire a heal bolt, or null: at the most hurt ally in range (the nearest, for a rookie) whose path reaches someone hurt first.</summary>
+        private static float? HealBoltAim(SimulationWorld world, PlayerId me, PlayerState self, SkillDefinition skill, float p)
+        {
+            var reach = skill.Range * 0.9f; // allies move while it flies
+            var thinking = p >= 0.4f;
+            float? best = null;
+            var bestScore = float.MaxValue;
+            foreach (var id in world.PlayerIds)
+            {
+                if (id == me) continue;
+                var ally = world.GetPlayer(id);
+                if (!NeedsHealing(ally, skill, p)) continue;
+                var distance = Flat(ally.Position - self.Position).Length;
+                if (distance > reach) continue;
+                var score = thinking ? (float)ally.Health / Math.Max(1, ally.MaxHealth) + distance * 0.001f : distance;
+                if (score >= bestScore) continue;
+                var direction = Direction(self.Position, ally.Position);
+                if (direction.Length < 0.5f) direction = self.Facing.Length > 1e-4f ? self.Facing : new Vec3(0f, 0f, 1f);
+                var first = FirstAllyAlong(world, me, self.Position, direction, skill.Range, skill.Radius);
+                if (first == null || !NeedsHealing(world.GetPlayer(first.Value), skill, p)) continue; // someone fine is in the way
+                bestScore = score;
+                best = MathF.Atan2(direction.X, direction.Z) * (180f / MathF.PI);
+            }
+            return best;
+        }
+
+        /// <summary>The first standing ally other than it that a bolt fired this way would reach, as the simulation finds it.</summary>
+        private static PlayerId? FirstAllyAlong(SimulationWorld world, PlayerId me, Vec3 from, Vec3 direction, float length, float radius)
+        {
+            PlayerId? first = null;
+            var along = float.MaxValue;
+            foreach (var id in world.PlayerIds)
+            {
+                if (id == me) continue;
+                var ally = world.GetPlayer(id);
+                if (ally.IsDefeated || ally.IsAway) continue;
+                var offset = Flat(ally.Position - from);
+                var t = Math.Clamp(offset.X * direction.X + offset.Z * direction.Z, 0f, length);
+                var miss = Flat(offset - direction * t).Length;
+                if (miss > radius) continue;
+                var contact = MathF.Max(0f, t - MathF.Sqrt(MathF.Max(0f, radius * radius - miss * miss)));
+                if (contact >= along) continue;
+                along = contact;
+                first = id;
+            }
+            return first;
+        }
+
+        /// <summary>Whether a heal area cast now would heal someone who needs it: it, or an ally within the radius.</summary>
+        private static bool HurtInArea(SimulationWorld world, PlayerState self, SkillDefinition skill, float p)
+        {
+            var radius = skill.Radius * 0.9f;
+            foreach (var id in world.PlayerIds)
+            {
+                var who = world.GetPlayer(id);
+                if (Flat(who.Position - self.Position).Length <= radius && NeedsHealing(who, skill, p)) return true;
+            }
+            return false;
         }
 
         /// <summary>Holding a charge: keep moving as the role wants, and let go when full enough (or it has held too long).</summary>
