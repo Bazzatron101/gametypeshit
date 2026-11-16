@@ -105,10 +105,10 @@ namespace HunterSystem.Simulation
                 Id = id, Position = spawnPosition, SetOffFrom = spawnPosition, Facing = DefaultFacing, Stats = stats,
                 Class = characterClass, JumpHeightPercent = characterClass?.JumpHeightPercent ?? 100,
             };
-            player.MaxHealth = ComputeMaxHealth(player);
-            player.Health = player.MaxHealth;
             LearnStarterSkills(player);
             IssueStartingWeapon(player);
+            player.MaxHealth = ComputeMaxHealth(player); // after the weapon: its stat bonuses count (ticket 51)
+            player.Health = player.MaxHealth;
             _players.Add(player);
             _playersById.Add(id, player);
             _playerIds.Add(id);
@@ -126,7 +126,15 @@ namespace HunterSystem.Simulation
                 SkillBarSnapshot(p), p.KnownSkills.ToArray(), p.Modifiers.ToArray(),
                 p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray(),
                 p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone(), p.Name, p.Look,
-                hasMount: p.HasMount, isMounted: p.Mounted, specialties: p.Specialties.ToArray(), passedTrials: p.PassedTrials.ToArray(), specialtyPickWaiting: PickWaiting(p));
+                hasMount: p.HasMount, isMounted: p.Mounted, specialties: p.Specialties.ToArray(), passedTrials: p.PassedTrials.ToArray(), specialtyPickWaiting: PickWaiting(p),
+                gearStats: GearStatsOf(p));
+        }
+
+        private static PlayerStats GearStatsOf(Player p)
+        {
+            var bonuses = new int[PlayerStats.Count];
+            for (var i = 0; i < bonuses.Length; i++) bonuses[i] = GearStatBonus(p, (Stat)i);
+            return new PlayerStats(bonuses);
         }
 
         public EnemyId SpawnEnemy(EnemyDefinition definition, Vec3 position) => SpawnEnemy(definition, position, null);

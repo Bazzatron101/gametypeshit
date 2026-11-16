@@ -6,10 +6,43 @@ namespace HunterSystem.Simulation
     /// <summary>Progression: stat effects, XP, levels and stat points.</summary>
     public sealed partial class SimulationWorld
     {
-        private int PointsAboveStart(Player player, Stat stat) => player.Stats[(int)stat] - _config.Progression.StartingStatValue;
+        /// <summary>
+        /// The least a stat effect can scale move speed or damage to, however far worn gear pulls a stat
+        /// below its start (ticket 51): a tenth. Max health has its own floor of 1.
+        /// </summary>
+        private const int MinStatScalePerMille = 100;
+
+        /// <summary>
+        /// The stat as it counts in play: the character's own value plus what worn gear adds (ticket 51).
+        /// Every stat effect goes through here, so gear reaches them all at once.
+        /// </summary>
+        private static int EffectiveStat(Player player, Stat stat) => player.Stats[(int)stat] + GearStatBonus(player, stat);
+
+        /// <summary>What the gear the player wears adds to <paramref name="stat"/> (negative for a loss).</summary>
+        private static int GearStatBonus(Player player, Stat stat)
+        {
+            var total = 0;
+            foreach (var gear in player.Worn)
+                if (gear != null) total += gear.BonusTo(stat);
+            return total;
+        }
+
+        /// <summary>Points above the start, counting worn gear. Below zero when gear pulls a stat under its start.</summary>
+        private int PointsAboveStart(Player player, Stat stat) => EffectiveStat(player, stat) - _config.Progression.StartingStatValue;
 
         private int ComputeMaxHealth(Player player) =>
             Math.Max(1, _config.PlayerMaxHealth + PointsAboveStart(player, Stat.Vitality) * _config.StatEffects.HealthPerVitality);
+
+        /// <summary>
+        /// After worn gear changed: max health follows Vitality, but putting a piece on is never a free heal
+        /// (ticket 51). Current health stays as it is when the max goes up, and is cut to the new max when it
+        /// goes down.
+        /// </summary>
+        private void RefreshMaxHealthAfterGearChange(Player player)
+        {
+            player.MaxHealth = ComputeMaxHealth(player);
+            if (player.Health > player.MaxHealth) player.Health = player.MaxHealth;
+        }
 
         /// <summary>
         /// Damage raised by <paramref name="scalingStat"/>'s points above the start. Integer maths in
@@ -21,7 +54,7 @@ namespace HunterSystem.Simulation
                 : scalingStat == Stat.Intelligence ? _damagePerMillePerIntelligence
                 : scalingStat == Stat.Agility ? _damagePerMillePerAgility
                 : 0;
-            var perMille = 1000 + PointsAboveStart(player, scalingStat) * perPoint;
+            var perMille = Math.Max(MinStatScalePerMille, 1000 + PointsAboveStart(player, scalingStat) * perPoint);
             return (int)Math.Max(0L, ((long)baseDamage * perMille + 500) / 1000);
         }
 

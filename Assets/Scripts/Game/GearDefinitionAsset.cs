@@ -48,6 +48,14 @@ namespace HunterSystem.Game
             };
         }
 
+        /// <summary>One stat the piece raises or lowers while worn (ticket 51).</summary>
+        [Serializable]
+        public sealed class WornStatBonus
+        {
+            public Stat stat;
+            [Tooltip("+5 = five more points while worn; negative takes points away (pair it with an upside)")] public int amount;
+        }
+
         /// <summary>One of a weapon's attacks (ticket 46): a skill-shaped hit plus a windup. An empty id means none (the default attack).</summary>
         [Serializable]
         public sealed class Attack
@@ -88,6 +96,7 @@ namespace HunterSystem.Game
         [SerializeField] private GearSlot slot;
         [SerializeField, Tooltip("Known tags: melee, physical, area, fire, projectile, magic, summon")] private string[] tags = new string[0];
         [SerializeField] private WornModifier[] modifiers = new WornModifier[0];
+        [SerializeField, Tooltip("Stats raised or lowered while worn (ticket 51); one entry per stat")] private WornStatBonus[] statBonuses = new WornStatBonus[0];
         [Header("Weapons only (ticket 46)")]
         [SerializeField, Tooltip("Replaces the light attack while worn")] private Attack lightAttack = new Attack();
         [SerializeField, Tooltip("Replaces the heavy attack while worn")] private Attack heavyAttack = new Attack();
@@ -118,6 +127,8 @@ namespace HunterSystem.Game
             };
             foreach (var m in modifiers ?? new WornModifier[0])
                 if (m != null) gear.Modifiers.Add(m.ToDefinition());
+            foreach (var b in statBonuses ?? new WornStatBonus[0])
+                if (b != null) gear.StatBonuses.Add(new StatBonus(b.stat, b.amount));
             if (made != null) made[this] = gear;
             return gear;
         }

@@ -21,7 +21,7 @@ namespace HunterSystem.Simulation
 
             var speed = player.Mounted
                 ? _config.MountSpeed // the mount's pace, whatever the rider's agility
-                : speedFactor * _config.PlayerMoveSpeed * (1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
+                : speedFactor * _config.PlayerMoveSpeed * Math.Max(MinStatScalePerMille / 1000f, 1f + PointsAboveStart(player, Stat.Agility) * _config.StatEffects.MoveSpeedPerAgility);
             player.Position += direction * (magnitude * speed * TickDelta);
             player.Facing = direction;
         }

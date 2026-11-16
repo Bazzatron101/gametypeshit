@@ -19,6 +19,7 @@ namespace HunterSystem.Game
             if (gear == null) return lines;
             if (gear.LightAttack != null) lines.Add("Light attack: " + Attack(gear.LightAttack));
             if (gear.HeavyAttack != null) lines.Add("Heavy attack: " + Attack(gear.HeavyAttack));
+            foreach (var b in gear.StatBonuses) lines.Add(StatBonus(b.Stat, b.Amount));
             foreach (var m in gear.Modifiers) lines.Add(Modifier(m, skillName));
             if (lines.Count == 0) lines.Add("No effect yet.");
             return lines;
@@ -47,6 +48,13 @@ namespace HunterSystem.Game
             parts.Add($"every {N(hit.CooldownSeconds)} s");
             return $"{hit.Name}: {string.Join(", ", parts)}";
         }
+
+        /// <summary>"+5 Vitality", "-2 Agility". Sense and Luck say they do nothing yet (ticket 51).</summary>
+        public static string StatBonus(Stat stat, int amount) =>
+            $"{Signed(amount)} {stat}" + (StatDoesNothingYet(stat) ? " (no effect yet)" : "");
+
+        /// <summary>Sense and Luck have no effect in play yet (ticket 06); gear may still carry them.</summary>
+        public static bool StatDoesNothingYet(Stat stat) => stat == Stat.Sense || stat == Stat.Luck;
 
         /// <summary>One modifier as a short line: what it changes, then what it applies to.</summary>
         public static string Modifier(ModifierDefinition m, Func<string, string> skillName = null)
@@ -79,18 +87,38 @@ namespace HunterSystem.Game
             if (candidate == null) return lines;
             if (worn == null)
             {
-                lines.Add($"The {GearPanel.SlotName(candidate.Slot)} slot is empty: you only gain.");
+                // Gains only, unless the piece takes a stat away: then say what it costs.
+                if (candidate.StatBonuses.All(b => b.Amount >= 0))
+                {
+                    lines.Add($"The {GearPanel.SlotName(candidate.Slot)} slot is empty: you only gain.");
+                    return lines;
+                }
+                lines.Add($"The {GearPanel.SlotName(candidate.Slot)} slot is empty.");
+                StatChanges(lines, candidate, null);
                 return lines;
             }
             if (worn == candidate) return lines;
             AttackChange(lines, "Light", candidate.LightAttack, worn.LightAttack);
             AttackChange(lines, "Heavy", candidate.HeavyAttack, worn.HeavyAttack);
+            StatChanges(lines, candidate, worn);
             var gained = candidate.Modifiers.Select(m => Modifier(m, skillName)).ToList();
             var lost = worn.Modifiers.Select(m => Modifier(m, skillName)).ToList();
             foreach (var line in gained.Except(lost)) lines.Add("+ " + line);
             foreach (var line in lost.Except(gained)) lines.Add("− " + line);
             if (lines.Count == 0) lines.Add("No difference.");
             return lines;
+        }
+
+        /// <summary>The net change to each stat if <paramref name="candidate"/> replaces <paramref name="worn"/>: "+ 3 Vitality", "− 2 Agility".</summary>
+        private static void StatChanges(List<string> lines, GearDefinition candidate, GearDefinition worn)
+        {
+            foreach (Stat stat in Enum.GetValues(typeof(Stat)))
+            {
+                var change = candidate.BonusTo(stat) - (worn?.BonusTo(stat) ?? 0);
+                if (change == 0) continue;
+                var note = StatDoesNothingYet(stat) ? " (no effect yet)" : "";
+                lines.Add(change > 0 ? $"+ {change} {stat}{note}" : $"− {-change} {stat}{note}");
+            }
         }
 
         private static void AttackChange(List<string> lines, string kind, WeaponAttack now, WeaponAttack was)

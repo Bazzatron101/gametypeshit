@@ -82,10 +82,15 @@ namespace HunterSystem.Netcode
             }
         }
 
-        /// <summary>How well a piece suits a role: one point for each wanted tag it carries, and one for each of its modifiers aimed at one.</summary>
+        /// <summary>
+        /// How well a piece suits a role: one point for each wanted tag it carries, one for each of its
+        /// modifiers aimed at one, and its stat bonuses to the stats the role puts its points into
+        /// (<see cref="StatPlan"/>), point for point (ticket 51). A minus to one of them counts against it.
+        /// </summary>
         public static int GearScore(CompanionRole role, GearDefinition gear)
         {
             var score = 0;
+            foreach (var stat in System.Linq.Enumerable.Distinct(StatPlan(role))) score += gear.BonusTo(stat);
             foreach (var tag in GearTags(role))
             {
                 if (gear.HasTag(tag)) score++;
@@ -98,7 +103,7 @@ namespace HunterSystem.Netcode
 
         /// <summary>
         /// A piece from the bag worth putting on now, or null: the best-suited piece for a slot that is
-        /// empty, or that beats what is worn there. The first piece found wins a tie, so it never swaps
+        /// empty (unless it scores below zero for the role), or that beats what is worn there. The first piece found wins a tie, so it never swaps
         /// back and forth. One piece at a time, slot by slot.
         /// </summary>
         public static string GearToWear(CompanionRole role, PlayerState self)
@@ -106,7 +111,7 @@ namespace HunterSystem.Netcode
             for (var slot = 0; slot < GearDefinition.SlotCount; slot++)
             {
                 GearDefinition best = null;
-                var bestScore = -1;
+                var bestScore = int.MinValue;
                 foreach (var gear in self.Bag)
                 {
                     if ((int)gear.Slot != slot) continue;
@@ -115,7 +120,8 @@ namespace HunterSystem.Netcode
                 }
                 var worn = self.Worn[slot];
                 if (best == null || best == worn) continue;
-                if (worn == null || bestScore > GearScore(role, worn)) return best.Id;
+                // An empty slot takes the best piece unless even that one costs the role more than it gives (ticket 51).
+                if (worn == null ? bestScore >= 0 : bestScore > GearScore(role, worn)) return best.Id;
             }
             return null;
         }

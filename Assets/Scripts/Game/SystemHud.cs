@@ -278,12 +278,12 @@ namespace HunterSystem.Game
         private void DrawStatScreen(PlayerState state)
         {
             const float rowHeight = 34f;
-            var box = new Rect((Screen.width - 420) / 2f, (Screen.height - 330) / 2f, 420, 120 + StatRows.Length * rowHeight);
+            var box = new Rect((Screen.width - 500) / 2f, (Screen.height - 330) / 2f, 500, 120 + StatRows.Length * rowHeight);
             Fill(box, PanelColor);
             Outline(box, SystemBlue);
 
             _title.normal.textColor = SystemBlue;
-            GUI.Label(new Rect(box.x + 16, box.y + 12, 380, 26), $"[ STATUS ]   Level {state.Level}", _title);
+            GUI.Label(new Rect(box.x + 16, box.y + 12, 460, 26), $"[ STATUS ]   Level {state.Level}", _title);
             _label.normal.textColor = state.UnspentStatPoints > 0 ? SystemBlue : Color.gray;
             GUI.Label(new Rect(box.x + 16, box.y + 42, 380, 22), $"Unspent points: {state.UnspentStatPoints}", _label);
 
@@ -293,12 +293,19 @@ namespace HunterSystem.Game
                 var y = box.y + 74 + i * rowHeight;
                 _label.normal.textColor = Color.white;
                 GUI.Label(new Rect(box.x + 16, y, 130, 26), stat.ToString(), _label);
-                GUI.Label(new Rect(box.x + 140, y, 40, 26), state.Stats[stat].ToString(), _label);
+                // The total as it counts in play, with worn gear's part beside it (ticket 51): "14 (+4 gear)".
+                GUI.Label(new Rect(box.x + 140, y, 40, 26), state.TotalStat(stat).ToString(), _label);
+                var fromGear = state.GearStats[stat];
+                if (fromGear != 0)
+                {
+                    _label.normal.textColor = fromGear > 0 ? new Color(0.45f, 0.95f, 0.45f) : new Color(1f, 0.5f, 0.45f);
+                    GUI.Label(new Rect(box.x + 176, y, 80, 26), fromGear > 0 ? $"(+{fromGear} gear)" : $"({fromGear} gear)", _label);
+                }
                 _label.normal.textColor = Color.gray;
-                GUI.Label(new Rect(box.x + 190, y, 170, 26), effect, _label);
+                GUI.Label(new Rect(box.x + 260, y, 180, 26), effect, _label);
 
                 GUI.enabled = state.UnspentStatPoints > 0;
-                if (GUI.Button(new Rect(box.x + 364, y, 40, 26), "+", _button)) _runner.RequestStatAllocation(PlayerId, stat);
+                if (GUI.Button(new Rect(box.x + 444, y, 40, 26), "+", _button)) _runner.RequestStatAllocation(PlayerId, stat);
                 GUI.enabled = true;
             }
 

@@ -34,6 +34,16 @@ namespace HunterSystem.Simulation
                     try { ValidateModifier(modifier); }
                     catch (ArgumentException e) { throw new ArgumentException($"Gear '{gear.Id}': {e.Message}", nameof(_config), e); }
                 }
+                var bonusStats = new HashSet<Stat>();
+                foreach (var bonus in gear.StatBonuses)
+                {
+                    Require(Enum.IsDefined(typeof(Stat), bonus.Stat), $"stat {(int)bonus.Stat} is not a stat.");
+                    Require(bonus.Amount != 0, $"its {bonus.Stat} bonus is 0.");
+                    Require(bonusStats.Add(bonus.Stat), $"has more than one {bonus.Stat} bonus.");
+                }
+                // A minus always comes with an upside (ticket 51): a piece whose stats add up to a loss must do something else.
+                Require(gear.StatBonuses.Sum(b => b.Amount) >= 0 || gear.Modifiers.Count > 0 || gear.LightAttack != null || gear.HeavyAttack != null,
+                    "its stat bonuses add up to a loss and it has nothing else to make it worth wearing (no modifiers, no attacks).");
                 foreach (var attack in new[] { gear.LightAttack, gear.HeavyAttack })
                 {
                     if (attack == null) continue;
@@ -89,6 +99,7 @@ namespace HunterSystem.Simulation
             if (player.Worn[slot] == gear) return;
             if (player.Worn[slot] != null) _events.Add(new GearUnequipped(tick, player.Id, gear.Slot, player.Worn[slot].Id));
             player.Worn[slot] = gear;
+            RefreshMaxHealthAfterGearChange(player);
             _events.Add(new GearEquipped(tick, player.Id, gear.Slot, gear.Id));
         }
 
@@ -98,6 +109,7 @@ namespace HunterSystem.Simulation
             var worn = player.Worn[(int)slot];
             if (worn == null) return;
             player.Worn[(int)slot] = null;
+            RefreshMaxHealthAfterGearChange(player);
             _events.Add(new GearUnequipped(tick, player.Id, slot, worn.Id));
         }
 

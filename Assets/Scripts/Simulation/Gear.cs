@@ -39,7 +39,36 @@ namespace HunterSystem.Simulation
         /// <summary>A weapon's heavy attack, or null to keep the default one.</summary>
         public WeaponAttack HeavyAttack { get; set; }
 
+        /// <summary>
+        /// What the piece adds to (or takes from) the six stats while worn (ticket 51), at most one entry per
+        /// stat. The bonus counts wherever the stat has an effect, but never changes the points the player
+        /// spent or the stats saved with the character.
+        /// </summary>
+        public List<StatBonus> StatBonuses { get; } = new List<StatBonus>();
+
+        /// <summary>The piece's bonus to <paramref name="stat"/>, 0 if it has none.</summary>
+        public int BonusTo(Stat stat)
+        {
+            var total = 0;
+            foreach (var b in StatBonuses)
+                if (b.Stat == stat) total += b.Amount;
+            return total;
+        }
+
         public bool HasTag(string tag) => Tags != null && Tags.Contains(tag, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>One stat a piece of gear raises or lowers while worn (ticket 51): "+5 Vitality", "-2 Agility".</summary>
+    public readonly struct StatBonus
+    {
+        public readonly Stat Stat;
+        public readonly int Amount;
+
+        public StatBonus(Stat stat, int amount)
+        {
+            Stat = stat;
+            Amount = amount;
+        }
     }
 
     /// <summary>

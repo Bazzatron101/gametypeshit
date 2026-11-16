@@ -44,7 +44,15 @@ namespace HunterSystem.Simulation
 
         public readonly bool IsAtLevelCap;
         public readonly int UnspentStatPoints;
+
+        /// <summary>The character's own stats: starting values, class stats and the points the player spent. Saved with the character.</summary>
         public readonly PlayerStats Stats;
+
+        /// <summary>What worn gear adds to each stat right now (ticket 51); negative for a loss. Never saved.</summary>
+        public PlayerStats GearStats { get; }
+
+        /// <summary>A stat as it counts in play: the character's own plus worn gear's.</summary>
+        public int TotalStat(Stat stat) => Stats[stat] + GearStats[stat];
 
         /// <summary>The six-slot skill bar (keys 1 to 6).</summary>
         public readonly IReadOnlyList<SkillSlotState> SkillSlots;
@@ -122,8 +130,10 @@ namespace HunterSystem.Simulation
             ClassDefinition characterClass = null, int jumpHeightPercent = 100, int gold = 0, IReadOnlyList<LootDefinition> duplicates = null,
             IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null, string name = null, CharacterLook look = default,
             bool hasMount = false, bool isMounted = false,
-            IReadOnlyList<SpecialtyDefinition> specialties = null, IReadOnlyList<string> passedTrials = null, string specialtyPickWaiting = null)
+            IReadOnlyList<SpecialtyDefinition> specialties = null, IReadOnlyList<string> passedTrials = null, string specialtyPickWaiting = null,
+            PlayerStats gearStats = default)
         {
+            GearStats = gearStats;
             Specialties = specialties ?? System.Array.Empty<SpecialtyDefinition>();
             PassedTrials = passedTrials ?? System.Array.Empty<string>();
             SpecialtyPickWaiting = specialtyPickWaiting;

@@ -33,6 +33,9 @@ MonoBehaviour:
     projectileSpreadDegrees: 10
     explosionRadius: 0
     explosionDamagePercent: 0
+  statBonuses:
+  - stat: 4
+    amount: 2
   lightAttack:
     id: 
     displayName: 
