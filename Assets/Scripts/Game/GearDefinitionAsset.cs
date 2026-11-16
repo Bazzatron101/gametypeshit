@@ -92,10 +92,16 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Replaces the light attack while worn")] private Attack lightAttack = new Attack();
         [SerializeField, Tooltip("Replaces the heavy attack while worn")] private Attack heavyAttack = new Attack();
         [SerializeField, Min(1), Tooltip("Gold for a duplicate at a store paying full value; each store pays its own share")] private int sellValue = 100;
+        [Header("Look (ticket 34)")]
+        [SerializeField, Tooltip("Drawn on the wearer, placed at its slot's anchor on the body (see GearLooks). Empty = a plain stand-in shape.")]
+        private GameObject look;
 
         public string Id => id;
         public string DisplayName => displayName;
         public GearSlot Slot => slot;
+
+        /// <summary>What the piece looks like when worn (ticket 34), or null for the plain stand-in. Presentation only.</summary>
+        public GameObject Look => look;
 
         /// <summary>
         /// The piece as the simulation sees it, made once per config: a gate's pool and the game's

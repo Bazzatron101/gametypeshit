@@ -33,4 +33,33 @@ MonoBehaviour:
     projectileSpreadDegrees: 15
     explosionRadius: 3
     explosionDamagePercent: 40
+  lightAttack:
+    id: 
+    displayName: 
+    effect: 0
+    tags: []
+    scalingStat: 0
+    damage: 10
+    range: 2.5
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: 
+    displayName: 
+    effect: 0
+    tags: []
+    scalingStat: 0
+    damage: 10
+    range: 2.5
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
   sellValue: 150
+  look: {fileID: 2126516498998766939, guid: 86d7e723b44f5524a937a0b252a5441a, type: 3}

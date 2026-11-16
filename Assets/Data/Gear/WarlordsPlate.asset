@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: WarlordsPlate
   m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
   id: warlords-plate
-  displayName: 'Warlord''s Plate'
+  displayName: Warlord's Plate
   description: Physical skills deal 8% more damage for every piece of physical gear you wear.
   slot: 2
   tags:
@@ -33,4 +33,33 @@ MonoBehaviour:
     projectileSpreadDegrees: 15
     explosionRadius: 0
     explosionDamagePercent: 0
+  lightAttack:
+    id: 
+    displayName: 
+    effect: 0
+    tags: []
+    scalingStat: 0
+    damage: 10
+    range: 2.5
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: 
+    displayName: 
+    effect: 0
+    tags: []
+    scalingStat: 0
+    damage: 10
+    range: 2.5
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
   sellValue: 120
+  look: {fileID: 8294797814135705595, guid: 26e378600eb44ef4eaf3dfc46832209e, type: 3}

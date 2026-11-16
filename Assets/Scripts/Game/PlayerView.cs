@@ -8,6 +8,8 @@ namespace HunterSystem.Game
     /// only reads state from the simulation and never writes to it. Place it at the feet;
     /// child visuals (the capsule) sit above. It turns to the simulation's facing, shows a swing
     /// marker on each light attack, flashes when hit, squashes while dodging and lies down when defeated.
+    /// What the player wears is drawn on the body (ticket 34, see <see cref="GearLooks"/>); online, other
+    /// players' gear comes from host snapshots, so everyone sees everyone's own gear.
     /// </summary>
     public sealed class PlayerView : MonoBehaviour
     {
@@ -30,12 +32,18 @@ namespace HunterSystem.Game
         private Vector3 _bodyScale;
         private Vector3 _bodyPosition;
         private GameObject _mount;
+        private System.Collections.Generic.Dictionary<string, GameObject> _gearLooks;
+        private readonly string[] _shownGear = new string[GearDefinition.SlotCount]; // by id: a new world (a rejoin) has new definitions of the same pieces
+        private readonly GameObject[] _gearObjects = new GameObject[GearDefinition.SlotCount];
 
         /// <summary>How much higher a rider sits (ticket 42).</summary>
         private const float SaddleHeight = 0.9f;
 
         public PlayerId PlayerId => new PlayerId(playerId);
         public bool IsLocal => isLocal;
+
+        /// <summary>The look drawn for the piece worn in <paramref name="slot"/>, or null when nothing is shown there.</summary>
+        public GameObject WornLook(GearSlot slot) => _gearObjects[(int)slot];
 
         /// <summary>Sets up a view built in code (online, players appear as they join).</summary>
         public void Configure(PlayerId id, bool local, Renderer bodyRenderer, GameObject swing)
@@ -88,6 +96,7 @@ namespace HunterSystem.Game
             transform.rotation = Quaternion.LookRotation(new Vector3(state.Facing.X, 0f, state.Facing.Z), Vector3.up);
             if (swingMarker != null) swingMarker.SetActive(!state.IsDefeated && Time.time < _swingUntil);
             if (body != null) PoseBody(state);
+            if (body != null) ShowGear(state);
             ShowMount(state.IsMounted && !state.IsDefeated);
         }
 
@@ -108,6 +117,23 @@ namespace HunterSystem.Game
             }
             if (_mount != null) _mount.SetActive(riding);
             if (riding && body != null) body.transform.localPosition += Vector3.up * SaddleHeight;
+        }
+
+        /// <summary>Draws each worn piece on the body, swapping a look only when what is worn changes (ticket 34).</summary>
+        private void ShowGear(PlayerState state)
+        {
+            for (var slot = 0; slot < GearDefinition.SlotCount; slot++)
+            {
+                var worn = slot < state.Worn.Count ? state.Worn[slot] : null;
+                if (worn?.Id == _shownGear[slot]) continue;
+                if (_gearObjects[slot] != null) Destroy(_gearObjects[slot]);
+                _gearObjects[slot] = null;
+                _shownGear[slot] = worn?.Id;
+                if (worn == null) continue;
+                _gearLooks ??= GearLooks.Catalog(_runner.Content);
+                _gearLooks.TryGetValue(worn.Id, out var prefab);
+                _gearObjects[slot] = GearLooks.Wear(worn, prefab, body);
+            }
         }
 
         private void PoseBody(PlayerState state)

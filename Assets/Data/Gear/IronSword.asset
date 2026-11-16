@@ -53,3 +53,4 @@ MonoBehaviour:
     cooldownSeconds: 0.9
     windupSeconds: 0.3
   sellValue: 60
+  look: {fileID: 1394762924603619437, guid: 3e6e360a25bde1941bd2b7e0c700e64c, type: 3}
