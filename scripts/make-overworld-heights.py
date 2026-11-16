@@ -38,7 +38,10 @@ land |= ndi.binary_dilation(snowy, iterations=3)
 land = ndi.binary_closing(land, structure=np.ones((5, 5)))
 land = ndi.binary_fill_holes(land)
 # Where the drawing's icons hide the land (a grey castle on the coast reads as sea), say so by hand.
-LAND_PATCHES = [(805, 195, 18), (95, 270, 26)]   # Saltreach castle; the guild town (blue spires)
+LAND_PATCHES = [(805, 195, 18), (95, 270, 26),   # Saltreach castle; the guild town (blue spires)
+                (76, 452, 12)]                     # Heron isle, the islet off the far west coast (gate site 21)
+# The dashed path from the cave on the west coast to Heron isle: a narrow causeway of shallows (ticket 36).
+LAND_PATCHES += [(int(86 + (150 - 86) * t), int(455 + (463 - 455) * t), 3) for t in np.linspace(0, 1, 22)]
 for (px, py, r) in LAND_PATCHES:
     land |= (xx - px) ** 2 + (yy - py) ** 2 <= r * r
 land = ndi.binary_opening(land, structure=np.ones((3, 3)))

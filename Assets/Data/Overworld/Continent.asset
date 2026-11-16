@@ -82,7 +82,7 @@ MonoBehaviour:
     - {x: -2593.2344, y: 81.68601, z: -1214.896}
     - {x: -2824.2573, y: 54.119946, z: -1537.3329}
     - {x: -3286.3037, y: 89.725395, z: -1537.3329}
-    - {x: -3517.3267, y: 116.36391, z: -1456.7236}
+    - {x: -3517.3267, y: 125.687164, z: -1456.7236}
   - halfWidth: 4
     points:
     - {x: -109.73598, y: 47.44461, z: 2343.425}
@@ -154,6 +154,26 @@ MonoBehaviour:
     - {x: -3193.8943, y: 11.548142, z: 742.7563}
     - {x: -3401.8152, y: 16.857714, z: 915.49036}
   landmarks:
+  - label: 'Gate spot: Class quest: south island south (saltreach)'
+    position: {x: -1842.4093, y: 22.409843, z: -3091.939}
+  - label: 'Gate spot: Class quest: south island north (saltreach)'
+    position: {x: -1438.1188, y: 16.55965, z: -2078.5662}
+  - label: 'Gate spot: Heron isle (fenward)'
+    position: {x: -4372.1123, y: 43.187588, z: -1330.052}
+  - label: 'Gate spot: Riverbed gate (brokenstone)'
+    position: {x: -225.24753, y: 48.81995, z: -846.3967}
+  - label: 'Gate spot: Peat camp (fenward)'
+    position: {x: -3401.8152, y: 74.392, z: -328.19464}
+  - label: 'Gate spot: Herd grounds (ashen)'
+    position: {x: 2835.8086, y: 79.123604, z: -178.49182}
+  - label: 'Gate spot: Wreck cove (saltreach)'
+    position: {x: 3990.924, y: 16.760754, z: 282.13223}
+  - label: 'Gate spot: Old well (greenmarch)'
+    position: {x: -2454.6204, y: 31.843925, z: 1664.0045}
+  - label: 'Gate spot: Class quest: north-east coast (saltreach)'
+    position: {x: 2316.0066, y: 41.868797, z: 2585.2527}
+  - label: 'Gate spot: Class quest: north coast (saltreach)'
+    position: {x: 271.45215, y: 24.360043, z: 2953.752}
   - label: 'Gate spot: The Rift (riftlands)'
     position: {x: 3702.1453, y: 23.927614, z: -1767.6449}
   - label: 'Gate spot: South gate (riftlands)'

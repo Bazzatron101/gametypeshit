@@ -96,6 +96,18 @@ namespace HunterSystem.Editor
             new GateSpot("Snow pass", 555f, 395f, "riftlands", known: true),
             new GateSpot("South gate", 485f, 525f, "riftlands", known: false),
             new GateSpot("The Rift", 775f, 490f, "riftlands", known: true),
+            // The numbered drawing's other sites (docs/maps/overworld-gates-numbered.png), filled by the agent
+            // from ticket 36's list of gates without a spot; the developer will change them as needed.
+            new GateSpot("Class quest: north coast", 478f, 80f, "saltreach", known: true),        // site 3
+            new GateSpot("Class quest: north-east coast", 655f, 112f, "saltreach", known: true),  // site 5
+            new GateSpot("Old well", 242f, 192f, "greenmarch", known: false),                     // site 7, the spare: a farming gate
+            new GateSpot("Wreck cove", 800f, 312f, "saltreach", known: false),                    // site 14
+            new GateSpot("Herd grounds", 700f, 352f, "ashen", known: false),                      // site 15, moved off the snowy ridge
+            new GateSpot("Peat camp", 160f, 365f, "fenward", known: false),                       // site 16
+            new GateSpot("Riverbed gate", 435f, 410f, "brokenstone", known: false),               // site 18, by Quarry brook
+            new GateSpot("Heron isle", 76f, 452f, "fenward", known: true),                        // site 21, the islet
+            new GateSpot("Class quest: south island north", 330f, 517f, "saltreach", known: true), // site 23
+            new GateSpot("Class quest: south island south", 295f, 605f, "saltreach", known: true), // site 26
         };
 
         public static readonly Road[] Roads =

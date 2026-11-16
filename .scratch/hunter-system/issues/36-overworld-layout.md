@@ -343,3 +343,26 @@ Still to settle: which crossed swords are which gate (the region table predates 
 **2026-11-15 (developer playtest, recorded by agent):** Walking the test patch, the map "feels big with the movement speed". Nothing changed yet. Options when this is decided: leave it until mounts (ticket 42) and buildings (ticket 49) make the ground feel less empty, raise walking or sprint speed (the map stays the same size; crossing time drops), or shrink the map before ticket 45 builds it.
 
 **2026-11-16 (developer, recorded by agent):** Towns and the land need nature and buildings; they are empty for now. That is ticket 49 (placeholders first).
+
+**2026-11-16 (developer: "do what you think is best and I'll change them when I need to"; agent's assignment):** Every numbered site in `docs/maps/overworld-gates-numbered.png` now has a gate (in `ContinentLayout`, ticket 45):
+
+| # | Gate | Region | # | Gate | Region |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Barrow | greenmarch | 14 | Wreck cove | saltreach |
+| 2 | Thornwood hollow | greenmarch | 15 | Herd grounds (moved off the snowy ridge, into its foothills) | ashen |
+| 3 | Class quest: north coast | saltreach | 16 | Peat camp | fenward |
+| 4 | Lighthouse | saltreach | 17 | Snow pass | riftlands |
+| 5 | Class quest: north-east coast | saltreach | 18 | Riverbed gate (by Quarry brook) | brokenstone |
+| 6 | Deep mine | brokenstone | 19 | Causeway gate | fenward |
+| 7 | Old well (the spare: a farming gate) | greenmarch | 20 | Cairns | brokenstone |
+| 8 | Watchtower | brokenstone | 21 | Heron isle | fenward |
+| 9 | Battlefield | ashen | 22 | The Rift | riftlands |
+| 10 | Stone ring | ashen | 23 | Class quest: south island north | saltreach |
+| 11 | Bridge gate | greenmarch | 24 | South gate | riftlands |
+| 12 | Great quarry | brokenstone | 25 | Drowned chapel | fenward |
+| 13 | Mill cellar (Goblin Warren) | greenmarch | 26 | Class quest: south island south | saltreach |
+
+- The four class quest gates went to the coastal sites, as the region sketch put them "along the coast"; two are on the small south island, far from Saltreach.
+- The Riverbed gate sits in the Brokenstone hills by Quarry brook, not the Ashen steppe as the region table had it: site 18 is there.
+- Heron isle (21) is the islet off the far west coast, reached by a narrow shallows causeway from the cave (now land in the elevation map).
+- The demon king's gate under Saltreach stays unmarked. Story-spawned sites are still to choose.

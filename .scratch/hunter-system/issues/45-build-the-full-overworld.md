@@ -7,7 +7,7 @@
 **Status:** ready-for-human (open Assets/Scenes/Continent.unity, rebuild it from the menu first, press Play and walk; check the layout)
 
 - [ ] Every region's ground generated and baked into tiles, with the sea, the mountain ranges, passes and climbable faces where ticket 36 puts them (ground, sea, ranges, rivers and bridges done; no climbable faces or passes yet)
-- [ ] Every settlement and gate from ticket 36 placed as a marker; the nine missing gate spots once the developer marks them on the map
+- [x] Every settlement and gate from ticket 36 placed as a marker (all 26 numbered sites; see ticket 36)
 - [ ] The road joins the guild town to the east coast; a crossing measures about 40 minutes walking and about 13 mounted (ticket 36), checked in a build
 - [x] Origin at the map's centre (ADR 0015)
 - [ ] Hours spent recorded against the estimate from ticket 39
@@ -38,3 +38,5 @@
 - No climbable faces yet; no waystones; the nine missing gate spots from ticket 36 still wait on the developer's drawing.
 - Towns are empty squares (ticket 49).
 - Build size: the continent scene is in the build list, so a player build carries its 415 MB of tiles.
+
+**2026-11-16 (agent):** All 26 numbered gate sites are placed (list on ticket 36); 2 are real gates, 24 are named spots. Heron isle and its causeway are now land. Rebuilt (1,302 tiles in 287 s) and tested: EditMode 671 passed, PlayMode 38 passed.
