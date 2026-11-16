@@ -4,7 +4,7 @@
 
 **Blocked by:** 23: Gear and tag synergies
 
-**Status:** ready-for-human (open the gear screen with I and try it)
+**Status:** done
 
 - [x] The six worn slots are shown clearly, with what is in each
 - [x] The bag lists every owned piece, and what a piece does (its modifiers and tags) is easy to read
@@ -26,3 +26,5 @@
 - Tests: `GearScreenTest` (5: weapon lines, modifier lines, comparing weapons, comparing armour, the filtered bag). EditMode: 637 passed; PlayMode: 36 passed.
 - Not done: gear drawn on the character (ticket 34), and gear changing stats like Vitality (gear only has skill modifiers today).
 - **To check:** in the arena (every weapon is in the bag there) press I, filter, pick pieces and compare.
+
+**2026-11-16 (developer, recorded by agent):** Tried it: "very basic and will need a touch up but it is good for now." Closed as done. A visual and feel touch-up comes later; no specifics yet. Gear that changes stats is ticket 51.

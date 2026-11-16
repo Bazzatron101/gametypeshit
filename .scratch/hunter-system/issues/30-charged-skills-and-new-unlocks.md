@@ -4,7 +4,7 @@
 
 **Blocked by:** 07: Data-driven skills with the six-slot bar, 09: Test arena
 
-**Status:** ready-for-agent
+**Status:** done
 
 Decisions (from the developer, 2026-11-13):
 - Charging scales with hold time: a tap fires the normal skill; holding builds charge up to the skill's maximum; releasing fires with a bonus proportional to the charge.
