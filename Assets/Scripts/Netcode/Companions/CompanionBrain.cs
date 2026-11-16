@@ -70,6 +70,12 @@ namespace HunterSystem.Netcode
         private float _chargeTarget;
         private float _tickSeconds = 1f / 60f;
 
+        // Steering across the overworld (ticket 43): the last way found, for which goal, on which tick.
+        private Vec3 _waypoint;
+        private Vec3 _waypointGoal;
+        private int _waypointTick = int.MinValue;
+        private int _tick;
+
         /// <param name="record">The teammate; its experience grows as it plays.</param>
         /// <param name="seed">Spreads its timing and decisions from other teammates'. Any int.</param>
         public CompanionBrain(CompanionRecord record, int seed)
@@ -190,8 +196,11 @@ namespace HunterSystem.Netcode
             var p = Proficiency;
             if (_chargingSlot.HasValue && self.ChargingSlot != _chargingSlot && tick - _chargeStartedTick > 2) _chargingSlot = null; // the charge never started, or it was fired
 
+            _tick = tick;
             var leader = LeaderState(world, me);
-            if (world.InHub) return self.IsReady ? Travel(world, self, leader, p) : new PlayerCommand(0f, 0f, setReady: true);
+            if (world.InHub && !self.IsReady) return new PlayerCommand(0f, 0f, setReady: true); // the ready check, wherever the party is outside a gate
+            if (world.InHub && !world.InOverworld) return Travel(world, self, leader, p);
+            // Out in the overworld (ticket 43) it fights what leaks from the gates, as in a gate, and otherwise follows.
 
             if (TryAvoidBoss(self, tick, p, out var avoid)) return avoid;
             if (TryDodgeHit(self, tick, out var dodge)) return dodge;
@@ -483,9 +492,28 @@ namespace HunterSystem.Netcode
             var spot = l.Position + forward * ahead + right * across;
             var offset = Flat(spot - self.Position);
             var distance = offset.Length;
+            if (world.InOverworld)
+            {
+                // Keep up on a mount when the leader rides (ticket 42), and get down when they stop, ready to fight.
+                if (l.IsMounted && !self.IsMounted && self.HasMount && world.CanMount(self.Id)) return new PlayerCommand(0f, 0f, toggleMount: true);
+                if (!l.IsMounted && self.IsMounted && distance < 8f) return new PlayerCommand(0f, 0f, toggleMount: true);
+            }
             if (distance <= Lerp(3f, 1f, p)) return PlayerCommand.None;
-            var toward = offset * (1f / distance);
-            return new PlayerCommand(toward.X, toward.Z, sprint: distance > 6f);
+            var toward = Flat((world.InOverworld ? Steer(world, self.Position, spot) : spot) - self.Position);
+            toward = toward.Length > 1e-4f ? toward * (1f / toward.Length) : offset * (1f / distance);
+            return new PlayerCommand(toward.X, toward.Z, sprint: distance > 6f && !self.IsMounted);
+        }
+
+        /// <summary>Where to head for <paramref name="goal"/> across the overworld: straight, or round what is in the way (ticket 43).</summary>
+        private Vec3 Steer(SimulationWorld world, Vec3 from, Vec3 goal)
+        {
+            if (_tick - _waypointTick >= 15 || Flat(_waypointGoal - goal).Length > 3f || Flat(_waypoint - from).Length < 0.5f)
+            {
+                _waypoint = GroundPath.NextWaypoint(world.Ground, from, goal);
+                _waypointGoal = goal;
+                _waypointTick = _tick;
+            }
+            return _waypoint;
         }
 
         /// <summary>No one to follow in a gate: on to the first room not cleared, a missed checkpoint first; when cleared, home.</summary>

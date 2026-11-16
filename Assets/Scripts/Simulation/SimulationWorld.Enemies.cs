@@ -22,8 +22,12 @@ namespace HunterSystem.Simulation
                 return;
             }
 
-            var target = NearestLivePlayer(enemy.Position, out var distance);
-            if (target == null) return;
+            var target = enemy.Home.HasValue ? NearestLivePlayerNearHome(enemy, out var distance) : NearestLivePlayer(enemy.Position, out distance);
+            if (target == null)
+            {
+                if (enemy.Home.HasValue) WalkHome(enemy, tick); // nobody near its gate: back to it
+                return;
+            }
 
             if (distance <= enemy.Definition.AttackRange && tick >= enemy.AttackReadyAtTick)
             {
@@ -36,7 +40,7 @@ namespace HunterSystem.Simulation
             var gap = distance - enemy.Definition.StopDistance;
             if (gap <= 0f) return;
             var step = MathF.Min(enemy.Definition.MoveSpeed * TickDelta, gap);
-            enemy.Position += Flat(target.Position - enemy.Position) * (step / distance);
+            MoveEnemyToward(enemy, target.Position, step, tick);
         }
 
         private void ResolveEnemyAttack(Enemy enemy, int tick)

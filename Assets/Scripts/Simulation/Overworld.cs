@@ -26,6 +26,18 @@ namespace HunterSystem.Simulation
         /// <summary>How close a player must come to a hidden gate to find it.</summary>
         public float FindRadius { get; set; } = 20f;
 
+        /// <summary>Monsters each gate keeps round its entrance (ticket 43): its own kinds, while its tile is loaded and it is not cleared.</summary>
+        public int LeakCount { get; set; } = 3;
+
+        /// <summary>How far from the entrance a leaked monster appears.</summary>
+        public float LeakRadius { get; set; } = 10f;
+
+        /// <summary>A leaked monster only chases players within this many metres of its gate, and walks back otherwise.</summary>
+        public float LeakLeash { get; set; } = 30f;
+
+        /// <summary>How long after one is killed before the gate leaks another.</summary>
+        public float LeakRespawnSeconds { get; set; } = 60f;
+
         /// <summary>A gate in a region that is not open: XP from its enemies, as a percentage (ADR 0015). Loot is not cut.</summary>
         public int UnopenedRegionXpPercent { get; set; } = 25;
 

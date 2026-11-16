@@ -110,6 +110,27 @@ namespace HunterSystem.Netcode
 
         public bool IsCompanion(PlayerId id) => _companions.Exists(c => c.id == id);
 
+        /// <summary>Out in the overworld, a teammate further than this from its leader is brought back beside them (ticket 43).</summary>
+        public float CompanionRegroupDistance { get; set; } = 150f;
+
+        /// <summary>
+        /// Out in the overworld (ticket 43): teammates get a mount when their leader has one, so they keep up when the
+        /// leader rides; and one left hopelessly behind (stuck, or the leader rode off while it fought) is brought back.
+        /// </summary>
+        private void KeepCompanionsWithTheirLeader()
+        {
+            if (_companions.Count == 0 || !World.InOverworld || !World.HasPlayer(LocalPlayerId)) return;
+            var leader = World.GetPlayer(LocalPlayerId);
+            foreach (var (id, _) in _companions)
+            {
+                var mate = World.GetPlayer(id);
+                if (leader.HasMount && !mate.HasMount) World.GrantMount(id);
+                var apart = new Vec3(mate.Position.X - leader.Position.X, 0f, mate.Position.Z - leader.Position.Z).Length;
+                if (!leader.IsDefeated && !mate.IsDefeated && apart > CompanionRegroupDistance)
+                    World.PlacePlayer(id, JoinPoint.BesideParty(World, id, leader.Position));
+            }
+        }
+
         /// <summary>
         /// Adds a bot teammate, played on the host by a <see cref="CompanionBrain"/> that follows the
         /// host's own player. It is a player like any other: it takes a place in the party (and in
@@ -156,6 +177,7 @@ namespace HunterSystem.Netcode
             _commands.Clear();
             if (World.HasPlayer(LocalPlayerId)) _commands[LocalPlayerId] = localCommand;
             foreach (var remote in _remotes) _commands[remote.Id] = NextCommand(remote);
+            KeepCompanionsWithTheirLeader();
             foreach (var (id, brain) in _companions) _commands[id] = brain.Next(World, id, World.Events); // the last step's events
 
             World.Step(_commands);

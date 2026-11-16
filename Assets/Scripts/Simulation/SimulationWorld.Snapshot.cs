@@ -76,6 +76,10 @@ namespace HunterSystem.Simulation
                 w.Write(e.AttackTarget != null);
                 if (e.AttackTarget != null) w.Write(e.AttackTarget.Id.Value);
                 WriteVec(w, e.Facing);
+                WriteNullable(w, e.LeakedFrom);
+                w.Write(e.Home.HasValue);
+                if (e.Home.HasValue) WriteVec(w, e.Home.Value);
+                w.Write(e.Leash);
                 w.Write(e.BossAttack);
                 WriteVec(w, e.AttackOrigin);
                 WriteVec(w, e.AttackDirection);
@@ -126,6 +130,7 @@ namespace HunterSystem.Simulation
             foreach (var id in _foundGates) w.Write(id);
             w.Write(_openRegions.Count);
             foreach (var id in _openRegions) w.Write(id);
+            WriteLeaks(w);
 
             w.Flush();
             return stream.ToArray();
@@ -181,6 +186,7 @@ namespace HunterSystem.Simulation
             _foundGates.AddRange(parsed.FoundGates);
             _openRegions.Clear();
             _openRegions.AddRange(parsed.OpenRegions);
+            RestoreLeaks(parsed.Leaks);
             _events.Clear();
             _pendingOperations.Clear();
         }
@@ -351,6 +357,7 @@ namespace HunterSystem.Simulation
             public readonly List<string> SeenStoryScenes = new List<string>();
             public readonly List<string> FoundGates = new List<string>();
             public readonly List<string> OpenRegions = new List<string>();
+            public readonly List<(string gate, bool filled, int nextTick)> Leaks = new List<(string, bool, int)>();
         }
 
         private ParsedSnapshot Parse(byte[] snapshot)
@@ -393,6 +400,9 @@ namespace HunterSystem.Simulation
                 };
                 if (r.ReadBoolean()) e.AttackTarget = playersById[r.ReadInt32()];
                 e.Facing = ReadVec(r);
+                e.LeakedFrom = ReadNullable(r);
+                e.Home = r.ReadBoolean() ? ReadVec(r) : (Vec3?)null;
+                e.Leash = r.ReadSingle();
                 e.BossAttack = r.ReadInt32();
                 if (e.BossAttack >= 0 && (e.Definition.Boss == null || e.BossAttack >= e.Definition.Boss.Attacks.Count)) throw new FormatException("A boss attack that does not exist.");
                 e.AttackOrigin = ReadVec(r);
@@ -449,6 +459,7 @@ namespace HunterSystem.Simulation
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.SeenStoryScenes.Add(r.ReadString());
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.FoundGates.Add(r.ReadString());
             for (int i = 0, n = ReadCount(r); i < n; i++) parsed.OpenRegions.Add(r.ReadString());
+            for (int i = 0, n = ReadCount(r); i < n; i++) parsed.Leaks.Add((r.ReadString(), r.ReadBoolean(), r.ReadInt32()));
 
             if (r.BaseStream.Position != r.BaseStream.Length) throw new FormatException("Unexpected bytes after the snapshot.");
             return parsed;

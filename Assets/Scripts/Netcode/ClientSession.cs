@@ -138,6 +138,7 @@ namespace HunterSystem.Netcode
                         var (you, snapshot) = Wire.ReadWelcome(payload);
                         PlayerId = you;
                         World = SimulationWorld.FromSnapshot(_config, snapshot.World);
+                        World.RunsLeaks = false; // the host's monsters arrive in snapshots; this world never makes its own (ticket 43)
                         _confirmedWorld = snapshot.World;
                         _unconfirmed.Clear();
                         _sequence = 0;

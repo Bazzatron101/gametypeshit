@@ -264,6 +264,7 @@ namespace HunterSystem.Simulation
             SettleOnGround();
             DismountWhereRidingEnds(tick);
             FindGates(tick);
+            UpdateLeaks(tick);
             UpdateGate(tick);
             UpdateStory(tick);
 

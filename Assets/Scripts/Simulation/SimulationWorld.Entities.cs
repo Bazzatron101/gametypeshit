@@ -149,6 +149,18 @@ namespace HunterSystem.Simulation
             /// <summary>Its hits deal this percentage of their authored damage (party-size scaling).</summary>
             public int DamagePercent = 100;
 
+            /// <summary>Leaked from a gate out in the overworld (ticket 43): that gate's id; null otherwise.</summary>
+            public string LeakedFrom;
+
+            /// <summary>A leaked monster's home (its gate's entrance) and how far from it it will chase. Null for none.</summary>
+            public Vec3? Home;
+            public float Leash;
+
+            /// <summary>Steering's last answer (ticket 43): where to head, for which goal, worked out on which tick. Not in snapshots.</summary>
+            public Vec3 Waypoint;
+            public Vec3 WaypointGoal;
+            public int WaypointTick = int.MinValue;
+
             public int AttackReadyAtTick;
 
             /// <summary>0 when not winding up.</summary>
