@@ -14,12 +14,14 @@ namespace HunterSystem.Netcode
 
         /// <summary>
         /// Where a joining or returning player appears: in a running gate, at the latest checkpoint
-        /// the party has activated (ADR 0003); in a game with a hub, in the hub; otherwise beside the party.
+        /// the party has activated (ADR 0003); in a game with a hub, in the hub; out in the overworld, beside
+        /// the party, or in the guild town with nobody there yet; otherwise beside the party.
         /// </summary>
         public static Vec3 For(SimulationWorld world, PlayerId joiner, Vec3 fallback)
         {
             if (world == null) throw new ArgumentNullException(nameof(world));
-            return world.JoinPosition(joiner) ?? BesideParty(world, joiner, fallback);
+            // Out in the overworld with nobody to stand beside (the host starting), the guild town is home.
+            return world.JoinPosition(joiner) ?? BesideParty(world, joiner, world.Hub != null && world.InOverworld ? world.HubJoinPosition(joiner) : fallback);
         }
 
         /// <summary>

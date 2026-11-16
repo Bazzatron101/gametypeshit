@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HunterSystem.Game;
 using UnityEngine;
 
@@ -30,6 +31,12 @@ namespace HunterSystem.Editor
         public GroundRules rules = new GroundRules();
         [Min(0.5f), Tooltip("Facet size close up, in metres")] public float meshCellSize = 4f;
         [Min(1f), Tooltip("Facet size far away, in metres")] public float farMeshCellSize = 16f;
+
+        [Header("Big maps (ticket 45)")]
+        [Tooltip("Bake straight from the recipe, without a Unity Terrain for every tile (the whole continent would be over a gigabyte). Only the tiles listed below get a Terrain to sculpt, and their sculpting is baked in.")]
+        public bool bakeFromRecipe;
+        [Tooltip("With Bake From Recipe: the tiles (x, z from the south-west) that Generate makes Terrains for, to sculpt by hand.")]
+        public List<Vector2Int> sculptTiles = new List<Vector2Int>();
 
         public Vector2 AreaSize => new Vector2(tileSize * tilesX, tileSize * tilesZ);
         public int CellsPerTile => heightmapResolution - 1;

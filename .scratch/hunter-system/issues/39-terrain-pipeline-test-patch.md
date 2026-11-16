@@ -46,3 +46,32 @@
 - The shown ground has no colliders; nothing needs them, since movement is the simulation's.
 
 **2026-11-15 (developer playtest, recorded by agent):** The open world feels big at the current movement speed, and it will need buildings and environment to look good. Scale is noted on ticket 36; the dressing is ticket 49.
+
+**2026-11-16 (developer, recorded by agent):** Sculpting a tile and regenerating is easy. Next, the developer will make an elevation map of the continent to show the heights. The pipeline already takes one: `HeightSource.paintedHeights`, a greyscale image stretched over the whole area (white adds `paintedHeightScale` metres over black). Best made on top of `docs/maps/overworld-reference.webp`, same framing, saved as `docs/maps/overworld-heights.png`.
+
+**2026-11-16 (agent, developer asked):** A first elevation map of the continent, drawn by the agent from the reference map (AI placeholder; "-ai" in the file names):
+- `docs/maps/overworld-heights-ai.png`: 16-bit greyscale, 1818 × 1346, same framing as the reference. Black is 0 m, white 250 m. Sea level 4 m; the coast sits at about 6 m with shallows just offshore.
+- `docs/maps/overworld-topo-ai.png`: the same heights as a coloured, shaded map with contours every 25 m and the ranges named, to look at.
+- Made by `scripts/make-overworld-heights.py`: land from the drawing's colours; mountains are ridges drawn by hand along the drawing's mountain icons (the list `RIDGES`: name, height, width, points on the 909 × 673 drawing), with noise for rough crests. Lowlands rise from ~6 m at the coast to ~35–50 m inland. Heights: snowy mountains to ~250 m, Brokenstone ~200 m, other ranges 130–170 m, southern hills ~100 m.
+- Edit by changing `RIDGES` and rerunning, or paint over the greyscale in an image editor.
+- **Not wired in yet.** To use it: import the greyscale with Read/Write on, no compression, format R16; set `paintedHeights` to it, `paintedHeightScale` 250 and `baseHeight` 0, and raise the recipe's `maxHeight` from 120 to at least 260. Roads (flatten stamps) and passes still go on top.
+
+**2026-11-16 (developer, recorded by agent):** "Widen the mountain ranges and add hills if it doesn't feel real, and add some lakes and rivers." Done in the same script:
+- **Ranges** drawn 1.5× wider (`WIDEN`), each with a wide skirt of foothills; the lowlands have rolling hills and scattered knolls, so most land sits at 30–100 m.
+- **Rivers** (`RIVERS`, winding, about 35 m wide, cutting valleys): Greywater (the Greenmarch ford), the Fen river, the Ember river across the steppe, the north-east river and the Quarry brook. All run to the sea.
+- **Lakes** (`LAKES`): the Fen lakes and pool in the mire, the Greenmarch mere, the Tarn between the ranges, the Steppe lake.
+- River and lake surfaces sit at 2.5 m, under sea level, so the bake makes them water like the sea. Where a road crosses a river it needs a bridge or a ford (a flatten stamp raised above the water, or a shallows rule), to settle when ticket 45 lays the roads.
+- Names of rivers and lakes are placeholders.
+
+**2026-11-16 (developer, recorded by agent):** Rivers should be joined up: flowing down from the mountains and through the lakes. Done:
+- Every river now starts high in a range, runs through the lake near it, and ends in the sea or another river: Greywater (north-west mountains → Greenmarch mere → the bay), Fen river (west-coast range → Fen lakes → south coast), Fen beck (inner spur → Fen pool → Fen river), Ember river (snowy east arm → Steppe lake → east coast), North-east river (north-east mountains → north-east bay), Quarry brook (Brokenstone → south bay), Tarn beck (snowy mountains → the Tarn → Quarry brook).
+- Each river's bed only ever goes down from source to mouth, cut into the land as a V-shaped valley: a mountain stream in a gully up high, at the water level in the lowlands, in lakes and at the mouth.
+- **New file:** `docs/maps/overworld-water-ai.png`, every river and lake in white. The high stretches of rivers are above sea level, so today's bake would leave them as dry gullies; making them water needs the bake to read this mask (a later change, with ticket 45).
+
+**2026-11-16 (agent, developer said "wire it in"):** The elevation and water maps are wired into the pipeline.
+- **Water above sea level:** `HeightSource.paintedWater` (white = river or lake) and `IsPaintedWater`; the bake (`GroundBake.Classify`, new `water` argument) makes those cells water even high in the hills. Where a road (flatten stamp) crosses, it is not water: roads make their own bridges and fords.
+- **Drawn:** a new `TerrainSurface.Water` for rivers and lakes above the sea; `OverworldScene` uses its water material for it when the scene's surface list stops short.
+- **Fix:** painted maps are read from the red channel. A one-channel texture (R16, R8) reports green and blue as 1, so `.grayscale` read 70 % too high.
+- **The continent recipe:** Hunter System > Overworld > Set Up Continent Recipe (`ContinentSetup`) copies `docs/maps/overworld-heights-ai.png` and `overworld-water-ai.png` to `Assets/Art/Maps/` (readable, linear, uncompressed; heights R16, water R8; **labelled AI**) and makes `Assets/Data/Overworld/ContinentSource.asset`: 42 × 31 tiles of 250 m (10.5 × 7.75 km), centred on the origin, max height 260 m, base 0, painted heights × 250 m, sea level 4 m.
+- Tests: `ContinentMapsTest` (4). EditMode 665 passed; PlayMode 36 passed.
+- **Not done:** generating and baking the continent's tiles, a scene for it, roads, gates and towns on it: ticket 45.

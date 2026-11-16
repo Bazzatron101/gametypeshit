@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using HunterSystem.Game;
@@ -6,6 +8,8 @@ using HunterSystem.Simulation;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace HunterSystem.Editor
 {
@@ -49,6 +53,7 @@ namespace HunterSystem.Editor
 
         public static Terrain[,] Generate(OverworldScene scene, OverworldSourceAsset source)
         {
+            source.heights.Refresh();
             EnsureFolders(source.TerrainFolder);
             var root = GameObject.Find(TerrainRootName) ?? new GameObject(TerrainRootName);
             root.tag = "EditorOnly"; // the editing surface never goes into a build
@@ -61,6 +66,7 @@ namespace HunterSystem.Editor
             for (var j = 0; j < source.tilesZ; j++)
             for (var i = 0; i < source.tilesX; i++)
             {
+                if (source.bakeFromRecipe && !source.sculptTiles.Contains(new Vector2Int(i, j))) continue; // a big map: only the tiles chosen for sculpting
                 var dataPath = $"{source.TerrainFolder}/Tile_{i}_{j}.asset";
                 var basePath = $"{source.TerrainFolder}/Tile_{i}_{j}.base.bytes";
                 var data = AssetDatabase.LoadAssetAtPath<TerrainData>(dataPath);
@@ -137,6 +143,8 @@ namespace HunterSystem.Editor
 
         public static OverworldAsset Bake(OverworldScene scene, OverworldSourceAsset source)
         {
+            source.heights.Refresh();
+            if (source.bakeFromRecipe) return BakeFromRecipe(source);
             var root = GameObject.Find(TerrainRootName) ?? throw new System.InvalidOperationException("Generate the terrain tiles first.");
             var cellsPerTile = source.CellsPerTile;
             var columns = source.tilesX * cellsPerTile;
@@ -167,7 +175,11 @@ namespace HunterSystem.Editor
                 }
             }
 
-            var kinds = GroundBake.Classify(heights, columns, rows, cellSize, source.rules, (c, r) => climbable[r * columns + c]);
+            // Rivers and lakes from the painted water map are water even above sea level; a road over one is a bridge or ford.
+            var areaMin = source.origin;
+            var areaSize = source.AreaSize;
+            var kinds = GroundBake.Classify(heights, columns, rows, cellSize, source.rules, (c, r) => climbable[r * columns + c],
+                (c, r) => source.heights.IsPaintedWater(areaMin.x + (c + 0.5f) * cellSize, areaMin.y + (r + 0.5f) * cellSize, areaMin, areaSize));
             var ground = new HeightmapGround(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds);
 
             // One file per tile, streamed in as players move (ticket 40, ADR 0020); each holds its own edge samples.
@@ -209,13 +221,127 @@ namespace HunterSystem.Editor
             AssetDatabase.Refresh();
             var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
 
+            var asset = WriteOverworldAsset(source, coarseAsset, p => OnGround(ground, p), out var gateCount, out var roadCount);
+            Debug.Log($"Baked {source.outputName}: {columns} × {rows} cells of {cellSize:0.###} m, {gateCount} gates, {roadCount} roads, " +
+                      $"{kinds.Count(k => k == GroundKind.Blocked)} blocked, {kinds.Count(k => k == GroundKind.Water)} water, {kinds.Count(k => k == GroundKind.Climbable)} climbable cells.");
+            return asset;
+        }
+
+        private static Vector3 OnGround(IGround ground, Vector3 p) => new Vector3(p.x, ground.HeightAt(new Vec3(p.x, 0f, p.z)), p.z);
+
+        // --- Bake from the recipe (big maps, ticket 45) ------------------------------------------------
+
+        /// <summary>
+        /// Bakes a big map tile by tile straight from the recipe, with no Unity Terrain for the whole area: each
+        /// tile's heights are sampled from the heights recipe (or read from its Terrain, for a tile chosen for
+        /// sculpting), classified (steep, sea, painted rivers and lakes, climbable stamps) and written to its
+        /// streamed file. The coarse map is sampled from the recipe too. Memory stays at one tile.
+        /// </summary>
+        public static OverworldAsset BakeFromRecipe(OverworldSourceAsset source)
+        {
+            var clock = Stopwatch.StartNew();
+            var heights = source.heights;
+            heights.Refresh();
+            var cellsPerTile = source.CellsPerTile;
+            var cellSize = source.tileSize / cellsPerTile;
+            var areaMin = source.origin;
+            var areaSize = source.AreaSize;
+            var root = GameObject.Find(TerrainRootName);
+
+            EnsureFolders(source.TileFolderAsset);
+            foreach (var old in Directory.GetFiles(source.TileFolderAsset, "tile_*.bytes")) File.Delete(old);
+            long blocked = 0, water = 0, climbable = 0, sculpted = 0;
+            var stride = cellsPerTile + 1;
+            var tileHeights = new float[stride * stride];
+            var tileClimb = new bool[cellsPerTile * cellsPerTile];
+            var total = source.tilesX * source.tilesZ;
+            var interactive = !Application.isBatchMode;
+            try
+            {
+                for (var j = 0; j < source.tilesZ; j++)
+                for (var i = 0; i < source.tilesX; i++)
+                {
+                    var n = j * source.tilesX + i;
+                    if (interactive && n % 8 == 0 && EditorUtility.DisplayCancelableProgressBar("Baking " + source.outputName, $"Tile {n + 1} of {total}", n / (float)total))
+                        throw new OperationCanceledException("Bake cancelled.");
+                    var minX = areaMin.x + i * source.tileSize;
+                    var minZ = areaMin.y + j * source.tileSize;
+
+                    var terrain = root != null ? root.transform.Find($"Tile {i},{j}")?.GetComponent<Terrain>() : null;
+                    var data = terrain != null ? terrain.terrainData : null;
+                    if (data != null && data.heightmapResolution == stride)
+                    {
+                        sculpted++;
+                        var grid = data.GetHeights(0, 0, stride, stride);
+                        for (var z = 0; z < stride; z++)
+                        for (var x = 0; x < stride; x++)
+                            tileHeights[z * stride + x] = grid[z, x] * source.maxHeight;
+                        var alpha = data.alphamapLayers >= 2 ? data.GetAlphamaps(0, 0, data.alphamapWidth, data.alphamapHeight) : null;
+                        for (var z = 0; z < cellsPerTile; z++)
+                        for (var x = 0; x < cellsPerTile; x++)
+                            tileClimb[z * cellsPerTile + x] = alpha != null &&
+                                alpha[Mathf.Min(z * data.alphamapHeight / cellsPerTile, data.alphamapHeight - 1), Mathf.Min(x * data.alphamapWidth / cellsPerTile, data.alphamapWidth - 1), 1] > 0.5f;
+                    }
+                    else
+                    {
+                        for (var z = 0; z < stride; z++)
+                        for (var x = 0; x < stride; x++)
+                            tileHeights[z * stride + x] = Mathf.Clamp(heights.Sample(minX + x * cellSize, minZ + z * cellSize, areaMin, areaSize), 0f, source.maxHeight);
+                        for (var z = 0; z < cellsPerTile; z++)
+                        for (var x = 0; x < cellsPerTile; x++)
+                            tileClimb[z * cellsPerTile + x] = heights.IsClimbable(minX + (x + 0.5f) * cellSize, minZ + (z + 0.5f) * cellSize);
+                    }
+
+                    var kinds = GroundBake.Classify(tileHeights, cellsPerTile, cellsPerTile, cellSize, source.rules,
+                        (c, r) => tileClimb[r * cellsPerTile + c],
+                        (c, r) => heights.IsPaintedWater(minX + (c + 0.5f) * cellSize, minZ + (r + 0.5f) * cellSize, areaMin, areaSize));
+                    foreach (var k in kinds)
+                    {
+                        if (k == GroundKind.Blocked) blocked++;
+                        else if (k == GroundKind.Water) water++;
+                        else if (k == GroundKind.Climbable) climbable++;
+                    }
+                    File.WriteAllBytes($"{source.TileFolderAsset}/{OverworldAsset.TileFileName(new TileCoord(i, j))}",
+                        GroundBake.Encode(minX, minZ, cellSize, cellsPerTile, cellsPerTile, tileHeights, kinds));
+                }
+            }
+            finally
+            {
+                if (interactive) EditorUtility.ClearProgressBar();
+            }
+
+            // The coarse map, sampled from the recipe at the far facet size.
+            var coarseColumns = Mathf.Max(1, Mathf.CeilToInt(areaSize.x / source.farMeshCellSize));
+            var coarseCell = areaSize.x / coarseColumns;
+            var coarseRows = Mathf.Max(1, Mathf.CeilToInt(areaSize.y / coarseCell - 1e-3f));
+            var coarseHeights = new float[(coarseColumns + 1) * (coarseRows + 1)];
+            for (var z = 0; z <= coarseRows; z++)
+            for (var x = 0; x <= coarseColumns; x++)
+                coarseHeights[z * (coarseColumns + 1) + x] = Mathf.Clamp(heights.Sample(areaMin.x + x * coarseCell, areaMin.y + z * coarseCell, areaMin, areaSize), 0f, source.maxHeight);
+            var coarseKinds = GroundBake.Classify(coarseHeights, coarseColumns, coarseRows, coarseCell, source.rules, null,
+                (c, r) => heights.IsPaintedWater(areaMin.x + (c + 0.5f) * coarseCell, areaMin.y + (r + 0.5f) * coarseCell, areaMin, areaSize));
+            EnsureFolders("Assets/Data/Overworld");
+            File.WriteAllBytes(source.CoarsePath, GroundBake.Encode(areaMin.x, areaMin.y, coarseCell, coarseColumns, coarseRows, coarseHeights, coarseKinds));
+            AssetDatabase.Refresh();
+            var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
+
+            Vector3 OnRecipe(Vector3 p) => new Vector3(p.x, heights.Sample(p.x, p.z, areaMin, areaSize), p.z);
+            var asset = WriteOverworldAsset(source, coarseAsset, OnRecipe, out var gateCount, out var roadCount);
+            Debug.Log($"Baked {source.outputName} from its recipe in {clock.Elapsed.TotalSeconds:0.0} s: {total} tiles ({sculpted} sculpted), " +
+                      $"{gateCount} gates, {roadCount} roads, {blocked} blocked, {water} water, {climbable} climbable cells.");
+            return asset;
+        }
+
+        /// <summary>The overworld asset from the scene's markers: gates, the town, roads and landmarks, each put on the ground.</summary>
+        private static OverworldAsset WriteOverworldAsset(OverworldSourceAsset source, TextAsset coarseAsset, Func<Vector3, Vector3> onGround, out int gateCount, out int roadCount)
+        {
             var gates = new List<OverworldAsset.GateSiteData>();
             var roads = new List<OverworldAsset.RoadData>();
             var landmarks = new List<OverworldAsset.LandmarkData>();
             OverworldMarker town = null;
             foreach (var marker in Object.FindObjectsByType<OverworldMarker>(FindObjectsSortMode.InstanceID))
             {
-                var at = OnGround(ground, marker.transform.position);
+                var at = onGround(marker.transform.position);
                 switch (marker.Kind)
                 {
                     case OverworldMarkerKind.Gate:
@@ -226,7 +352,7 @@ namespace HunterSystem.Editor
                         town = marker;
                         break;
                     case OverworldMarkerKind.Road:
-                        roads.Add(new OverworldAsset.RoadData { halfWidth = marker.Radius, points = marker.RoadPoints().Select(p => OnGround(ground, p)).ToList() });
+                        roads.Add(new OverworldAsset.RoadData { halfWidth = marker.Radius, points = marker.RoadPoints().Select(onGround).ToList() });
                         break;
                     case OverworldMarkerKind.Landmark:
                         landmarks.Add(new OverworldAsset.LandmarkData { label = marker.Label, position = at });
@@ -242,16 +368,14 @@ namespace HunterSystem.Editor
                 AssetDatabase.CreateAsset(asset, source.OverworldPath);
             }
             asset.Set(source.origin, source.tileSize, source.tilesX, source.tilesZ, source.TileFolder, coarseAsset,
-                gates, town != null, town != null ? OnGround(ground, town.transform.position) : Vector3.zero, town != null ? town.Radius : 0f,
+                gates, town != null, town != null ? onGround(town.transform.position) : Vector3.zero, town != null ? town.Radius : 0f,
                 roads, landmarks, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize);
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
-            Debug.Log($"Baked {source.outputName}: {columns} × {rows} cells of {cellSize:0.###} m, {gates.Count} gates, {roads.Count} roads, " +
-                      $"{kinds.Count(k => k == GroundKind.Blocked)} blocked, {kinds.Count(k => k == GroundKind.Water)} water, {kinds.Count(k => k == GroundKind.Climbable)} climbable cells.");
+            gateCount = gates.Count;
+            roadCount = roads.Count;
             return AssetDatabase.LoadAssetAtPath<OverworldAsset>(source.OverworldPath);
         }
-
-        private static Vector3 OnGround(IGround ground, Vector3 p) => new Vector3(p.x, ground.HeightAt(new Vec3(p.x, 0f, p.z)), p.z);
 
         // --- Helpers ---------------------------------------------------------------------------------
 

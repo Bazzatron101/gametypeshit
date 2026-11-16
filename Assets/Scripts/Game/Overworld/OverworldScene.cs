@@ -18,7 +18,7 @@ namespace HunterSystem.Game
     public sealed class OverworldScene : MonoBehaviour
     {
         [SerializeField] private OverworldAsset overworld;
-        [SerializeField, Tooltip("One per TerrainSurface: grass, rock, climbable, sand, road")] private Material[] surfaceMaterials = new Material[0];
+        [SerializeField, Tooltip("One per TerrainSurface: grass, rock, climbable, sand, road, water (the water material if left out)")] private Material[] surfaceMaterials = new Material[0];
         [SerializeField] private Material waterMaterial;
         [SerializeField] private Material gateMaterial;
         [SerializeField, Min(0f), Tooltip("Tiles this close to a player are loaded. Set for a mount (16 m/s), not walking.")] private float loadRadius = 600f;
@@ -147,7 +147,7 @@ namespace HunterSystem.Game
         {
             if (!_shown.TryGetValue(tile, out var shown) || payload.Extra is not FlatTerrainMesh.MeshData data) return;
             if (shown.near != null) Destroy(shown.near);
-            var near = MeshObject("Near", shown.far.transform.parent, FlatTerrainMesh.ToMesh(data), surfaceMaterials);
+            var near = MeshObject("Near", shown.far.transform.parent, FlatTerrainMesh.ToMesh(data), SurfaceMaterials());
             shown.far.enabled = false;
             _shown[tile] = (shown.far, near.gameObject);
         }
@@ -181,7 +181,7 @@ namespace HunterSystem.Game
                 var far = MeshObject("Far", tileObject.transform,
                     FlatTerrainMesh.Build(coarse, corner.X, corner.Z, _ground.TileSize, overworld.FarMeshCellSize,
                         at => FlatTerrainMesh.SurfaceAt(coarse, at, overworld.SeaLevel, overworld.SandAboveSea, overworld.DistanceToRoad)),
-                    surfaceMaterials);
+                    SurfaceMaterials());
                 _shown[tile] = (far, null);
             }
 
@@ -209,6 +209,16 @@ namespace HunterSystem.Game
                 if (gateMaterial != null) pillar.GetComponent<Renderer>().sharedMaterial = gateMaterial;
             }
             return root;
+        }
+
+        /// <summary>A material for every surface: rivers and lakes use the water material when the list stops short of them.</summary>
+        private Material[] SurfaceMaterials()
+        {
+            if (surfaceMaterials.Length >= FlatTerrainMesh.SurfaceCount) return surfaceMaterials;
+            var all = new Material[FlatTerrainMesh.SurfaceCount];
+            for (var i = 0; i < all.Length; i++)
+                all[i] = i < surfaceMaterials.Length ? surfaceMaterials[i] : i == (int)TerrainSurface.Water ? waterMaterial : surfaceMaterials.LastOrDefault();
+            return all;
         }
 
         private static MeshRenderer MeshObject(string name, Transform parent, Mesh mesh, Material[] materials)

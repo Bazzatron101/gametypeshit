@@ -1,0 +1,227 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46db4e71ca22230478b296fb269b8762, type: 3}
+  m_Name: Continent
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.OverworldAsset
+  origin: {x: -5250, y: -3875}
+  tileSize: 250
+  tilesX: 42
+  tilesZ: 31
+  tileFolder: Overworld/Continent
+  coarse: {fileID: 4900000, guid: 60a843d0f0c686b44bd3dda9ea7089c7, type: 3}
+  gates:
+  - gateId: goblin-warren
+    entrance: {x: -4325.9077, y: 32.872448, z: 362.74146}
+    region: greenmarch
+    knownFromStart: 1
+  - gateId: thornwood-hollow
+    entrance: {x: -999.1749, y: 17.857111, z: 2999.8142}
+    region: greenmarch
+    knownFromStart: 0
+  hasTown: 1
+  townCentre: {x: -4152.64, y: 28.073666, z: 765.78754}
+  townRadius: 60
+  roads:
+  - halfWidth: 4
+    points:
+    - {x: 2512.3762, y: 23.181608, z: -2573.737}
+    - {x: 2835.8086, y: 25.114626, z: -2343.425}
+    - {x: 3182.3433, y: 33.18865, z: -2113.113}
+    - {x: 3528.878, y: 24.379875, z: -1940.3789}
+  - halfWidth: 4
+    points:
+    - {x: 3528.878, y: 34.77251, z: 74.85141}
+    - {x: 3182.3433, y: 56.52504, z: -558.5067}
+  - halfWidth: 4
+    points:
+    - {x: 3124.5874, y: 34.15395, z: 788.8187}
+    - {x: 3240.099, y: 7, z: 420.31946}
+    - {x: 3528.878, y: 34.77251, z: 74.85144}
+    - {x: 3875.4126, y: 15.837249, z: -155.46063}
+  - halfWidth: 4
+    points:
+    - {x: -1726.8977, y: 10.39833, z: -2481.6123}
+    - {x: -1842.4093, y: 21.821619, z: -3034.361}
+  - halfWidth: 4
+    points:
+    - {x: -1264.8514, y: 14.551437, z: -2654.3462}
+    - {x: -1726.8977, y: 10.39833, z: -2481.6123}
+  - halfWidth: 4
+    points:
+    - {x: 779.70294, y: 119.60608, z: -1767.6449}
+    - {x: 698.8449, y: 67.36182, z: -2113.113}
+    - {x: 756.60065, y: 64.50385, z: -2458.581}
+    - {x: 525.5776, y: 79.91601, z: -2608.2837}
+    - {x: -167.49176, y: 78.23526, z: -2596.7683}
+    - {x: -918.31683, y: 36.62297, z: -2573.737}
+    - {x: -1264.8516, y: 14.551441, z: -2654.3462}
+  - halfWidth: 4
+    points:
+    - {x: 121.28713, y: 7, z: 166.97623}
+    - {x: -51.9802, y: 7, z: -155.4606}
+    - {x: 63.531353, y: 61.14211, z: -731.2407}
+    - {x: 202.14522, y: 79.280464, z: -1019.13074}
+    - {x: 179.04291, y: 99.52622, z: -1307.0208}
+    - {x: -109.73597, y: 49.267605, z: -1594.9109}
+    - {x: 294.55444, y: 228.50574, z: -1940.379}
+    - {x: 779.70294, y: 119.60608, z: -1767.6449}
+  - halfWidth: 4
+    points:
+    - {x: -2131.1882, y: 61.472637, z: -236.06984}
+    - {x: -2223.5974, y: 67.957, z: -558.5067}
+    - {x: -2385.3135, y: 129.53806, z: -903.97473}
+    - {x: -2593.2344, y: 81.68601, z: -1214.896}
+    - {x: -2824.2573, y: 54.119946, z: -1537.3329}
+    - {x: -3286.3037, y: 89.725395, z: -1537.3329}
+    - {x: -3517.3267, y: 116.36391, z: -1456.7236}
+  - halfWidth: 4
+    points:
+    - {x: -109.73598, y: 47.44461, z: 2343.425}
+    - {x: 179.0429, y: 52.39661, z: 1917.3477}
+    - {x: 467.82178, y: 61.334198, z: 1399.1456}
+  - halfWidth: 4
+    points:
+    - {x: -2131.1882, y: 61.472637, z: -236.06984}
+    - {x: -1553.6304, y: 111.13828, z: -362.74146}
+    - {x: -976.07263, y: 73.5144, z: -408.80386}
+    - {x: -571.7822, y: 78.73045, z: -155.46062}
+    - {x: -259.901, y: 62.858585, z: 17.273407}
+    - {x: 121.28711, y: 7, z: 166.97624}
+    - {x: 352.3103, y: 7, z: 420.31946}
+    - {x: 641.0891, y: 88.877495, z: 593.05347}
+    - {x: 895.2146, y: 77.39209, z: 765.78754}
+    - {x: 1080.033, y: 65.262535, z: 1053.6776}
+    - {x: 1391.9143, y: 65.48711, z: 1111.2556}
+    - {x: 1738.449, y: 64.75102, z: 903.97473}
+    - {x: 2142.7395, y: 72.61448, z: 938.5216}
+    - {x: 2720.297, y: 25.547087, z: 742.7563}
+    - {x: 3124.5872, y: 34.15395, z: 788.8187}
+    - {x: 3528.8782, y: 28.737331, z: 1053.6776}
+    - {x: 3875.4124, y: 19.930656, z: 1283.9896}
+    - {x: 4048.68, y: 23.450857, z: 1594.9109}
+  - halfWidth: 4
+    points:
+    - {x: -2362.2112, y: 53.014545, z: 2354.9407}
+    - {x: -2419.967, y: 41.80476, z: 2032.5037}
+    - {x: -2223.5974, y: 41.216446, z: 1687.0356}
+    - {x: -2396.8647, y: 28.508009, z: 1203.3804}
+    - {x: -2304.4556, y: 45.54743, z: 903.97473}
+    - {x: -1957.9208, y: 24.461725, z: 627.60034}
+    - {x: -1761.5511, y: 46.514023, z: 512.44434}
+    - {x: -1807.7557, y: 108.70763, z: 132.42944}
+    - {x: -1957.9208, y: 83.651726, z: -155.4607}
+    - {x: -2131.1882, y: 61.472637, z: -236.06982}
+  - halfWidth: 4
+    points:
+    - {x: -3517.3267, y: 60.220272, z: 2435.5498}
+    - {x: -2997.5247, y: 60.579662, z: 2424.0342}
+    - {x: -2362.2112, y: 53.014545, z: 2354.9407}
+    - {x: -1784.6534, y: 54.517033, z: 2401.003}
+    - {x: -1264.8516, y: 66.94381, z: 2412.5186}
+    - {x: -629.5381, y: 63.584927, z: 2401.003}
+    - {x: -109.736084, y: 47.44461, z: 2343.425}
+    - {x: 583.3335, y: 76.56608, z: 2573.737}
+    - {x: 1218.647, y: 61.121338, z: 2573.737}
+    - {x: 1680.6929, y: 43.062386, z: 2516.159}
+    - {x: 2084.9834, y: 49.179226, z: 2435.5498}
+    - {x: 2547.0298, y: 50.74372, z: 2631.315}
+    - {x: 2835.8086, y: 40.138386, z: 2976.783}
+  - halfWidth: 4
+    points:
+    - {x: -3956.2705, y: 10.860339, z: 1226.4116}
+    - {x: -4037.1287, y: 32.640278, z: 1491.2704}
+    - {x: -3944.7195, y: 45.208, z: 1756.1293}
+    - {x: -3655.9407, y: 50.538277, z: 2032.5037}
+    - {x: -3517.3267, y: 60.220272, z: 2435.5498}
+  - halfWidth: 4
+    points:
+    - {x: -3401.8152, y: 16.857714, z: 915.49036}
+    - {x: -3956.2705, y: 10.860339, z: 1226.4116}
+  - halfWidth: 4
+    points:
+    - {x: -4152.64, y: 28.073666, z: 765.78754}
+    - {x: -3748.3499, y: 23.053558, z: 593.05347}
+    - {x: -3286.3037, y: 30.850876, z: 570.0223}
+    - {x: -3193.8943, y: 11.548142, z: 742.7563}
+    - {x: -3401.8152, y: 16.857714, z: 915.49036}
+  landmarks:
+  - label: 'Gate spot: The Rift (riftlands)'
+    position: {x: 3702.1453, y: 23.927614, z: -1767.6449}
+  - label: 'Gate spot: South gate (riftlands)'
+    position: {x: 352.31024, y: 198.07469, z: -2170.691}
+  - label: 'Gate spot: Snow pass (riftlands)'
+    position: {x: 1160.8911, y: 229.23637, z: -673.6627}
+  - label: 'Gate spot: Lighthouse (saltreach)'
+    position: {x: 3990.924, y: 73.42238, z: 2815.5647}
+  - label: 'Gate spot: Battlefield (ashen)'
+    position: {x: 1391.9142, y: 91.348885, z: 1456.7236}
+  - label: 'Gate spot: Stone ring (ashen)'
+    position: {x: 2835.8086, y: 43.126358, z: 1226.4116}
+  - label: 'Gate spot: Cairns (brokenstone)'
+    position: {x: -1033.8284, y: 120.80624, z: -1249.4427}
+  - label: 'Gate spot: Watchtower (brokenstone)'
+    position: {x: 352.31024, y: 56.201042, z: 1571.8796}
+  - label: 'Gate spot: Deep mine (brokenstone)'
+    position: {x: -976.07263, y: 194.17984, z: 1802.1917}
+  - label: 'Gate spot: Great quarry (brokenstone)'
+    position: {x: -514.0264, y: 185.68977, z: 938.52155}
+  - label: 'Gate spot: Causeway gate (fenward)'
+    position: {x: -2131.1882, y: 83.99975, z: -927.0059}
+  - label: 'Gate spot: Drowned chapel (fenward)'
+    position: {x: -3667.4917, y: 93.197655, z: -2539.1902}
+  - label: 'Gate spot: Bridge gate (greenmarch)'
+    position: {x: -4002.4753, y: 20.155104, z: 1318.5364}
+  - label: 'Gate spot: Barrow (greenmarch)'
+    position: {x: -2593.2344, y: 73.274315, z: 2896.1738}
+  - label: Peninsula castle
+    position: {x: -918.31683, y: 36.62297, z: -2573.737}
+  - label: Snowfoot village
+    position: {x: -109.73598, y: 49.267605, z: -1594.9109}
+  - label: Midland town
+    position: {x: -259.901, y: 61.552464, z: 40.304607}
+  - label: North-east town
+    position: {x: 2835.8086, y: 33.623516, z: 3045.8767}
+  - label: North road village
+    position: {x: -802.8053, y: 55.140026, z: 2550.7058}
+  - label: Greenmarch village
+    position: {x: -1761.5511, y: 46.514023, z: 512.4443}
+  - label: Bay town
+    position: {x: -2396.8647, y: 28.508009, z: 1203.3804}
+  - label: West island village
+    position: {x: -3228.5479, y: 18.447329, z: 558.5067}
+  - label: Island port
+    position: {x: 2512.3762, y: 23.181608, z: -2573.737}
+  - label: Farwatch
+    position: {x: 3528.878, y: 24.379875, z: -1940.3789}
+  - label: Southport
+    position: {x: 814.35645, y: 115.19795, z: -1767.6449}
+  - label: Ember crossing
+    position: {x: 3182.3433, y: 56.52504, z: -558.5067}
+  - label: Saltreach
+    position: {x: 4048.68, y: 23.233326, z: 1629.4576}
+  - label: Quarrygate
+    position: {x: 467.82178, y: 61.334198, z: 1399.1456}
+  - label: Stiltmoor
+    position: {x: -2824.2573, y: 54.119946, z: -1537.3329}
+  - label: Westkeep
+    position: {x: -2131.1882, y: 61.472637, z: -236.06984}
+  - label: North-west castle (the best guild's seat)
+    position: {x: -3517.3267, y: 58.79408, z: 2539.1902}
+  startingRegions:
+  - greenmarch
+  entranceRadius: 3
+  findRadius: 20
+  unopenedRegionXpPercent: 25
+  meshCellSize: 4
+  farMeshCellSize: 16
+  seaLevel: 4
+  sandAboveSea: 1.2

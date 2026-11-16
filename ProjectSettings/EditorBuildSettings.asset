@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Scenes/OverworldPatch.unity
     guid: 3a3f94784a6461944a641f0fd51ce822
   - enabled: 1
+    path: Assets/Scenes/Continent.unity
+    guid: 579014a3f9e76254fac0ca16ff9ac349
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:

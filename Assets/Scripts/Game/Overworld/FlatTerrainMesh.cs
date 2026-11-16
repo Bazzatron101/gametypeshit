@@ -14,6 +14,9 @@ namespace HunterSystem.Game
         Climbable = 2,
         Sand = 3,
         Road = 4,
+
+        /// <summary>A river or lake above sea level (the sea itself is a plane at sea level).</summary>
+        Water = 5,
     }
 
     /// <summary>
@@ -107,13 +110,14 @@ namespace HunterSystem.Game
 
         /// <summary>
         /// The usual choice of surface: the ground's kind (rock where it cannot be walked, climbable faces their
-        /// own), a road within its width, sand just above the sea, grass otherwise.
+        /// own), rivers and lakes above the sea, a road within its width, sand just above the sea, grass otherwise.
         /// </summary>
         public static TerrainSurface SurfaceAt(IGround ground, Vector3 at, float seaLevel, float sandAboveSea, Func<float, float, float> distanceToRoad)
         {
             var kind = ground.KindAt(new Vec3(at.x, 0f, at.z));
             if (kind == GroundKind.Climbable) return TerrainSurface.Climbable;
             if (kind == GroundKind.Blocked) return TerrainSurface.Rock;
+            if (kind == GroundKind.Water && at.y >= seaLevel) return TerrainSurface.Water;
             if (at.y < seaLevel + sandAboveSea) return TerrainSurface.Sand;
             if (distanceToRoad != null && distanceToRoad(at.x, at.z) <= 0f) return TerrainSurface.Road;
             return TerrainSurface.Grass;

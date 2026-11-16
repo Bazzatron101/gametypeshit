@@ -261,6 +261,16 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void TheFirstPlayerOutInTheWorldStartsInTheGuildTown()
+        {
+            var world = new SimulationWorld(Config()); // nobody here yet: the host starting
+
+            var at = JoinPoint.For(world, P1, fallback: new Vec3(999f, 0f, 999f));
+
+            Assert.That(FlatDistance(at, Town), Is.LessThan(10f), "in the guild town, not the fallback");
+        }
+
+        [Test]
         public void DuringARunAJoinerStillAppearsAtTheLatestCheckpoint()
         {
             var world = World();

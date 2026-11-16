@@ -28,10 +28,12 @@ namespace HunterSystem.Game
 
         /// <summary>
         /// A kind for each of <paramref name="columns"/> × <paramref name="rows"/> cells. A cell is water when its
-        /// middle is below the sea; else blocked when any of its edges or diagonals is steeper than allowed,
-        /// unless <paramref name="climbable"/> marks it (then climbable); else walkable.
+        /// middle is below the sea, or <paramref name="water"/> marks it (a river or lake above sea level); else
+        /// blocked when any of its edges or diagonals is steeper than allowed, unless <paramref name="climbable"/>
+        /// marks it (then climbable); else walkable.
         /// </summary>
-        public static GroundKind[] Classify(float[] heights, int columns, int rows, float cellSize, GroundRules rules, Func<int, int, bool> climbable = null)
+        public static GroundKind[] Classify(float[] heights, int columns, int rows, float cellSize, GroundRules rules, Func<int, int, bool> climbable = null,
+            Func<int, int, bool> water = null)
         {
             if (heights == null) throw new ArgumentNullException(nameof(heights));
             if (heights.Length != (columns + 1) * (rows + 1)) throw new ArgumentException("Heights must be (columns + 1) × (rows + 1) corner samples.", nameof(heights));
@@ -47,7 +49,7 @@ namespace HunterSystem.Game
                 var h01 = heights[(row + 1) * stride + column];
                 var h11 = heights[(row + 1) * stride + column + 1];
                 GroundKind kind;
-                if ((h00 + h10 + h01 + h11) / 4f < rules.seaLevel) kind = GroundKind.Water;
+                if ((h00 + h10 + h01 + h11) / 4f < rules.seaLevel || (water != null && water(column, row))) kind = GroundKind.Water;
                 else
                 {
                     var rise = Math.Max(Math.Max(Math.Abs(h10 - h00), Math.Abs(h11 - h01)), Math.Max(Math.Abs(h01 - h00), Math.Abs(h11 - h10))) / cellSize;

@@ -36,3 +36,8 @@ Thumbs.db
 # Crash reports
 sysinfo.txt
 crashlytics-build.properties
+
+# The continent's baked tiles (ticket 45): over 400 MB, rebuilt from the recipe with
+# Hunter System > Overworld > Rebuild Continent Scene
+/Assets/StreamingAssets/Overworld/Continent/
+/Assets/StreamingAssets/Overworld/Continent.meta

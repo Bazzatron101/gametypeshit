@@ -384,7 +384,7 @@ namespace HunterSystem.Editor
         /// <summary>Greybox first (the default build scene), then the arena, then anything else.</summary>
         private static void RegisterScenes()
         {
-            var builtScenes = new[] { ScenePath, ArenaScenePath, CoopScenePath, OverworldPatchScenePath };
+            var builtScenes = new[] { ScenePath, ArenaScenePath, CoopScenePath, OverworldPatchScenePath, ContinentScenePath };
             var existing = builtScenes.Where(p => AssetDatabase.LoadAssetAtPath<SceneAsset>(p) != null).Select(p => new EditorBuildSettingsScene(p, true));
             var others = EditorBuildSettings.scenes.Where(s => !builtScenes.Contains(s.path));
             EditorBuildSettings.scenes = existing.Concat(others).ToArray();
