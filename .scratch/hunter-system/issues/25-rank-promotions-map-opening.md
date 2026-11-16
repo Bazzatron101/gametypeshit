@@ -4,7 +4,7 @@
 
 **Blocked by:** 06: XP, levels, six stats and the level-up UI, 20: Mission board and text-only story scenes, 21: M3 feel review and kill-switch
 
-**Status:** ready-for-human (review: confirm whose level promotes the world, and write the four promotion scenes)
+**Status:** ready-for-human (write the four promotion scenes)
 
 - [x] Level bands per rank are configuration values
 - [x] A promotion scene plays when the player crosses a band
@@ -35,3 +35,5 @@ Not done here:
 - There is no drawn map screen. The "hub map" is the gate board plus the open regions; the continent's markers do not yet show which regions are open.
 - Brokenstone hills (a C-rank story beat) and the Riftlands (the S story) open by story, not by rank. Story beats that open regions are not built.
 - Quest-gated promotions (spec: "some promotions gated by quests") are ticket 26's.
+
+**2026-11-17 (developer):** Decision: the host's own level promotes the host's world; a guest's level never does. Kept as built. What is left is writing the four promotion scenes.
