@@ -231,7 +231,7 @@ namespace HunterSystem.Tests
         private const double GuardHostTickMs = 1.0;
         private const double GuardHostStreamingMs = 0.5;
         private const int GuardHostTiles = 450;
-        private const double GuardUploadBytesPerSecond = 128 * 1024;
+        private const double GuardUploadBytesPerSecond = 32 * 1024; // 51 KB/s at ticket 44; 9.8 KB/s once snapshots went as compressed differences (ticket 31)
         private const double GuardClientLoadMs = 1000.0;
 
         /// <summary>

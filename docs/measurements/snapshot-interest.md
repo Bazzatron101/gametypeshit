@@ -1,5 +1,9 @@
 # Snapshot interest: host upload with ten players spread out
 
+> **Since ticket 31 (2026-11-16):** snapshots go compressed, as the difference from the last world each client was
+> sent (ADR 0021). The same measurement is now about 14 KB/s sending everything and 8 KB/s within 200 m. Both are mostly
+> per-message overhead, so the test guards the near figure (under 16 KB/s) rather than its share of everything.
+
 Ticket 41. Measured 2026-11-16 in the editor (`InterestManagementTest.MeasureTheHostsUploadWithTenPlayersSpreadAcrossTheOverworld`),
 over the simulated network, with no compression.
 

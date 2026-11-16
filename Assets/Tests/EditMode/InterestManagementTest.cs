@@ -216,7 +216,11 @@ namespace HunterSystem.Tests
 
             TestContext.WriteLine($"Ten players 500 m apart, five enemies each: everything {everything / 1024:0} KB/s; " +
                                   $"within 200 m {near / 1024:0} KB/s ({near / everything * 100:0}% of everything)");
-            Assert.That(near, Is.LessThan(everything * 0.25), "spread out, each client is sent a small share of the world");
+            // Before ticket 31 this was 178 KB/s against 1,639 KB/s, and the guard was a quarter of everything. Snapshots now go
+            // as the compressed difference from the last world each client was sent, so both are a few KB/s, mostly per-message
+            // overhead, and the share no longer says much. The cut still has to save something, and the total stays small.
+            Assert.That(near, Is.LessThan(everything), "spread out, each client is sent less than the whole world");
+            Assert.That(near, Is.LessThan(16 * 1024), "host upload for nine far-apart clients (bytes/s); 8 KB/s when ticket 31 measured it");
         }
     }
 }

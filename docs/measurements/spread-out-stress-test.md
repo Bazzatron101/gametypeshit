@@ -1,3 +1,6 @@
+> **Since ticket 31 (2026-11-16):** host upload with all ten in measured 9.8 KB/s (1.1 KB/s per client), down from
+> 51 KB/s; the guard is now 32 KB/s (ADR 0021).
+
 # Spread-out stress test (ticket 44)
 
 **Measured 2026-11-16, Unity 6000.6.8f1, one Windows 11 PC, headless (`SpreadOutStressTest`, EditMode).**

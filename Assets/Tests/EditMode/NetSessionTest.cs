@@ -407,6 +407,43 @@ namespace HunterSystem.Tests
             Assert.That(rig.Host.BytesReceived, Is.GreaterThan(0).And.LessThanOrEqualTo(rig.Network.BytesToHost));
         }
 
+        [Test]
+        public void SnapshotsWrittenAgainstEachClientsLastWorldKeepEveryClientInStepThroughKillsAndRejoins()
+        {
+            // Ticket 31: each snapshot is the difference from the last world its client was sent. Worlds change size
+            // (an enemy falls, one arrives) and clients come and go mid-run; every client must still rebuild the host's world.
+            var rig = new Rig();
+            var alice = rig.Join("alice");
+            var bob = rig.Join("bob");
+            rig.Tick(Latency * 2 + 2);
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(0f, 0f, 1f));
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(30f, 0f, 30f));
+            rig.Input[alice] = new PlayerCommand(0f, 0f, lightAttack: true);
+            rig.Input[bob] = East;
+            rig.Tick(60);
+
+            bob.Disconnect();
+            rig.Clients.Remove(bob);
+            rig.Tick(20);
+            rig.Host.World.SpawnEnemy(Prey, new Vec3(-30f, 0f, -30f));
+            var bobAgain = rig.Join("bob");
+            rig.Input[bobAgain] = new PlayerCommand(0f, 1f);
+            rig.Tick(90);
+            rig.Input[alice] = PlayerCommand.None;
+            rig.Input[bobAgain] = PlayerCommand.None;
+            rig.Tick(Latency * 3);
+
+            foreach (var client in new[] { alice, bobAgain })
+            {
+                Assert.That(client.World.EnemyIds, Is.EqualTo(rig.Host.World.EnemyIds), "the same enemies");
+                foreach (var enemy in rig.Host.World.EnemyIds)
+                    Assert.That(client.World.GetEnemy(enemy).Health, Is.EqualTo(rig.Host.World.GetEnemy(enemy).Health));
+                foreach (var player in rig.Host.World.PlayerIds)
+                    Assert.That((client.World.GetPlayer(player).Position - rig.Host.World.GetPlayer(player).Position).Length, Is.LessThan(0.01f));
+                Assert.That(client.ConfirmedCharacter().Level, Is.EqualTo(rig.HostView(client).Level));
+            }
+        }
+
         // --- Ticket 13: what clients show -------------------------------------------------------
 
         /// <summary>Ticks the rig, collecting each client's presentation events.</summary>

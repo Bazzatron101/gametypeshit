@@ -127,10 +127,11 @@ namespace HunterSystem.Tests
             Assert.That(clients.Sum(c => c.session.UnreadableEventLists), Is.Zero);
 
             // Guards against getting worse, not targets: a 60 Hz frame is 16.7 ms (and the host also renders),
-            // and full snapshots measured about 92 KB/s per client when this was written (ticket 14's write-up).
+            // Full snapshots measured about 92 KB/s per client (ticket 14); compressed differences from the last world sent
+            // measured 7.7 KB/s (ticket 31, ADR 0021).
             Assert.That(hostTicks.Average(), Is.LessThan(4.0), "average host tick (ms)");
             var perClientBytesPerSecond = (host.BytesSent - bytesSentWhenFull) / (double)(Seconds - FullFromTick / 60) / BotClients;
-            Assert.That(perClientBytesPerSecond, Is.LessThan(128 * 1024), "host upload per client (bytes/s)");
+            Assert.That(perClientBytesPerSecond, Is.LessThan(16 * 1024), "host upload per client (bytes/s)");
         }
 
         /// <summary>Snapshot size for an empty world, per player and per enemy, and what Deflate would make of the session's own snapshot.</summary>

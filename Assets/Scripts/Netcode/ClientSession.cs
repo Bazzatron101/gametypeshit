@@ -27,7 +27,7 @@ namespace HunterSystem.Netcode
         private readonly List<(int sequence, PlayerCommand command)> _unconfirmed = new List<(int, PlayerCommand)>();
         private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
         private int _sequence;
-        private byte[] _confirmedWorld; // the host's latest snapshot, as received
+        private byte[] _confirmedWorld; // the host's latest world, as received: the next snapshot is written against it (ticket 31)
 
         private readonly List<SimulationEvent> _events = new List<SimulationEvent>();
         private int _lastHostEventTick;   // host events up to here have been shown (or happened before we joined)
@@ -148,7 +148,8 @@ namespace HunterSystem.Netcode
                         _glides.Clear();
                         break;
                     case MessageType.Snapshot when IsJoined:
-                        latest = Wire.ReadSnapshot(payload); // only the newest world matters...
+                        latest = Wire.ReadSnapshot(payload, _confirmedWorld); // only the newest world matters...
+                        _confirmedWorld = latest.World;                       // ...though each is written against the one before
                         ShowHostEvents(latest);              // ...but every snapshot's events do
                         foreach (var pair in latest.FarPlayers) _farPlayers[new PlayerId(pair.Key)] = new Vec3(pair.Value.x, 0f, pair.Value.z);
                         break;

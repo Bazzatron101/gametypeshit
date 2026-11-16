@@ -34,6 +34,12 @@ namespace HunterSystem.Netcode
             public int LastProcessed;
             public PlayerCommand LastCommand;
 
+            /// <summary>
+            /// The last world this connection was sent (in its welcome or a snapshot): the next snapshot is written against
+            /// it (ticket 31). The channel is reliable and ordered, so the client is sure to have it by then.
+            /// </summary>
+            public byte[] Baseline;
+
             /// <summary>Forgets the old connection's commands: a fresh connection numbers its commands from 1 again.</summary>
             public void ResetConnection(int connection)
             {
@@ -42,6 +48,7 @@ namespace HunterSystem.Netcode
                 LastReceived = 0;
                 LastProcessed = 0;
                 LastCommand = PlayerCommand.None;
+                Baseline = null;
             }
         }
 
@@ -333,7 +340,9 @@ namespace HunterSystem.Netcode
             remote.ResetConnection(connection);
             World.SetAway(remote.Id, false);
             _byConnection[connection] = remote;
-            Send(connection, Wire.Welcome(remote.Id, CurrentSnapshot(World.InterestOf(remote.Id, InterestRadius))));
+            var welcome = CurrentSnapshot(World.InterestOf(remote.Id, InterestRadius));
+            remote.Baseline = welcome.World;
+            Send(connection, Wire.Welcome(remote.Id, welcome));
         }
 
         private void BringNewerCharacter(PlayerId id, byte[] characterBytes)
@@ -356,9 +365,13 @@ namespace HunterSystem.Netcode
             _transport.Send(connection, message);
         }
 
+        private readonly Dictionary<byte[], byte[]> _messageByBaseline = new Dictionary<byte[], byte[]>();
+
         /// <summary>
-        /// Everyone together (a gate, the hub): one snapshot, the same bytes to every client. Out in the overworld: each
-        /// client its own, cut down to what is near its player (ticket 41), with far party members' positions now and then.
+        /// Everyone together (a gate, the hub): one snapshot for every client, encoded once for each different world they
+        /// were last sent (usually one: they were all sent the same). Out in the overworld: each client its own, cut down
+        /// to what is near its player (ticket 41), with far party members' positions now and then. Each is written
+        /// against the last world its client was sent (ticket 31).
         /// </summary>
         private void SendSnapshots()
         {
@@ -367,9 +380,19 @@ namespace HunterSystem.Netcode
             {
                 var snapshot = CurrentSnapshot(SnapshotInterest.Everything);
                 snapshot.Events = SimulationEventCodec.Encode(_eventsSinceSnapshot);
-                var message = Wire.Snapshot(snapshot);
-                LastSnapshotSize = message.Length;
-                foreach (var connection in _byConnection.Keys) Send(connection, message);
+                _messageByBaseline.Clear();
+                byte[] wholeMessage = null;
+                foreach (var (connection, remote) in _byConnection)
+                {
+                    byte[] message;
+                    if (remote.Baseline == null) message = wholeMessage ??= Wire.Snapshot(snapshot);
+                    else if (!_messageByBaseline.TryGetValue(remote.Baseline, out message))
+                        _messageByBaseline[remote.Baseline] = message = Wire.Snapshot(snapshot, remote.Baseline);
+                    remote.Baseline = snapshot.World;
+                    LastSnapshotSize = message.Length;
+                    Send(connection, message);
+                }
+                _messageByBaseline.Clear();
                 return;
             }
 
@@ -382,7 +405,8 @@ namespace HunterSystem.Netcode
                 if (withFarPlayers)
                     foreach (var (id, position) in World.PlayerPositions())
                         if (!interest.Includes(id)) snapshot.FarPlayers[id.Value] = (position.X, position.Z);
-                var message = Wire.Snapshot(snapshot);
+                var message = Wire.Snapshot(snapshot, remote.Baseline);
+                remote.Baseline = snapshot.World;
                 LastSnapshotSize = message.Length;
                 Send(connection, message);
             }

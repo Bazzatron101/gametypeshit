@@ -16,7 +16,23 @@ from the game's real content; 8 living enemies are kept topped up and defeated o
   - The host runs in a window at 1280x720, so its frame time includes rendering ten players. The nine clients are headless.
   - The host measures for 60 s, starting once all nine clients are connected and after a 3 s warm-up. It stops early if any client leaves.
 
-## Results
+## Since ticket 31 (2026-11-16)
+
+Snapshots now go Deflate-compressed, as the difference from the last world each client was sent (ADR 0021). The
+headless test, same setup:
+
+| | Before (full snapshots) | After |
+|---|---|---|
+| Host upload, total | 854 KB/s | 69.4 KB/s (8%) |
+| Host upload, per client | 95 KB/s | 7.7 KB/s |
+| Snapshot message, mean / max | 4.7 / 6.0 KB | 391 / 1,072 bytes |
+| Host simulation tick, mean | 0.18 ms | 0.26 ms (compressing included) |
+
+`BotStressTest` now fails above 16 KB/s per client. The built game (`scripts/coop-bot-stress.ps1 -Seconds 30
+-HeadlessHost`, local UDP) measured 71.1 KB/s total, 7.9 KB/s per client. Its "largest correction" (about 62 m on every
+client) is the hub-to-gate move the bot host now makes, not a misprediction. The tables below are from ticket 14.
+
+## Results (ticket 14, before ticket 31)
 
 **Bandwidth.** All three runs were measured over a full session.
 

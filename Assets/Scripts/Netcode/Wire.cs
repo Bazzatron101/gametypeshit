@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using HunterSystem.Simulation;
 
 namespace HunterSystem.Netcode
@@ -16,7 +17,10 @@ namespace HunterSystem.Netcode
         /// <summary>Client to host, every tick: one numbered command.</summary>
         Command = 3,
 
-        /// <summary>Host to every client, every few ticks: the whole world and each player's last processed command.</summary>
+        /// <summary>
+        /// Host to every client, every few ticks: the world and each player's last processed command. Compressed, and
+        /// usually written against the last world sent to that client (ticket 31): see <see cref="Wire.Snapshot"/>.
+        /// </summary>
         Snapshot = 4,
 
         /// <summary>Host to one client: you cannot join, and why (the session is full).</summary>
@@ -70,18 +74,48 @@ namespace HunterSystem.Netcode
             return (key, character);
         });
 
+        /// <summary>The whole world, compressed: a welcome has no earlier world to be written against.</summary>
         public static byte[] Welcome(PlayerId you, SnapshotMessage snapshot) => Write(MessageType.Welcome, w =>
         {
             w.Write(you.Value);
-            WriteSnapshot(w, snapshot);
+            WriteCompressed(w, body => WriteSnapshot(body, snapshot, snapshot.World));
         });
 
         public static (PlayerId you, SnapshotMessage snapshot) ReadWelcome(byte[] message) =>
-            Read(message, r => (new PlayerId(r.ReadInt32()), ReadSnapshot(r)));
+            Read(message, r => (new PlayerId(r.ReadInt32()), ReadCompressed(r, body => ReadSnapshot(body, null))));
 
-        public static byte[] Snapshot(SnapshotMessage snapshot) => Write(MessageType.Snapshot, w => WriteSnapshot(w, snapshot));
+        private const byte WholeWorld = 0, AgainstBaseline = 1;
 
-        public static SnapshotMessage ReadSnapshot(byte[] message) => Read(message, ReadSnapshot);
+        /// <summary>
+        /// A snapshot, Deflate-compressed (ticket 31). Given the world this client was last sent (<paramref name="baseline"/>),
+        /// the world goes as its byte-by-byte XOR with that one: almost all zeros from one snapshot to the next, so it
+        /// compresses to very little. When the two differ in length (something arrived or left) the whole world goes instead.
+        /// This relies on the client receiving every snapshot, in order, to know the baseline: the game's channel is
+        /// reliable and ordered (ADR 0021).
+        /// </summary>
+        public static byte[] Snapshot(SnapshotMessage snapshot, byte[] baseline = null) => Write(MessageType.Snapshot, w =>
+        {
+            var againstBaseline = baseline != null && baseline.Length == snapshot.World.Length;
+            w.Write(againstBaseline ? AgainstBaseline : WholeWorld);
+            WriteCompressed(w, body => WriteSnapshot(body, snapshot, againstBaseline ? Xor(snapshot.World, baseline) : snapshot.World));
+        });
+
+        /// <param name="baseline">The world of the previous snapshot (or welcome) this client received, as rebuilt.</param>
+        /// <returns>The snapshot with its <see cref="SnapshotMessage.World"/> whole again.</returns>
+        public static SnapshotMessage ReadSnapshot(byte[] message, byte[] baseline) => Read(message, r =>
+        {
+            var encoding = r.ReadByte();
+            if (encoding == AgainstBaseline && baseline == null) throw new FormatException("A snapshot written against a world this client never had.");
+            if (encoding != WholeWorld && encoding != AgainstBaseline) throw new FormatException("Unknown snapshot encoding.");
+            return ReadCompressed(r, body => ReadSnapshot(body, encoding == AgainstBaseline ? baseline : null));
+        });
+
+        private static byte[] Xor(byte[] world, byte[] baseline)
+        {
+            var result = new byte[world.Length];
+            for (var i = 0; i < world.Length; i++) result[i] = (byte)(world[i] ^ baseline[i]);
+            return result;
+        }
 
         public static byte[] Command(int sequence, PlayerCommand command) => Write(MessageType.Command, w =>
         {
@@ -159,7 +193,8 @@ namespace HunterSystem.Netcode
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;
 
-        private static void WriteSnapshot(BinaryWriter w, SnapshotMessage s)
+        /// <param name="world">The world as it goes on the wire: whole, or XOR'd with the baseline.</param>
+        private static void WriteSnapshot(BinaryWriter w, SnapshotMessage s, byte[] world)
         {
             w.Write(s.Tick);
             w.Write(s.LastProcessedSequence.Count);
@@ -168,8 +203,8 @@ namespace HunterSystem.Netcode
                 w.Write(pair.Key);
                 w.Write(pair.Value);
             }
-            w.Write(s.World.Length);
-            w.Write(s.World);
+            w.Write(world.Length);
+            w.Write(world);
             w.Write(s.Events.Length);
             w.Write(s.Events);
             w.Write(s.FarPlayers.Count);
@@ -181,14 +216,44 @@ namespace HunterSystem.Netcode
             }
         }
 
-        private static SnapshotMessage ReadSnapshot(BinaryReader r)
+        /// <param name="baseline">Null when the world was sent whole; otherwise the world it was XOR'd with.</param>
+        private static SnapshotMessage ReadSnapshot(BinaryReader r, byte[] baseline)
         {
             var s = new SnapshotMessage { Tick = r.ReadInt32() };
             for (int i = 0, n = r.ReadInt32(); i < n; i++) s.LastProcessedSequence[r.ReadInt32()] = r.ReadInt32();
             s.World = r.ReadBytes(r.ReadInt32());
+            if (baseline != null)
+            {
+                if (baseline.Length != s.World.Length) throw new FormatException("A snapshot written against a different world.");
+                s.World = Xor(s.World, baseline);
+            }
             s.Events = r.ReadBytes(r.ReadInt32());
             for (int i = 0, n = r.ReadInt32(); i < n; i++) s.FarPlayers[r.ReadInt32()] = (r.ReadSingle(), r.ReadSingle());
             return s;
+        }
+
+        /// <summary>Writes a length-prefixed Deflate block holding whatever <paramref name="body"/> writes.</summary>
+        private static void WriteCompressed(BinaryWriter w, Action<BinaryWriter> body)
+        {
+            using var compressed = new MemoryStream();
+            using (var deflate = new DeflateStream(compressed, CompressionLevel.Fastest, leaveOpen: true))
+            using (var inner = new BinaryWriter(deflate))
+            {
+                body(inner);
+            }
+            w.Write((int)compressed.Length);
+            w.Write(compressed.GetBuffer(), 0, (int)compressed.Length);
+        }
+
+        private static T ReadCompressed<T>(BinaryReader r, Func<BinaryReader, T> body)
+        {
+            var length = r.ReadInt32();
+            if (length < 0) throw new FormatException("Impossible snapshot size.");
+            var bytes = r.ReadBytes(length);
+            if (bytes.Length != length) throw new FormatException("The snapshot was cut short.");
+            using var deflate = new DeflateStream(new MemoryStream(bytes), CompressionMode.Decompress);
+            using var inner = new BinaryReader(deflate);
+            return body(inner);
         }
 
         private static byte[] Write(MessageType type, Action<BinaryWriter> body)
