@@ -4,7 +4,7 @@
 
 **Blocked by:** None
 
-**Status:** ready-for-human (try them in a run)
+**Status:** done
 
 - [x] Five teammates, one of each class plus one that evens the front and back lines
 - [x] Each plays its role: tank holds enemies, Rogue flanks and finishes, Archer and Wizard fight from range
@@ -37,3 +37,5 @@ Not done:
 - This builds on the uncommitted aim-with-the-camera work (`PlayerCommand.AimYawDegrees`), which teammates use to aim skills.
 
 **2026-11-14 (developer, recorded by agent):** Played with the teammates: "thats really enjoyable and it works well".
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: you played with the teammates ("thats really enjoyable and it works well") and every box is ticked.

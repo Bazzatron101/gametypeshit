@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Two-player Steam co-op, 17: Gate runtime
 
-**Status:** ready-for-human (play the hub with a friend)
+**Status:** done
 
 - [x] Players can walk around a small hub together
 - [x] A gate board lists available gates and starts one for the party
@@ -61,3 +61,4 @@ Limits:
   - Story 48's "showing where gates are" is a list on the board, not a map.
 - **Evidence:** 397 EditMode and 23 PlayMode tests pass. The hub-to-gate-to-home network test and the two-copy fight pass.
 
+**2026-11-17 (developer playtest, recorded by agent):** "The ready check is good and easy to use." The hub with a real friend is covered by the two-PC test (ticket 13).

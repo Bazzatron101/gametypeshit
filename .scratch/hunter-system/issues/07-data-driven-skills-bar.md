@@ -4,7 +4,7 @@
 
 **Blocked by:** 05: Camera, keyboard and mouse controls, soft lock-on, 06: XP, levels, six stats and the level-up UI
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Skills load from data definitions with a name, cooldown, effect, and tags
 - [x] Skills are used from keys 1 to 6, governed only by cooldowns (no mana or stamina)
@@ -27,3 +27,5 @@ Open notes for later tickets:
 - **08 (tag modifiers):** tags are free-form strings, so a typo matches nothing; consider a known-tags list. There is no per-player "resolved skill" step yet: modifiers need one, rather than mutating the shared `SkillDefinition`. Light and heavy attacks carry no tags, so a "melee" modifier cannot reach them yet.
 - **Loadout:** a skill learned with a full bar is in `PlayerState.KnownSkills` but cannot be slotted. A rearrange-slots command and screen are needed once more than six skills exist.
 - **Small:** dodge and a skill pressed on the same tick drop the skill (dodge wins). An enemy crossing a projectile's path between ticks can slip through, which is negligible at current speeds.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

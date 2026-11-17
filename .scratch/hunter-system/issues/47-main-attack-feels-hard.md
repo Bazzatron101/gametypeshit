@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human (try the sword in the arena)
+**Status:** done
 
 - [x] Find out what makes it hard (see the questions below)
 - [x] Tune or change the attack so it lands reliably, in data where possible (`PlayerTuning.asset`, the weapon assets)
-- [ ] The developer tries it again and it feels good
+- [x] The developer tries it again and it feels good
 
 ## Questions for the developer
 
@@ -33,3 +33,5 @@ Next: give the sword's light slash more reach (`IronSword.asset`, tests in `Weap
 - Not done: a hit sound (the game has no audio yet) and a hit pause.
 - Tests: PlayMode `ArenaTest.TheSwordReachesAnEnemyAFewMetresAwayAndTheHitShowsItsNumber` (a goblin 3 m away, out of the old reach, is hit, and your number shows). EditMode: 637 passed; PlayMode: 36 passed.
 - **To check:** play the arena as a Warrior and see whether the slash now feels easy to land, and whether the numbers are too much.
+
+**2026-11-17 (developer playtest, recorded by agent):** "The weapon did feel better to use." The longer reach works.

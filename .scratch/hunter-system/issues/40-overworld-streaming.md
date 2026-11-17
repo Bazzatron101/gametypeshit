@@ -4,7 +4,7 @@
 
 **Blocked by:** 38: The overworld as a third kind of place, 39: Terrain pipeline and a 1 km test patch
 
-**Status:** ready-for-human (review; walk the test patch and watch tiles sharpen as you go)
+**Status:** done
 
 - [x] Clients load tiles within a configured radius of the local player and unload tiles past a larger one, with no hitch a player notices
 - [x] The host keeps active every tile near any player; ground data (ticket 37) and gate leaks for a tile exist only while it is active (gate leaks do not exist yet: ticket 43)
@@ -36,3 +36,5 @@
 - Not measured in a standalone build or on a slow disk; ten players on the full map is ticket 44.
 - Far versions of all 1,260 tiles of the full map would be about 650,000 triangles: worth merging into larger chunks when ticket 45 builds the map.
 - The baked files are not in Git LFS yet (5 MB for the patch); do that before the full map.
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: you have walked the streamed test patch since (ticket 39 playtest), and the continent streams the same way (ticket 45).

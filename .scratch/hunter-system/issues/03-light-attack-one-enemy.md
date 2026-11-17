@@ -4,7 +4,7 @@
 
 **Blocked by:** 02: Simulation core with a movable capsule
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Light attack on the mouse button deals damage in the simulation, with damage events emitted
 - [x] One enemy type chases the player and is defeated when its health reaches zero
@@ -23,3 +23,5 @@ Open notes for later tickets:
 - **07 (data-driven skills):** light attack stats are serialized fields on `SimulationRunner`, not a data asset yet. Move them when skills become data.
 - **10 (feel review):** a press during cooldown is dropped, not buffered. Input buffering is a feel decision.
 - **05 (soft lock-on):** facing is the last move direction; lock-on may replace it for attacks.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

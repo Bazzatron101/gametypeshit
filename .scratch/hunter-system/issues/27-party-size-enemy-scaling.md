@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Two-player Steam co-op, 17: Gate runtime
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Three tiers apply multipliers and spawn counts from data
 - [x] Player stats are not reduced for over-leveled players and rewards are not reduced
@@ -47,3 +47,5 @@ Not done: whether the numbers feel right. That is for the M3 feel review (ticket
 - **Recorded in ADR 0010:** a room filled for a party keeps that strength if the party shrinks mid-fight.
 - **Evidence:** 426 EditMode and 24 PlayMode tests pass. The built host and guest gate test and the two-copy test pass.
 
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

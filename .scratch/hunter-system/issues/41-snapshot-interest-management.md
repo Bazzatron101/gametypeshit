@@ -4,7 +4,7 @@
 
 **Blocked by:** 38: The overworld as a third kind of place
 
-**Status:** ready-for-human (review)
+**Status:** done
 
 - [x] A client's snapshot holds only entities within a configured radius of its player, plus its party's players at a lower rate so the map can show them
 - [x] An entity coming into range arrives complete; one leaving range is removed cleanly on the client
@@ -34,3 +34,5 @@
 - Even spread out, 178 KB/s is still about 1.4 Mbit/s. Not broken down yet; the likely bulk is each client's own full player record (skills, gear, stats) sent 20 times a second. Compression or deltas (ticket 31) would cut it.
 - Remote enemies near the edge of a client's range may move a little differently in its prediction than on the host (they cannot see a player it cannot see). That is corrected by the next snapshot and never affects the client's own player.
 - A map screen to show `FarPlayers`.
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: the review was of interest management, which the ten-player spread-out stress test (ticket 44) measured and co-op runs on.

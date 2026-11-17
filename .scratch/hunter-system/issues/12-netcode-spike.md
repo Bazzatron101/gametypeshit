@@ -4,7 +4,7 @@
 
 **Blocked by:** 10: M1 feel review
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Two instances play the same slice over Steam transport with a relay, using the front-runner library
 - [x] At least one alternative is tried or ruled out with reasons
@@ -63,3 +63,5 @@
 - Both PCs were in the same room on one network (host on Wi-Fi, client on Ethernet).
 
 ADR 0004 is now Accepted.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

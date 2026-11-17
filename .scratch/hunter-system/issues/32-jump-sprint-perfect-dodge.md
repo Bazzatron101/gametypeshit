@@ -4,7 +4,7 @@
 
 **Blocked by:** None
 
-**Status:** ready-for-human (try the feel)
+**Status:** done
 
 - [x] Hold to sprint, faster on foot, ending when you fight
 - [x] A jump that clears ground-level attacks but not an enemy; classes can raise it
@@ -42,3 +42,4 @@
   - Ctrl as the dodge key can trigger editor or browser shortcuts when combined with W, S or D.
 - **Evidence:** 442 EditMode and 25 PlayMode tests pass. The built network tests pass.
 
+**2026-11-17 (developer playtest, recorded by agent):** "It was rewarding to get a perfect dodge and the sprinting and jumping made the game better."

@@ -4,7 +4,7 @@
 
 **Blocked by:** None
 
-**Status:** ready-for-human (see it in a run)
+**Status:** done
 
 - [x] Each skill has a recognisable effect, not one grey flash for all
 - [x] ~~It is clear whose skill it was (the skill's name over the player who used it)~~ Not wanted (developer, 2026-11-14): "you dont need to show skill name". The colour says which class used it.
@@ -17,3 +17,5 @@
 - **Longer flashes:** half a second instead of a quarter. A flash opens out quickly to full size, holds, then thins away.
 - No names or text over players.
 - Tests: `SkillLookTest` (3, EditMode); the PlayMode `GreyboxSkillsTest` and `GreyboxModifiersTest` still pass.
+
+**2026-11-17 (developer playtest, recorded by agent):** "You can see the skills and it is busy but I like it and I can tell they are doing something." Busy is fine; no change.

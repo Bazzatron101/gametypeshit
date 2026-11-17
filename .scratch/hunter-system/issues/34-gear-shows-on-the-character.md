@@ -4,7 +4,7 @@
 
 **Blocked by:** 23: Gear and tag synergies
 
-**Status:** ready-for-human
+**Status:** done
 
 - [x] Each equipped item has a look, drawn on the character in every scene
 - [x] Other players and bot teammates are seen with their own gear (it travels in snapshots)
@@ -21,3 +21,5 @@
 - **Placeholder art (labelled "AI"):** 12 prefabs in `Assets/Art/Gear` (one per piece) and 10 flat materials in `Assets/Art/Gear/Materials`, built from primitives by `Hunter System > Gear > Make Placeholder Gear Looks` (`GearLookSetup`). Running it again rebuilds only its own placeholders; a look you set by hand is never overwritten. To replace one, put your model's prefab in the gear asset's `look` field, built around the slot's spot (the hand for weapons, and so on; see `GearLooks.Anchor`).
 - Tests: `GearOnCharacterTest` (EditMode, 5: every piece has a look with no colliders, weapons look different, the look catalog, each slot has its own place, and host, guest and a bot teammate each see everyone's own gear over the simulated network). `GearOnCharacterSceneTest` (PlayMode, 2: wearing, swapping and taking off in the greybox; the host and three bot teammates in the co-op scene each drawn with what they wear). EditMode: 682 passed; PlayMode: 40 passed.
 - **To check:** in the arena, press I and wear pieces one at a time, then the whole Cinder set. Check that each piece sits right on slim, average and broad builds, and while dodging, defeated and riding. Host with bot teammates and see them in their own gear. The shapes are rough stand-ins: find them with `l:AI` in the Project window. I only looked at a still render, not the game.
+
+**2026-11-17 (developer playtest, recorded by agent):** "The gear looks good and changes the character's feel." More gear is wanted: ticket 61.

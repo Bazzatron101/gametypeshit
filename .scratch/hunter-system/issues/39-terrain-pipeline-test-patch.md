@@ -4,14 +4,14 @@
 
 **Blocked by:** 37: Give the simulation real ground
 
-**Status:** ready-for-human (walk the patch: open Assets/Scenes/OverworldPatch.unity and press Play; try sculpting a tile and regenerating)
+**Status:** done
 
 - [x] Terrain is split into square tiles (size a setting; about 250 to 500 m to start) in Unity Terrain, URP flat shading per ADR 0002
 - [x] Generated height from a source the developer can paint or trace from `docs/maps/overworld-reference.webp`, with hand edits kept when it is regenerated
 - [x] An editor step bakes each tile's heightmap and walkability for the simulation; steepness past a configured slope is unwalkable, water is unwalkable, painted climbable faces are marked
 - [x] Hand-placed points (gates, town edges, the road, landmarks) are authored as markers the simulation can read, not only as scene objects
 - [x] A 1 km² test patch with a hill, a steep ridge with a pass, a climbable face, a stretch of shore, a road and two gate markers, walkable in a build
-- [ ] Hours spent on the patch are recorded (the agent's time is below; the developer's own sculpting time is still to come), to estimate the full map's cost (ticket 45)
+- [x] ~~Hours spent on the patch are recorded~~ (no longer needed: the continent is built from a recipe, ticket 45) (the agent's time is below; the developer's own sculpting time is still to come), to estimate the full map's cost (ticket 45)
 
 ## Notes
 
@@ -75,3 +75,5 @@
 - **The continent recipe:** Hunter System > Overworld > Set Up Continent Recipe (`ContinentSetup`) copies `docs/maps/overworld-heights-ai.png` and `overworld-water-ai.png` to `Assets/Art/Maps/` (readable, linear, uncompressed; heights R16, water R8; **labelled AI**) and makes `Assets/Data/Overworld/ContinentSource.asset`: 42 × 31 tiles of 250 m (10.5 × 7.75 km), centred on the origin, max height 260 m, base 0, painted heights × 250 m, sea level 4 m.
 - Tests: `ContinentMapsTest` (4). EditMode 665 passed; PlayMode 36 passed.
 - **Not done:** generating and baking the continent's tiles, a scene for it, roads, gates and towns on it: ticket 45.
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: you walked the patch and found sculpting and regenerating easy. The one open box, your sculpting hours to estimate the full map's cost, no longer matters: ticket 45 built the continent from a recipe, not by hand.

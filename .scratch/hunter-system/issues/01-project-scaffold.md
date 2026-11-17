@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Project is on a single locked long-term-support engine version, with the current version number checked against Unity's release page rather than assumed
 - [x] Render pipeline chosen and set up for flat-shaded low-poly art
@@ -24,3 +24,5 @@
 - `docs/backup.md` now names the remote and the push habit. Its weekly offline bundle routine stands.
 - All four boxes are ticked.
 
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

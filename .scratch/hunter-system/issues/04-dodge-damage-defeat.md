@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Light attack and one enemy
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Enemy attacks reduce player health and emit damage events
 - [x] Dodge grants a short invulnerability window during which damage is ignored
@@ -25,3 +25,5 @@ Open notes for later tickets:
 - **07 (data-driven skills):** dodge stats are serialized on `SimulationRunner`, like the light attack, not a data asset yet.
 - **Reporting quirk:** a dash that carries the player out of reach counts as a miss, not an `AttackDodged` event. That is fine for gameplay; revisit if feedback or statistics need "dodged" to include it.
 - **06 (UI):** `CombatHud` is a placeholder IMGUI health readout.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

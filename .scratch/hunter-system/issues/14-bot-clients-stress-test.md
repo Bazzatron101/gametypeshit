@@ -4,7 +4,7 @@
 
 **Blocked by:** 13: Two-player Steam co-op
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Bots join through the same path as real clients and perform scripted actions
 - [x] A session with ten bots runs on the M1 slice
@@ -44,3 +44,5 @@ Not covered: the Steam relay, real packet loss, and a weaker GPU.
   - Bots only send honest commands. Authority against hostile input is covered by the session tests.
   - Built-game corrections reached 1 m under CPU load. Not investigated; it is noted in the write-up.
 
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

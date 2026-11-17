@@ -4,7 +4,7 @@
 
 **Blocked by:** 14: Bot clients and 10-bot stress test
 
-**Status:** ready-for-human (review)
+**Status:** done
 
 - [x] Ten-player host upload is measured well under the current 880 KB/s by `BotStressTest` and `scripts/coop-bot-stress.ps1` (a target to agree in triage; compression alone measured about 23% of today's size) (`BotStressTest`: 69 KB/s; built game: 71 KB/s)
 - [x] Late join, rejoin and reconciliation still work (the session tests pass)
@@ -31,3 +31,5 @@ Open:
 - If snapshots ever move to an unreliable channel, the baseline must become an acknowledged one (ADR 0021).
 
 **2026-11-16 (agent):** Built game, fresh co-op build, `scripts/coop-bot-stress.ps1 -Seconds 30 -HeadlessHost`: PASS. Host upload 71.1 KB/s (7.9 KB/s per client), download 14.2 KB/s, host frame 2.07 ms mean. Every client's "largest correction" was about 62 m: the bot host now starts in the hub and takes everyone into the first gate, and that move counts as a correction. It is not a misprediction, but the figure no longer measures one; worth excluding moves the host makes (gate entry, rejoin) from it.
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: the review was of engine work that co-op, the bot stress tests and the ten-player overworld test (ticket 44) have run on since, with their tests passing.

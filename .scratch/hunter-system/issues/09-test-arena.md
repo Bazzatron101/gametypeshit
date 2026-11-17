@@ -4,7 +4,7 @@
 
 **Blocked by:** 07: Data-driven skills with the six-slot bar
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Arena scene lets the developer spawn chosen enemies and set the player's level and loadout
 - [x] Skills and modifiers can be tried without leaving the scene
@@ -31,3 +31,5 @@ Open notes for later tickets:
 - **Netcode (12):** `SpawnEnemy`/`DespawnEnemy` are immediate host-side calls, not queued. Gate spawners (17) should decide whether spawns become queued operations with events.
 - **Guarding:** `TeachSkill`, `RestoreHealth`, `ResetCooldowns` and `RaiseToLevel` are general world calls. Quests, checkpoints and revives will reuse some of them; anything arena-only stays in `ArenaPanel`.
 - **Greybox toggles:** F5 to F12 map to the content's modifier list in order, so new modifiers can shift the keys. Remove the toggles when gear grants modifiers (22, 23).
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

@@ -4,7 +4,7 @@
 
 **Blocked by:** None
 
-**Status:** ready-for-human (review; nothing to see in a build until ticket 38 or 39 gives the game ground)
+**Status:** done
 
 - [x] A `Ground` in the simulation gives height, walkability and a blocked-line test at any point; the hub and gates keep working through the same seam (their floors are flat, walled ground)
 - [x] Walking, jumping and landing follow the ground's height; a player cannot walk onto unwalkable ground (too steep, the sea) and slides along its edge rather than stopping dead
@@ -36,3 +36,5 @@
 - Projectiles fly level at the height they were thrown from and pass through hills; nothing in this ticket asked for that to change.
 - Ground data is held whole in memory. Reading it per tile comes with ticket 40.
 - The slide works along the grid's axes, so following a diagonal cliff zigzags a little at 1 m cells. Watch for it once there is real terrain.
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: the review was of the ground model, which the test patch, the continent and everything walking on them (tickets 38 to 45, 49) have been built and tested on since.

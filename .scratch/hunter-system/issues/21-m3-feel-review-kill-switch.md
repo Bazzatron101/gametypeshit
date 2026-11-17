@@ -4,7 +4,7 @@
 
 **Blocked by:** 18: Handcrafted boss and gate clear reward, 20: Mission board and text-only story scenes
 
-**Status:** ready-for-human
+**Status:** done
 
 - [x] Clearing the gate is enjoyable, as judged by the developer (mostly, with notes)
 - [x] ~~Friends were asked to play again unprompted, and the result recorded~~ Replaced by the developer's own trigger (see below)
@@ -24,3 +24,5 @@
   - **Teammates' skills you can see:** the new ticket 35. Today every player's skills already flash, but only as a quarter-second grey shape with no name, so you can't tell who did what.
 - **The trigger, rewritten:** "we will keep on adding things to the game until I feel like its a game thats good enough to play". The spec's Kill switch section is updated.
 - **Decision: keep building.** No spending or going public yet. The M4 tickets that waited on this one (22 onward) are unblocked.
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: your decision is recorded (keep building, the trigger rewritten) and every box is ticked; the follow-ups became tickets 22, 23, 30, 34 and 35.

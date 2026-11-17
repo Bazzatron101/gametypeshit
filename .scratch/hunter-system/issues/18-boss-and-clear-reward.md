@@ -4,7 +4,7 @@
 
 **Blocked by:** 17: Gate runtime
 
-**Status:** ready-for-human (play the Warlord solo and with a friend)
+**Status:** done
 
 - [x] Boss has distinct, readable attack patterns
 - [x] Defeating the boss completes the gate and grants a reward
@@ -57,3 +57,5 @@ Not done:
 
 
 **2026-11-16 (developer, recorded by agent):** A line for the Warlord, for now: "Get out of my home, you pesky humans!" The developer will think more about boss text later. Nothing shows boss lines yet; see ticket 20.
+
+**2026-11-17 (developer playtest, recorded by agent):** "The Warlord boss felt fun to play", but it needs sweeping attacks that travel: ticket 60.

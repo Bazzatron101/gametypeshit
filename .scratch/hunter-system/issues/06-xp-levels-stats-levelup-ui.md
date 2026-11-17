@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Light attack and one enemy
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] XP gain and the level curve come from data, and the level cap is a configuration value
 - [x] Each level grants a few free stat points, and the player can allocate them on a stat screen
@@ -28,3 +28,5 @@ Open notes for later tickets:
 - **25 (rank promotions):** rank bands (E 1-15, D 16-35, ...) are not modelled yet. Add them as configuration next to the curve.
 - **Structure:** `SimulationWorld` now holds movement, combat, enemy AI and progression. Split progression (and later skills) into their own types before ticket 07 grows it further.
 - **Duplicated defaults:** asset fields and definitions both state the same defaults. This is consistent with the existing pattern; revisit when tuning moves fully into data (07).
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

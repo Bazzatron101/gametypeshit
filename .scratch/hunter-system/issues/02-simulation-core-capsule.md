@@ -4,7 +4,7 @@
 
 **Blocked by:** 01: Project scaffold
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Simulation runs on a fixed timestep independent of rendering and the engine's scene objects
 - [x] Player input is expressed as commands per tick and the capsule moves in the game as a result
@@ -23,3 +23,5 @@ Deferred review findings, for later tickets:
 - **03/04 (attack, dodge):** input is sampled once per frame. A press shorter than one tick (about 16 ms) on a frame that runs 0 ticks is lost, and frames that run several ticks repeat the command. Button presses need latching until consumed by a tick.
 - **03:** the spec says the simulation "produces state and events". There is no event output yet; damage events arrive with ticket 03.
 - **12 (netcode spike):** commands carry no tick number. Prediction and reconciliation will need tick-stamped commands. Positions are floats, deterministic on one machine but not guaranteed across machines, which is acceptable under host authority.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

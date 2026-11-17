@@ -4,7 +4,7 @@
 
 **Blocked by:** 33: Bot teammates (done), 20: Mission board and text scenes
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 - [ ] Each friend has a name and a personality the writing can lean on
 - [ ] Friends can speak in text scenes (as a speaker, like the guild NPC)
@@ -23,3 +23,13 @@ From the developer (2026-11-16, ticket 20): "you start your adventure with your 
 - **Where the dialog happens:** only in text scenes in the hub, or also short lines during runs (for example on entering or clearing a gate)?
 - **Do friends' class and role stay tied to their bot**, so a friend who is the tank in the story is also the tank in fights?
 - **Words:** written by the developer; blank "write me" markers until then (ADR 0009).
+
+## Comments
+
+**2026-11-17 (developer, recorded by agent):** Decided in triage:
+- **All five bot friends are named story characters,** each with a personality.
+- **The past is the host's character's.** The story follows the host's character and their missing older sibling; guests come along (ADR 0009).
+- **Friends talk in the hub, during runs and during story events:** text scenes in the hub, short lines in runs (for example on entering or clearing a gate), and lines in story events.
+- **Each friend's role is fixed to their bot's class:** the friend who is the tank in the story is the tank in fights.
+- **A friend appears in scenes only when their bot is in the party.** With bots turned off, or replaced by real players, that friend is not in the scene, so every scene must still read well with any of them missing.
+- **Words:** blank "write me" markers for the developer (ADR 0009).

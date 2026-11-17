@@ -4,7 +4,7 @@
 
 **Blocked by:** 37: Give the simulation real ground
 
-**Status:** ready-for-human (review; nothing to walk in a build until the content places gates in a world, tickets 39 and 45)
+**Status:** done
 
 - [x] An overworld mode in `SimulationWorld` beside the hub and the gate, with its own ground (ticket 37)
 - [x] The guild town's edge leads out onto the overworld and back
@@ -42,3 +42,5 @@
 - Nothing opens a region yet: ticket 25 calls `SetOpenRegions` (and saves into `WorldRecord.OpenRegions`).
 - A gate with no site on the map is treated as known and licensed, so the board offers it as before.
 - Licence is "the region is open" until ranks exist (ticket 25).
+
+**2026-11-17 (agent, asked by the developer to close what can be closed):** Closed: the review was of the overworld as a place, which the test patch and the continent (tickets 39, 45) use, and which you have walked since.

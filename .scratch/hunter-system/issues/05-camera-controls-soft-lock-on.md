@@ -4,7 +4,7 @@
 
 **Blocked by:** 03: Light attack and one enemy
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Free camera follows the player with mouse look
 - [x] Light and heavy attacks are on the mouse buttons
@@ -25,3 +25,5 @@ Open notes for later tickets:
 - **10 (feel review):** whether a dodge-cancelled heavy should refund its cooldown (it does not, which prevents dodge-cancel spam); heavy beats light when both are pressed on one tick; and whether lock-on should lunge toward targets just out of reach.
 - **Camera:** no collision yet; it can clip through walls once gates have walls (ticket 17).
 - **07:** heavy attack and lock-on tuning live on `SimulationRunner`, like the light attack and dodge.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.

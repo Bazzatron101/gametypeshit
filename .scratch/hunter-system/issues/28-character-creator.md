@@ -4,7 +4,7 @@
 
 **Blocked by:** 15: Character save and load
 
-**Status:** ready-for-human (make a hunter, restyle in the hub, see names with a friend)
+**Status:** done
 
 - [x] A simple creator offers a few appearance options and a name
 - [x] The choice is saved with the character
@@ -31,3 +31,5 @@ Evidence:
 - PlayMode `CharacterCreatorSceneTest`: in the Greybox scene, a new hunter is named and dressed, then picks a class, and it is all there after a reload. A hunter from before names is asked once and keeps its level and class. In the Coop hub, looks change and two bot teammates' names show while yours does not. The full PlayMode suite passes (31/31).
 
 Not checked by playing: how the creator, swatches and nameplates look on screen, and nameplates between two real players over Steam.
+
+**2026-11-17 (developer playtest, recorded by agent):** "It is cute and I like it with the different colours and body sizes." A friend seeing your name is covered by the two-PC test (ticket 13).

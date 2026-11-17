@@ -4,7 +4,7 @@
 
 **Blocked by:** 07: Data-driven skills with the six-slot bar
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] A modifier definition keyed to a tag changes the behavior of every skill with that tag
 - [x] At least one concrete synergy is demonstrable in the game
@@ -27,3 +27,5 @@ Open notes for later tickets:
 - **23 (gear tag synergies) / 22 (loot):** gear should call `GrantModifier`/`RevokeModifier` on equip and unequip; remove `DebugModifierToggles` then. Light and heavy attacks still carry no tags, so "melee" modifiers do not reach them. Give `AttackDefinition` tags when gear needs it (story 29: skills and items interact through tags).
 - **Netcode (12):** grants are queued on the host's world. With prediction, they need to travel as authoritative events or commands; the queued-at-tick model is ready for that.
 - **Small:** with several bolts, a burst from an early bolt can land on an enemy that a later bolt then hits directly (time order). Damage rounds twice (modifier % then stat %, both halves up); this is consistent, but worth knowing when balancing.
+
+**2026-11-17 (agent, asked by the developer):** Marked done: every box was ticked and the work is built; only the status line was out of date.
