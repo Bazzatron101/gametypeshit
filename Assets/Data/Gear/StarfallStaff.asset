@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: StarfallStaff
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: starfall-staff
+  displayName: Starfall Staff
+  description: 'For the Wizard only. Light attack: Star Bolt; heavy attack: Starfall. Magic skills deal 15% more damage. Fire skills reach 0.75 m wider.'
+  slot: 0
+  rarity: 3
+  classIds:
+  - wizard
+  tags:
+  - magic
+  - fire
+  modifiers:
+  - id: starfall-power
+    displayName: 'Starfall Staff: power'
+    tag: magic
+    skill: 
+    perWornTag: 
+    damagePercent: 15
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  - id: starfall-flare
+    displayName: 'Starfall Staff: flare'
+    tag: fire
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0.75
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 3
+    amount: 5
+  - stat: 4
+    amount: 4
+  lightAttack:
+    id: starfall-bolt
+    displayName: Star Bolt
+    effect: 2
+    tags:
+    - projectile
+    - magic
+    - fire
+    scalingStat: 3
+    damage: 15
+    range: 13
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 18
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: starfall-blast
+    displayName: Starfall
+    effect: 1
+    tags:
+    - area
+    - magic
+    - fire
+    scalingStat: 3
+    damage: 34
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.8
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.6
+    windupSeconds: 0.2
+  sellValue: 400
+  look: {fileID: 6902017701909230363, guid: e5a7368e4209c4a4a9dea15f0d065442, type: 3}

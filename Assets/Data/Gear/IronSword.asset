@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Iron Sword
   description: Wide, quick slashes; the heavy attack is a long thrust that reaches past a shield.
   slot: 0
+  rarity: 0
+  classIds:
+  - warrior
   tags:
   - melee
   - physical

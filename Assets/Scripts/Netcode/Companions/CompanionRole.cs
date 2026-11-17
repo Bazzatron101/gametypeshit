@@ -118,7 +118,7 @@ namespace HunterSystem.Netcode
                 var bestScore = int.MinValue;
                 foreach (var gear in self.Bag)
                 {
-                    if ((int)gear.Slot != slot) continue;
+                    if ((int)gear.Slot != slot || !gear.UsableBy(self.Class?.Id)) continue; // never another class's weapon (ticket 61)
                     var score = GearScore(role, gear);
                     if (score > bestScore) { best = gear; bestScore = score; }
                 }

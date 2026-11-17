@@ -136,7 +136,7 @@ namespace HunterSystem.Game
                     case GateRewardGranted r when r.Player == me:
                         Notify(r.Reward == null ? $"{_gateName} cleared."
                             : r.IsDuplicate ? $"{_gateName} cleared.  A duplicate {r.Reward.Name}: sell it at a store, such as the {CheapestStoreName()} in the hub."
-                            : r.Gear != null ? $"{_gateName} cleared.  Reward: {r.Gear.Name} ({GearPanel.SlotName(r.Gear.Slot)}). Press I to see your gear."
+                            : r.Gear != null ? $"{_gateName} cleared.  Reward: {r.Gear.Name} ({r.Gear.Rarity} {GearPanel.SlotName(r.Gear.Slot)}). Press I to see your gear."
                             : $"{_gateName} cleared.  Reward: {r.Reward.Name}, kept on your hunter.");
                         _rewardShown = true;
                         break;

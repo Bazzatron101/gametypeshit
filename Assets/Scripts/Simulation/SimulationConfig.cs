@@ -59,6 +59,9 @@ namespace HunterSystem.Simulation
         /// <summary>Every piece of gear in the game (ticket 23). Gear is named by id in saves and snapshots, so host and clients must hold the same list; gates' pools name pieces from it.</summary>
         public IReadOnlyList<GearDefinition> Gear { get; set; } = Array.Empty<GearDefinition>();
 
+        /// <summary>The odds of each rarity in a gate's clear draw, and how gate rank and Luck tip them (ticket 61).</summary>
+        public RarityOddsDefinition RarityOdds { get; set; } = new RarityOddsDefinition();
+
         /// <summary>Stores that buy duplicates, wherever they stand in the world (ticket 22).</summary>
         public IReadOnlyList<ShopDefinition> Shops { get; set; } = Array.Empty<ShopDefinition>();
 

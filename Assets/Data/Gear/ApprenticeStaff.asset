@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Apprentice Staff
   description: Magic bolts; the heavy attack is an arcane blast all round you.
   slot: 0
+  rarity: 0
+  classIds:
+  - wizard
   tags:
   - magic
   modifiers: []

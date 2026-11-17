@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: Worldsplitter
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: worldsplitter
+  displayName: Worldsplitter
+  description: 'For the Warrior only. Light attack: Cleave; heavy attack: Quake. Melee skills deal 15% more damage. Area skills reach 1 m wider.'
+  slot: 0
+  rarity: 3
+  classIds:
+  - warrior
+  tags:
+  - melee
+  - physical
+  modifiers:
+  - id: worldsplitter-might
+    displayName: 'Worldsplitter: might'
+    tag: melee
+    skill: 
+    perWornTag: 
+    damagePercent: 15
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  - id: worldsplitter-reach
+    displayName: 'Worldsplitter: reach'
+    tag: area
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 1
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 0
+    amount: 5
+  - stat: 2
+    amount: 4
+  lightAttack:
+    id: worldsplitter-cleave
+    displayName: Cleave
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 18
+    range: 3.6
+    arcDegrees: 170
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.45
+    windupSeconds: 0
+  heavyAttack:
+    id: worldsplitter-quake
+    displayName: Quake
+    effect: 1
+    tags:
+    - melee
+    - physical
+    - area
+    scalingStat: 0
+    damage: 40
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.4
+    windupSeconds: 0.25
+  sellValue: 400
+  look: {fileID: 2967565533205067217, guid: 208475e9a4a8d054794a69776c720eb9, type: 3}

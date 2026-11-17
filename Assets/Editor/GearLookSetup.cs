@@ -15,7 +15,7 @@ namespace HunterSystem.Editor
     /// space (<see cref="GearLooks.Anchor"/>): the origin is the right hand for a weapon, the top of the
     /// head, the chest, the middle between the hands or the feet, and the chest for a trinket.
     /// </summary>
-    public static class GearLookSetup
+    public static partial class GearLookSetup
     {
         public const string Folder = "Assets/Art/Gear";
         public const string MaterialsFolder = Folder + "/Materials";
@@ -175,8 +175,9 @@ namespace HunterSystem.Editor
                 {
                     var source = AssetDatabase.LoadAssetAtPath<Material>(ShaderSource);
                     material = source != null ? new Material(source) : new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                    material.SetColor("_BaseColor", Colours[name]);
-                    material.SetColor("_Color", Colours[name]);
+                    var colour = Colours.TryGetValue(name, out var c) ? c : MoreColours[name];
+                    material.SetColor("_BaseColor", colour);
+                    material.SetColor("_Color", colour);
                     AssetDatabase.CreateAsset(material, path);
                     AssetDatabase.SetLabels(material, new[] { AiLabel });
                 }
@@ -191,7 +192,7 @@ namespace HunterSystem.Editor
                 if (gear == null) continue;
                 var path = $"{Folder}/Gear_{ToPascal(gear.Id)}_AI.prefab";
                 if (gear.Look != null && AssetDatabase.GetAssetPath(gear.Look) != path) continue; // a look put in by hand stays
-                if (!Recipes.TryGetValue(gear.Id, out var recipe))
+                if (!Recipes.TryGetValue(gear.Id, out var recipe) && !MoreGearRecipes.TryGetValue(gear.Id, out recipe))
                 {
                     Debug.LogWarning($"Gear '{gear.Id}' has no placeholder recipe; it is drawn with the plain stand-in until it gets a look.", gear);
                     continue;

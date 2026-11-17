@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Cinder Gloves
   description: Fire skills come back 12% sooner for every piece of fire gear you wear.
   slot: 3
+  rarity: 1
+  classIds: []
   tags:
   - fire
   modifiers:

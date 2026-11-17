@@ -26,6 +26,31 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("Text-only story scenes and what makes each play")] private TextSceneAsset[] scenes = new TextSceneAsset[0];
         [SerializeField, Tooltip("How gates' enemies scale with party size")] private PartyScalingAsset partyScaling;
         [SerializeField, Tooltip("Stores that buy duplicates, wherever they stand")] private ShopAsset[] shops = new ShopAsset[0];
+        [SerializeField, Tooltip("The odds of each rarity in a gate's clear draw, and how gate rank and Luck tip them (ticket 61)")] private RarityOdds rarityOdds = RarityOdds.Default;
+
+        /// <summary>The rarity odds as authored (ticket 61). See <see cref="RarityOddsDefinition"/>.</summary>
+        [System.Serializable]
+        public struct RarityOdds
+        {
+            [Min(1), Tooltip("Weight of one Common item in a pool")] public int common;
+            [Min(1), Tooltip("Weight of one Rare item")] public int rare;
+            [Min(1), Tooltip("Weight of one Epic item")] public int epic;
+            [Min(1), Tooltip("Weight of one Legendary item")] public int legendary;
+            [Min(0), Tooltip("Per rank the gate is above E: each tier above Common weighs this many percent more, per tier")] public int rankBonusPercent;
+            [Min(0), Tooltip("Per Luck point above the start: each tier above Common weighs this many percent more, per tier")] public int luckBonusPercent;
+
+            public static RarityOdds Default => new RarityOdds { common = 60, rare = 28, epic = 10, legendary = 2, rankBonusPercent = 25, luckBonusPercent = 2 };
+
+            public RarityOddsDefinition ToDefinition()
+            {
+                var odds = common == 0 && rare == 0 && epic == 0 && legendary == 0 ? Default : this; // never set (an asset from before ticket 61)
+                return new RarityOddsDefinition
+                {
+                    BaseWeights = new[] { odds.common, odds.rare, odds.epic, odds.legendary },
+                    RankBonusPercent = odds.rankBonusPercent, LuckBonusPercent = odds.luckBonusPercent,
+                };
+            }
+        }
 
         public PlayerTuningAsset PlayerTuning => playerTuning;
         public ProgressionAsset Progression => progression;
@@ -76,6 +101,7 @@ namespace HunterSystem.Game
                 gearList.Add(asset.ToDefinition(gearDefinitions));
             }
             config.Gear = gearList.ToArray();
+            config.RarityOdds = rarityOdds.ToDefinition();
 
             // One simulation definition per enemy asset across all gates, so snapshots write each once.
             var enemyDefinitions = new Dictionary<ScriptableObject, EnemyDefinition>();
@@ -105,6 +131,9 @@ namespace HunterSystem.Game
             }
             config.Shops = shopList.ToArray();
         }
+
+        /// <summary>For editor tooling: the gear list (ticket 61).</summary>
+        public void SetGear(GearDefinitionAsset[] gearAssets) => gear = gearAssets ?? new GearDefinitionAsset[0];
 
         /// <summary>For editor tooling: replaces the whole content list.</summary>
         public void ReplaceContent(PlayerTuningAsset tuningAsset, ProgressionAsset progressionAsset, ClassDefinitionAsset[] classAssets, SkillDefinitionAsset[] skillAssets,

@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: Soulbinder
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: soulbinder
+  displayName: Soulbinder
+  description: 'For the Summoner only. Light attack: Soul Bolt; heavy attack: Soul Burst. Summon skills deal 20% more damage. Summon skills recover 10% faster.'
+  slot: 0
+  rarity: 3
+  classIds:
+  - summoner
+  tags:
+  - magic
+  - summon
+  modifiers:
+  - id: soulbinder-pact
+    displayName: 'Soulbinder: pact'
+    tag: summon
+    skill: 
+    perWornTag: 
+    damagePercent: 20
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  - id: soulbinder-call
+    displayName: 'Soulbinder: quick call'
+    tag: summon
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: -10
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 3
+    amount: 5
+  - stat: 4
+    amount: 4
+  lightAttack:
+    id: soulbinder-bolt
+    displayName: Soul Bolt
+    effect: 2
+    tags:
+    - projectile
+    - magic
+    scalingStat: 3
+    damage: 14
+    range: 13
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 18
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: soulbinder-burst
+    displayName: Soul Burst
+    effect: 1
+    tags:
+    - area
+    - magic
+    scalingStat: 3
+    damage: 30
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.6
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.5
+    windupSeconds: 0
+  sellValue: 400
+  look: {fileID: 33149832506801499, guid: 7a812b00a71f42e45b72ea32c6f194a9, type: 3}

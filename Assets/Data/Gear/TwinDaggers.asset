@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: TwinDaggers
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: twin-daggers
+  displayName: Twin Daggers
+  description: 'For the Rogue only. Light attack: Flick; heavy attack: Backstab.'
+  slot: 0
+  rarity: 1
+  classIds:
+  - rogue
+  tags:
+  - melee
+  - physical
+  modifiers: []
+  statBonuses:
+  - stat: 1
+    amount: 3
+  lightAttack:
+    id: daggers-flick
+    displayName: Flick
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 8
+    range: 2.2
+    arcDegrees: 100
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.2
+    windupSeconds: 0
+  heavyAttack:
+    id: daggers-backstab
+    displayName: Backstab
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 30
+    range: 2.4
+    arcDegrees: 40
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.8
+    windupSeconds: 0
+  sellValue: 120
+  look: {fileID: 9217623044593260095, guid: 7f656015b2ae87144b00db0ccd7fc10c, type: 3}

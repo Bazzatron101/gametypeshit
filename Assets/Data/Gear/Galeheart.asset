@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: Galeheart
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: galeheart
+  displayName: Galeheart
+  description: 'For the Archer only. Light attack: Gale Arrow; heavy attack: Volley. Projectile skills deal 15% more damage. Projectile skills fire 1 more.'
+  slot: 0
+  rarity: 3
+  classIds:
+  - archer
+  tags:
+  - projectile
+  - physical
+  modifiers:
+  - id: galeheart-wind
+    displayName: 'Galeheart: wind'
+    tag: projectile
+    skill: 
+    perWornTag: 
+    damagePercent: 15
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  - id: galeheart-volley-spread
+    displayName: 'Galeheart: spread'
+    tag: projectile
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 1
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 1
+    amount: 5
+  - stat: 4
+    amount: 4
+  lightAttack:
+    id: galeheart-shot
+    displayName: Gale Arrow
+    effect: 2
+    tags:
+    - projectile
+    - physical
+    scalingStat: 1
+    damage: 13
+    range: 20
+    arcDegrees: 120
+    radius: 0.4
+    projectileSpeed: 36
+    pierces: 1
+    cooldownSeconds: 0.4
+    windupSeconds: 0
+  heavyAttack:
+    id: galeheart-volley
+    displayName: Volley
+    effect: 2
+    tags:
+    - projectile
+    - physical
+    scalingStat: 1
+    damage: 26
+    range: 22
+    arcDegrees: 120
+    radius: 0.45
+    projectileSpeed: 40
+    pierces: 0
+    cooldownSeconds: 1.2
+    windupSeconds: 0
+  sellValue: 400
+  look: {fileID: 1250127596534958564, guid: 1d4773a7891765343b788ebce5ac819d, type: 3}

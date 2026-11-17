@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Binding Staff
   description: Bolts of spirit; the heavy attack is a burst of spirit all round you.
   slot: 0
+  rarity: 0
+  classIds:
+  - summoner
   tags:
   - summon
   modifiers: []

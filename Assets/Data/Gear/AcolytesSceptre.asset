@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Acolyte's Sceptre
   description: Bolts of holy light; the heavy attack is a flash of radiance all round you.
   slot: 0
+  rarity: 0
+  classIds:
+  - cleric
   tags:
   - magic
   modifiers: []

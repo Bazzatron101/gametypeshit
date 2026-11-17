@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Hunting Bow
   description: Quick arrows from range; the heavy attack is a drawn shot that flies through a whole line of enemies.
   slot: 0
+  rarity: 0
+  classIds:
+  - archer
   tags:
   - projectile
   - physical

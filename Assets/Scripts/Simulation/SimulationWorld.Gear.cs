@@ -27,6 +27,11 @@ namespace HunterSystem.Simulation
                 Require(!_gearById.ContainsKey(gear.Id), "is defined twice.");
                 Require(Enum.IsDefined(typeof(GearSlot), gear.Slot), $"slot {(int)gear.Slot} is not a slot.");
                 Require(gear.SellValue >= 1, "SellValue must be at least 1.");
+                Require(Enum.IsDefined(typeof(Rarity), gear.Rarity), $"rarity {(int)gear.Rarity} is not a rarity.");
+                var classIds = gear.ClassIds ?? Array.Empty<string>();
+                Require(classIds.Length == 0 || gear.Slot == GearSlot.Weapon, "only a weapon is locked to classes; any class wears any armour.");
+                foreach (var classId in classIds)
+                    Require(_config.ClassById(classId) != null, $"class '{classId}' is not one of the game's classes.");
                 foreach (var tag in gear.Tags ?? Array.Empty<string>())
                     Require(_knownTags.Contains(tag), $"tag '{tag}' is not a known tag.");
                 foreach (var modifier in gear.Modifiers)
@@ -58,6 +63,9 @@ namespace HunterSystem.Simulation
             foreach (var c in _config.Classes ?? Array.Empty<ClassDefinition>())
                 if (c?.StartingWeaponId != null && GearById(c.StartingWeaponId)?.Slot != GearSlot.Weapon)
                     throw new ArgumentException($"Class '{c.Id}': starting weapon '{c.StartingWeaponId}' is not a weapon in the game's gear list.", nameof(_config));
+                else if (c?.StartingWeaponId != null && !GearById(c.StartingWeaponId).UsableBy(c.Id))
+                    throw new ArgumentException($"Class '{c.Id}': its starting weapon '{c.StartingWeaponId}' is locked to other classes.", nameof(_config));
+            (_config.RarityOdds ?? throw new ArgumentException("RarityOdds is missing.", nameof(_config))).Validate();
             ValidateSkills(weaponHits, _config.Progression.LevelCap, _knownTags, _config.Classes, weaponHits: true);
 
             // A gate's pool names the game's own gear, so a drop and a save mean the same piece.
@@ -94,7 +102,7 @@ namespace HunterSystem.Simulation
         {
             if (!player.IsAlive) return;
             var gear = player.Bag.FirstOrDefault(g => g.Id == gearId);
-            if (gear == null) return;
+            if (gear == null || !gear.UsableBy(player.Class?.Id)) return; // a weapon for another class stays in the bag (ticket 61)
             var slot = (int)gear.Slot;
             if (player.Worn[slot] == gear) return;
             if (player.Worn[slot] != null) _events.Add(new GearUnequipped(tick, player.Id, gear.Slot, player.Worn[slot].Id));
@@ -129,7 +137,7 @@ namespace HunterSystem.Simulation
         private void GainGear(Player player, GearDefinition gear, int tick)
         {
             player.Bag.Add(gear);
-            if (player.Worn[(int)gear.Slot] == null) TryEquip(player, gear.Id, tick);
+            if (player.Worn[(int)gear.Slot] == null) TryEquip(player, gear.Id, tick); // refuses another class's weapon
         }
 
         /// <summary>Whether the player already has this item: a modifier they keep, or gear in their bag.</summary>

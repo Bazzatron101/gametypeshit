@@ -27,6 +27,19 @@ namespace HunterSystem.Simulation
 
         public GearSlot Slot { get; set; }
 
+        /// <summary>How rare the piece is (ticket 61). It weighs the clear draw and colours its name.</summary>
+        public Rarity Rarity { get; set; }
+
+        /// <summary>
+        /// The classes that can wear this piece, by id (ticket 61). Empty: any class. Only weapons are
+        /// locked to classes; any class wears any armour.
+        /// </summary>
+        public string[] ClassIds { get; set; } = Array.Empty<string>();
+
+        /// <summary>Whether a character of class <paramref name="classId"/> can wear the piece. A character with no class can wear only unlocked pieces.</summary>
+        public bool UsableBy(string classId) =>
+            ClassIds == null || ClassIds.Length == 0 || (classId != null && Array.IndexOf(ClassIds, classId) >= 0);
+
         /// <summary>Known tags (fire, melee...) that describe the piece for modifiers that count worn gear.</summary>
         public string[] Tags { get; set; } = Array.Empty<string>();
 

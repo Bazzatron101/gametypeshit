@@ -57,27 +57,27 @@ namespace HunterSystem.Tests
             yield return Load("Greybox");
             var runner = Runner;
             runner.World.RaiseToLevel(LocalPlayer, 5);
-            runner.World.GiveGear(LocalPlayer, "cinder-staff");
+            runner.World.GiveGear(LocalPlayer, "goblin-cleaver"); // a Warrior's weapon: the greybox hunter is a Warrior (ticket 61)
             runner.World.GiveGear(LocalPlayer, "cinder-hood");
             yield return new WaitForSeconds(0.1f);
             var known = runner.World.GetPlayer(LocalPlayer).KnownSkills;
             Assert.That(known, Is.Not.Empty, "a level-5 character knows a skill");
             var lastSlot = SimulationWorld.SkillSlotCount - 1;
             runner.RequestSkillAssignment(LocalPlayer, new SkillAssignment(lastSlot, known[0].Id));
-            runner.RequestEquip(LocalPlayer, "cinder-staff");
+            runner.RequestEquip(LocalPlayer, "goblin-cleaver");
             yield return new WaitForSeconds(1.5f); // longer than the autosave interval
             var before = runner.World.GetPlayer(LocalPlayer);
             Assert.That(before.SkillSlots[lastSlot].Skill?.Id, Is.EqualTo(known[0].Id), "the skill went on the bar");
-            Assert.That(before.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("cinder-staff"), "the staff is worn");
+            Assert.That(before.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("goblin-cleaver"), "the cleaver is worn");
 
             yield return Load("Greybox");
 
             var after = Runner.World.GetPlayer(LocalPlayer);
             Assert.That(after.KnownSkills.Select(s => s.Id), Is.EqualTo(before.KnownSkills.Select(s => s.Id)));
             Assert.That(after.SkillSlots.Select(s => s.Skill?.Id), Is.EqualTo(before.SkillSlots.Select(s => s.Skill?.Id)));
-            Assert.That(after.Bag.Select(g => g.Id), Is.EquivalentTo(before.Bag.Select(g => g.Id)).And.SupersetOf(new[] { "cinder-staff", "cinder-hood" })); // and the class's starting weapon (ticket 46)
+            Assert.That(after.Bag.Select(g => g.Id), Is.EquivalentTo(before.Bag.Select(g => g.Id)).And.SupersetOf(new[] { "goblin-cleaver", "cinder-hood" })); // and the class's starting weapon (ticket 46)
             Assert.That(after.Worn.Select(g => g?.Id), Is.EqualTo(before.Worn.Select(g => g?.Id)));
-            Assert.That(after.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("cinder-staff"));
+            Assert.That(after.Worn[(int)GearSlot.Weapon]?.Id, Is.EqualTo("goblin-cleaver"));
             Assert.That(after.Worn[(int)GearSlot.Head], Is.Null, "the hood stayed in the bag");
         }
 

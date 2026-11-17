@@ -28,4 +28,18 @@ MonoBehaviour:
   wipeDelaySeconds: 3
   rewardPool:
   - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}
-  gearPool: []
+  gearPool:
+  - {fileID: 11400000, guid: 92c31466772e48041a1de451548ce0bf, type: 2}
+  raid:
+    isRaid: 0
+    crystal: {fileID: 0}
+    crystalPlaces: []
+    playersPerCrystal: 0
+    crystalRegrowSeconds: 0
+    shelterAtHealthPercent: 0
+    firstShelterAfterSeconds: 0
+    shelterEverySeconds: 0
+    shelterWindupSeconds: 0
+    shelterRadius: 0
+    shelterDamagePercent: 0
+    shelterPlaces: []

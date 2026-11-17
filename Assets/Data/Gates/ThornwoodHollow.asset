@@ -24,4 +24,25 @@ MonoBehaviour:
   checkpointRadius: 2
   wipeDelaySeconds: 3
   rewardPool: []
-  gearPool: []
+  gearPool:
+  - {fileID: 11400000, guid: a505d2644b833ad40aa97de8e4da7118, type: 2}
+  - {fileID: 11400000, guid: 9ca6c6122b758a6409f155dc9ddaa2b1, type: 2}
+  - {fileID: 11400000, guid: 4132f8e80223100419d01d3d48114d4a, type: 2}
+  - {fileID: 11400000, guid: 2228e71c15121c24caef5048997054ee, type: 2}
+  - {fileID: 11400000, guid: b6c7944dfdfd7da4396947fdf1ac2afd, type: 2}
+  - {fileID: 11400000, guid: b58f403ca699cb44c89df358a85a9d83, type: 2}
+  - {fileID: 11400000, guid: 63e607886606c0a48bf2cfffc53d4178, type: 2}
+  - {fileID: 11400000, guid: 3d5a10272b2575649a466b1a14aeb8c4, type: 2}
+  raid:
+    isRaid: 0
+    crystal: {fileID: 0}
+    crystalPlaces: []
+    playersPerCrystal: 0
+    crystalRegrowSeconds: 0
+    shelterAtHealthPercent: 0
+    firstShelterAfterSeconds: 0
+    shelterEverySeconds: 0
+    shelterWindupSeconds: 0
+    shelterRadius: 0
+    shelterDamagePercent: 0
+    shelterPlaces: []

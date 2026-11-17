@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: KnightsLongsword
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: knights-longsword
+  displayName: Knight's Longsword
+  description: 'For the Warrior only. Light attack: Slash; heavy attack: Thrust.'
+  slot: 0
+  rarity: 1
+  classIds:
+  - warrior
+  tags:
+  - melee
+  - physical
+  modifiers: []
+  statBonuses:
+  - stat: 0
+    amount: 3
+  lightAttack:
+    id: longsword-slash
+    displayName: Slash
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 14
+    range: 3.4
+    arcDegrees: 150
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.4
+    windupSeconds: 0
+  heavyAttack:
+    id: longsword-thrust
+    displayName: Thrust
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 0
+    damage: 34
+    range: 4.6
+    arcDegrees: 35
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.9
+    windupSeconds: 0
+  sellValue: 120
+  look: {fileID: 4695701446002812098, guid: 44938ba3686b50a4bbadf10f395b7f13, type: 3}

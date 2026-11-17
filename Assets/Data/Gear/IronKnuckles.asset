@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: IronKnuckles
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: iron-knuckles
+  displayName: Iron Knuckles
+  description: 'For the Monk only. Light attack: Jab; heavy attack: Hook.'
+  slot: 0
+  rarity: 1
+  classIds:
+  - monk
+  tags:
+  - melee
+  - physical
+  modifiers: []
+  statBonuses:
+  - stat: 1
+    amount: 2
+  - stat: 2
+    amount: 2
+  lightAttack:
+    id: knuckles-jab
+    displayName: Jab
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 11
+    range: 2.3
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.25
+    windupSeconds: 0
+  heavyAttack:
+    id: knuckles-hook
+    displayName: Hook
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 28
+    range: 2.8
+    arcDegrees: 90
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.7
+    windupSeconds: 0
+  sellValue: 120
+  look: {fileID: 1352000358533297437, guid: 1bb1baf9b45491949a1f89e8cec18bac, type: 3}

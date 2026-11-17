@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Hunter's Quiver
   description: Projectile skills loose one more shot.
   slot: 5
+  rarity: 1
+  classIds: []
   tags:
   - projectile
   - physical

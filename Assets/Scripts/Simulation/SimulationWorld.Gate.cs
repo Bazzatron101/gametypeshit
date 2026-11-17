@@ -194,18 +194,27 @@ namespace HunterSystem.Simulation
         /// not have, kept on their character: a modifier for good, or gear for the bag (ticket 23). Once they own the whole pool, the draw is from the
         /// whole pool and is a duplicate, kept to sell (ticket 22). The draw is a fixed function of
         /// the tick, the player and the attempt, so every machine that steps this tick draws the same.
+        /// Ticket 61: a weapon for another class is never drawn (unless the pool holds nothing else the
+        /// player could use, when it is a duplicate to sell), and each item weighs by its rarity: a
+        /// higher-rank gate and the player's Luck tip the draw toward rarer pieces.
         /// </summary>
         private void GrantClearRewards(int tick)
         {
             var pool = _gate.Definition.RewardPool;
             if (pool.Count == 0) return;
+            var rankSteps = Math.Max(0, _config.Progression.RankIndexOf(_gate.Definition.Rank));
             foreach (var player in _players)
             {
                 if (player.Away) continue;
-                var candidates = pool.Where(item => !Owns(player, item)).ToList();
+                var usable = pool.Where(item => !(item is GearDefinition g) || g.UsableBy(player.Class?.Id)).ToList();
+                var nothingForThem = usable.Count == 0; // only other classes' weapons: one of them, to sell
+                if (nothingForThem) usable = pool.ToList();
+                var candidates = nothingForThem ? new List<LootDefinition>() : usable.Where(item => !Owns(player, item)).ToList();
                 var duplicate = candidates.Count == 0;
-                if (duplicate) candidates = pool.ToList();
-                var reward = candidates[(int)(Mix((uint)tick, (uint)player.Id.Value, (uint)_gate.Attempt) % (uint)candidates.Count)];
+                if (duplicate) candidates = usable;
+                var luck = Math.Max(0, PointsAboveStart(player, Stat.Luck));
+                var reward = WeightedPick(candidates, item => _config.RarityOdds.WeightOf(item is GearDefinition g ? g.Rarity : Rarity.Common, rankSteps, luck),
+                    Mix((uint)tick, (uint)player.Id.Value, (uint)_gate.Attempt));
                 if (duplicate)
                 {
                     player.Duplicates.Add(reward);
@@ -221,6 +230,25 @@ namespace HunterSystem.Simulation
                 }
                 _events.Add(new GateRewardGranted(tick, player.Id, reward, duplicate));
             }
+        }
+
+        /// <summary>
+        /// One of <paramref name="items"/>, each as likely as its weight, from the fixed number
+        /// <paramref name="roll"/>. When every item weighs the same, it is <c>roll % count</c>, the draw
+        /// before rarities existed, so pools of one tier draw exactly as they always did.
+        /// </summary>
+        private static T WeightedPick<T>(IReadOnlyList<T> items, Func<T, int> weightOf, uint roll)
+        {
+            var weights = items.Select(i => Math.Max(0, weightOf(i))).ToArray();
+            if (weights.All(w => w == weights[0])) return items[(int)(roll % (uint)items.Count)];
+            var total = weights.Sum(w => (long)w);
+            var at = (long)(roll % (ulong)total);
+            for (var i = 0; i < items.Count; i++)
+            {
+                if (at < weights[i]) return items[i];
+                at -= weights[i];
+            }
+            return items[items.Count - 1];
         }
 
         /// <summary>A small, fixed integer hash: the same inputs give the same number on every machine.</summary>

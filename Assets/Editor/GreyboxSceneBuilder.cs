@@ -648,6 +648,9 @@ namespace HunterSystem.Editor
                 AssetDatabase.CreateAsset(content, ContentPath);
             }
 
+            // More gear (ticket 61): four sets and two weapons per class, each new piece in its gates' drop lists.
+            content.SetGear(GetOrCreateMoreGear(content.Gear, gates.First(g => g.Id == "thornwood-hollow"), gates.First(g => g.IsRaid), trials));
+
             content.ReplaceContent(tuning, progression,
                 WithEveryProjectAsset(content.Classes, classes),
                 WithEveryProjectAsset(content.Skills, skills),

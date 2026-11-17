@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Goblin Cleaver
   description: Melee skills deal 20% more damage.
   slot: 0
+  rarity: 1
+  classIds:
+  - warrior
   tags:
   - melee
   - physical

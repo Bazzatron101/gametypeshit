@@ -263,6 +263,38 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3de14642b46a42ce8071afcf8f10da7c, type: 2}
   - {fileID: 11400000, guid: 849530eb8d3944f19f7cae89134f31e0, type: 2}
   - {fileID: 11400000, guid: f02345fc0342474fb3a1c6ef1c7c3e02, type: 2}
+  - {fileID: 11400000, guid: a505d2644b833ad40aa97de8e4da7118, type: 2}
+  - {fileID: 11400000, guid: 9ca6c6122b758a6409f155dc9ddaa2b1, type: 2}
+  - {fileID: 11400000, guid: 4132f8e80223100419d01d3d48114d4a, type: 2}
+  - {fileID: 11400000, guid: 2228e71c15121c24caef5048997054ee, type: 2}
+  - {fileID: 11400000, guid: b6c7944dfdfd7da4396947fdf1ac2afd, type: 2}
+  - {fileID: 11400000, guid: b58f403ca699cb44c89df358a85a9d83, type: 2}
+  - {fileID: 11400000, guid: 63e607886606c0a48bf2cfffc53d4178, type: 2}
+  - {fileID: 11400000, guid: 3d5a10272b2575649a466b1a14aeb8c4, type: 2}
+  - {fileID: 11400000, guid: 497ec3a454acfc54c81245e098c3cceb, type: 2}
+  - {fileID: 11400000, guid: 99beef61d7f9e4f47b8f32dc4bb814d2, type: 2}
+  - {fileID: 11400000, guid: 2a5ba161d4482534badf886ae0a7bc74, type: 2}
+  - {fileID: 11400000, guid: 9213583ff8dc7f44989aab848e34192e, type: 2}
+  - {fileID: 11400000, guid: 697cbc576bf5beb48bdf47f2ec86d0f7, type: 2}
+  - {fileID: 11400000, guid: 4a47146073f09504aaaec55dfa847860, type: 2}
+  - {fileID: 11400000, guid: 2d9b535ba1c5fcd41a9901ede1ce946f, type: 2}
+  - {fileID: 11400000, guid: 657a955fe6541834f8a3823f8ab9639e, type: 2}
+  - {fileID: 11400000, guid: 19e827a3ff089fd40b7295a8de73a9c3, type: 2}
+  - {fileID: 11400000, guid: 5c70b1e02d5b404489876d6f3e88c24f, type: 2}
+  - {fileID: 11400000, guid: 6fe4d8a0c0999b54ba66fbae1ac1c9d0, type: 2}
+  - {fileID: 11400000, guid: ef9368362f8bae94f8b32f4071003cf8, type: 2}
+  - {fileID: 11400000, guid: b9f0d61cd50e4d04d87a6e5be3ed55c8, type: 2}
+  - {fileID: 11400000, guid: 16c23d9978c1f8e4e8998d98f2493c87, type: 2}
+  - {fileID: 11400000, guid: f68bce2bdb87a4240b741a66a9af2a44, type: 2}
+  - {fileID: 11400000, guid: 350952c18fde40448a6421aedfbe7315, type: 2}
+  - {fileID: 11400000, guid: a4d46b892da63fc4397c2e660b8519f6, type: 2}
+  - {fileID: 11400000, guid: 92c31466772e48041a1de451548ce0bf, type: 2}
+  - {fileID: 11400000, guid: 2f71c53e13c60054f8f1bfcdf9da4838, type: 2}
+  - {fileID: 11400000, guid: 151f2e7d7c0bb6146abc034b3d4404e5, type: 2}
+  - {fileID: 11400000, guid: 1aae2582c20bd45448dc99a22af3b04a, type: 2}
+  - {fileID: 11400000, guid: 0410de802ccb41842a6b72fea99c19aa, type: 2}
+  - {fileID: 11400000, guid: 262551c9f63034845b11ecd8c3c7c0d3, type: 2}
+  - {fileID: 11400000, guid: 44ce9a424ca3b12478eee144d0a2a3ed, type: 2}
   enemies:
   - {fileID: 11400000, guid: a640ad58f7da524439a5f6ca5ad9c95f, type: 2}
   - {fileID: 11400000, guid: b8213ddf57ac7634ab101d13adabee64, type: 2}
@@ -316,3 +348,10 @@ MonoBehaviour:
   partyScaling: {fileID: 11400000, guid: 0c27ba66a0ac06047b8392d97a5c6987, type: 2}
   shops:
   - {fileID: 11400000, guid: c6ba4d36de34ccc44ad57a2dd63db4dd, type: 2}
+  rarityOdds:
+    common: 60
+    rare: 28
+    epic: 10
+    legendary: 2
+    rankBonusPercent: 25
+    luckBonusPercent: 2

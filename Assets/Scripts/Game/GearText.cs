@@ -13,6 +13,28 @@ namespace HunterSystem.Game
     public static class GearText
     {
         /// <summary>Every line saying what the piece does while worn, attacks first.</summary>
+        /// <summary>The colour a rarity's name is shown in (ticket 61): grey, blue, purple, gold.</summary>
+        public static UnityEngine.Color RarityColour(Rarity rarity) => rarity switch
+        {
+            Rarity.Rare => new UnityEngine.Color(0.35f, 0.62f, 1f),
+            Rarity.Epic => new UnityEngine.Color(0.74f, 0.45f, 1f),
+            Rarity.Legendary => new UnityEngine.Color(1f, 0.74f, 0.2f),
+            _ => new UnityEngine.Color(0.85f, 0.85f, 0.85f),
+        };
+
+        /// <summary>The piece's name in its rarity's colour, as rich text.</summary>
+        public static string ColouredName(GearDefinition gear) =>
+            $"<color=#{UnityEngine.ColorUtility.ToHtmlStringRGB(RarityColour(gear.Rarity))}>{gear.Name}</color>";
+
+        /// <summary>"Rare", or "Legendary · Warrior only" for a weapon locked to a class.</summary>
+        public static string RarityLine(GearDefinition gear, Func<string, string> className = null)
+        {
+            var line = gear.Rarity.ToString();
+            if (gear.ClassIds != null && gear.ClassIds.Length > 0)
+                line += " · " + string.Join(", ", Array.ConvertAll(gear.ClassIds, id => className?.Invoke(id) ?? id)) + " only";
+            return line;
+        }
+
         public static List<string> Effects(GearDefinition gear, Func<string, string> skillName = null)
         {
             var lines = new List<string>();

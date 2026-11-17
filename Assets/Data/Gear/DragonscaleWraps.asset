@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: DragonscaleWraps
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: dragonscale-wraps
+  displayName: Dragonscale Wraps
+  description: 'For the Monk only. Light attack: Dragon Jab; heavy attack: Dragon Palm. Melee skills deal 15% more damage. Melee skills recover 10% faster.'
+  slot: 0
+  rarity: 3
+  classIds:
+  - monk
+  tags:
+  - melee
+  - physical
+  modifiers:
+  - id: dragonscale-fury
+    displayName: 'Dragonscale Wraps: fury'
+    tag: melee
+    skill: 
+    perWornTag: 
+    damagePercent: 15
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  - id: dragonscale-pace
+    displayName: 'Dragonscale Wraps: pace'
+    tag: melee
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: -10
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 1
+    amount: 5
+  - stat: 2
+    amount: 4
+  lightAttack:
+    id: dragonscale-jab
+    displayName: Dragon Jab
+    effect: 0
+    tags:
+    - melee
+    - physical
+    scalingStat: 1
+    damage: 13
+    range: 2.4
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.22
+    windupSeconds: 0
+  heavyAttack:
+    id: dragonscale-palm
+    displayName: Dragon Palm
+    effect: 1
+    tags:
+    - melee
+    - physical
+    - area
+    scalingStat: 1
+    damage: 32
+    range: 2.5
+    arcDegrees: 120
+    radius: 2.8
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.8
+    windupSeconds: 0
+  sellValue: 400
+  look: {fileID: 4044113421226508998, guid: 8ad1acc2c892c5c4eaedf0d7c846cd06, type: 3}

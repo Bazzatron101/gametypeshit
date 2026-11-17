@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: NightweaveVest
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: nightweave-vest
+  displayName: Nightweave Vest
+  description: Melee skills recover 10% faster.
+  slot: 2
+  rarity: 2
+  classIds: []
+  tags:
+  - melee
+  - physical
+  modifiers:
+  - id: nightweave-vest-flurry
+    displayName: 'Nightweave Vest: flurry'
+    tag: melee
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: -10
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 1
+    amount: 4
+  - stat: 5
+    amount: 3
+  lightAttack:
+    id: 
+    displayName: 
+    effect: 0
+    tags: []
+    scalingStat: 0
+    damage: 10
+    range: 2.5
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: 
+    displayName: 
+    effect: 0
+    tags: []
+    scalingStat: 0
+    damage: 10
+    range: 2.5
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  sellValue: 220
+  look: {fileID: 7568313395949721000, guid: 316b4dc4ce0f98749b2560e5b64ed7ad, type: 3}

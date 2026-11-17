@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Cinder Robe
   description: Every fire hit bursts, burning enemies within 3 m for 40% of the hit.
   slot: 2
+  rarity: 1
+  classIds: []
   tags:
   - fire
   - magic

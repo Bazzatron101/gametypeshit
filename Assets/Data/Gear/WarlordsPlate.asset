@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Warlord's Plate
   description: Physical skills deal 8% more damage for every piece of physical gear you wear.
   slot: 2
+  rarity: 2
+  classIds: []
   tags:
   - physical
   - melee

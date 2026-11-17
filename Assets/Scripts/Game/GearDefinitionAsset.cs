@@ -94,6 +94,8 @@ namespace HunterSystem.Game
         [SerializeField] private string displayName = "";
         [SerializeField, TextArea] private string description = "";
         [SerializeField] private GearSlot slot;
+        [SerializeField, Tooltip("How rare the piece is (ticket 61): weighs the clear draw; a Legendary glows when worn")] private Rarity rarity;
+        [SerializeField, Tooltip("Weapons only (ticket 61): the class ids that can wear it, e.g. warrior. Empty = any class.")] private string[] classIds = new string[0];
         [SerializeField, Tooltip("Known tags: melee, physical, area, fire, projectile, magic, summon")] private string[] tags = new string[0];
         [SerializeField] private WornModifier[] modifiers = new WornModifier[0];
         [SerializeField, Tooltip("Stats raised or lowered while worn (ticket 51); one entry per stat")] private WornStatBonus[] statBonuses = new WornStatBonus[0];
@@ -108,6 +110,8 @@ namespace HunterSystem.Game
         public string Id => id;
         public string DisplayName => displayName;
         public GearSlot Slot => slot;
+        public Rarity Rarity => rarity;
+        public System.Collections.Generic.IReadOnlyList<string> ClassIds => classIds ?? new string[0];
 
         /// <summary>What the piece looks like when worn (ticket 34), or null for the plain stand-in. Presentation only.</summary>
         public GameObject Look => look;
@@ -116,12 +120,37 @@ namespace HunterSystem.Game
         /// The piece as the simulation sees it, made once per config: a gate's pool and the game's
         /// gear list must hold the same definition (the simulation checks this).
         /// </summary>
+        /// <summary>For editor tooling that makes gear in code (ticket 61). Leaves the look alone.</summary>
+        public void Set(GearDefinition data, WornModifier[] wornModifiers, Attack light, Attack heavy)
+        {
+            id = data.Id;
+            displayName = data.Name;
+            description = data.Description;
+            slot = data.Slot;
+            rarity = data.Rarity;
+            classIds = (string[])(data.ClassIds ?? new string[0]).Clone();
+            tags = (string[])(data.Tags ?? new string[0]).Clone();
+            sellValue = data.SellValue;
+            modifiers = wornModifiers ?? new WornModifier[0];
+            statBonuses = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.Select(data.StatBonuses, b => new WornStatBonus { stat = b.Stat, amount = b.Amount }));
+            lightAttack = light ?? new Attack();
+            heavyAttack = heavy ?? new Attack();
+        }
+
+        /// <summary>For editor tooling: sets only the rarity and class lock, keeping everything else (ticket 61).</summary>
+        public void SetRarity(Rarity tier, params string[] classes)
+        {
+            rarity = tier;
+            classIds = classes ?? new string[0];
+        }
+
         public GearDefinition ToDefinition(System.Collections.Generic.Dictionary<GearDefinitionAsset, GearDefinition> made)
         {
             if (made != null && made.TryGetValue(this, out var known)) return known;
             var gear = new GearDefinition
             {
-                Id = id, Name = displayName, Description = description, Slot = slot,
+                Id = id, Name = displayName, Description = description, Slot = slot, Rarity = rarity,
+                ClassIds = (string[])(classIds ?? new string[0]).Clone(),
                 Tags = (string[])(tags ?? new string[0]).Clone(), SellValue = sellValue,
                 LightAttack = lightAttack?.ToDefinition(), HeavyAttack = heavyAttack?.ToDefinition(),
             };

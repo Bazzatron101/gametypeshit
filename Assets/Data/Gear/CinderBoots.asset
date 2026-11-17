@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Cinder Boots
   description: Fire bursts burn 10% harder for every piece of fire gear you wear.
   slot: 4
+  rarity: 1
+  classIds: []
   tags:
   - fire
   modifiers:

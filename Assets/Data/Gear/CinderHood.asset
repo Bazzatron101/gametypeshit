@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Cinder Hood
   description: 'Kindling: fire skills deal 15% more damage for every piece of fire gear you wear.'
   slot: 1
+  rarity: 1
+  classIds: []
   tags:
   - fire
   modifiers:

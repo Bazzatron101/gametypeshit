@@ -1,0 +1,90 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: Voidcaller
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: voidcaller
+  displayName: Voidcaller
+  description: 'For the Warlock only. Light attack: Void Bolt; heavy attack: Void Burst. Magic skills deal 15% more damage. Magic skills recover 10% faster.'
+  slot: 0
+  rarity: 3
+  classIds:
+  - warlock
+  tags:
+  - projectile
+  - magic
+  modifiers:
+  - id: voidcaller-hunger
+    displayName: 'Voidcaller: hunger'
+    tag: magic
+    skill: 
+    perWornTag: 
+    damagePercent: 15
+    cooldownPercent: 0
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  - id: voidcaller-haste
+    displayName: 'Voidcaller: haste'
+    tag: magic
+    skill: 
+    perWornTag: 
+    damagePercent: 0
+    cooldownPercent: -10
+    rangeAdd: 0
+    radiusAdd: 0
+    extraProjectiles: 0
+    projectileSpreadDegrees: 15
+    explosionRadius: 0
+    explosionDamagePercent: 0
+  statBonuses:
+  - stat: 3
+    amount: 5
+  - stat: 5
+    amount: 4
+  lightAttack:
+    id: voidcaller-bolt
+    displayName: Void Bolt
+    effect: 2
+    tags:
+    - projectile
+    - magic
+    scalingStat: 3
+    damage: 15
+    range: 13
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 18
+    pierces: 1
+    cooldownSeconds: 0.5
+    windupSeconds: 0
+  heavyAttack:
+    id: voidcaller-burst
+    displayName: Void Burst
+    effect: 1
+    tags:
+    - area
+    - magic
+    scalingStat: 3
+    damage: 34
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.6
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.6
+    windupSeconds: 0
+  sellValue: 400
+  look: {fileID: 6721674826052381278, guid: 53b68b8857a386f41aa8db9b45c36d08, type: 3}

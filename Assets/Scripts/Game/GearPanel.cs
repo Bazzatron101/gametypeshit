@@ -94,7 +94,7 @@ namespace HunterSystem.Game
                 GUILayout.BeginHorizontal();
                 var slotLabel = SlotName((GearSlot)slot) + (spare > 0 ? $" ({spare})" : "");
                 if (GUILayout.Button(slotLabel, _button, GUILayout.Width(110))) _filter = filtered ? (GearSlot?)null : (GearSlot)slot;
-                GUILayout.Label(worn != null ? worn.Name : "— empty —", _label);
+                GUILayout.Label(worn != null ? GearText.ColouredName(worn) : "— empty —", _label);
                 if (worn != null && GUILayout.Button("Take off", _button, GUILayout.Width(80))) _runner.RequestUnequip(me.Value, (GearSlot)slot);
                 GUILayout.EndHorizontal();
                 if (worn != null)
@@ -129,9 +129,12 @@ namespace HunterSystem.Game
             {
                 GUILayout.BeginHorizontal(gear.Id == _pickedId ? _selected : GUIStyle.none);
                 var summary = GearText.Effects(gear, SkillName)[0];
-                if (GUILayout.Button($"<b>{gear.Name}</b>   <size=11>{SlotName(gear.Slot)}  ·  {summary}</size>", _item))
+                if (GUILayout.Button($"<b>{GearText.ColouredName(gear)}</b>   <size=11>{gear.Rarity} {SlotName(gear.Slot)}  ·  {summary}</size>", _item))
                     _pickedId = gear.Id == _pickedId ? null : gear.Id;
-                if (GUILayout.Button("Equip", _button, GUILayout.Width(70), GUILayout.Height(34))) Equip(me.Value, gear);
+                var canWear = gear.UsableBy(state.Class?.Id); // another class's weapon stays in the bag (ticket 61)
+                GUI.enabled = canWear;
+                if (GUILayout.Button(canWear ? "Equip" : "Not yours", _button, GUILayout.Width(70), GUILayout.Height(34))) Equip(me.Value, gear);
+                GUI.enabled = true;
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();
@@ -147,7 +150,8 @@ namespace HunterSystem.Game
             {
                 var wornNow = state.Worn[(int)picked.Slot];
                 var tags = picked.Tags != null && picked.Tags.Length > 0 ? "; " + string.Join(", ", picked.Tags) : "";
-                GUILayout.Label($"{picked.Name}  ({SlotName(picked.Slot)}{tags})", _heading);
+                GUILayout.Label($"{GearText.ColouredName(picked)}  ({SlotName(picked.Slot)}{tags})", _heading);
+                GUILayout.Label(GearText.RarityLine(picked, ClassName), _small);
                 if (!string.IsNullOrEmpty(picked.Description)) GUILayout.Label(picked.Description, _small);
                 foreach (var line in GearText.Effects(picked, SkillName)) GUILayout.Label("• " + line, _label);
                 if (wornNow == picked)
@@ -176,6 +180,13 @@ namespace HunterSystem.Game
             if (_pickedId == gear.Id) _pickedId = null;
         }
 
+        private string ClassName(string id)
+        {
+            var content = _runner != null ? _runner.Content : null;
+            var found = content != null ? content.Classes.FirstOrDefault(c => c != null && c.Id == id) : null;
+            return found != null ? found.DisplayName : id;
+        }
+
         private string SkillName(string id)
         {
             var content = _runner != null ? _runner.Content : null;
@@ -187,10 +198,10 @@ namespace HunterSystem.Game
         {
             if (_title != null) return;
             _title = new GUIStyle(GUI.skin.label) { fontSize = 18, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter };
-            _label = new GUIStyle(GUI.skin.label) { fontSize = 14, wordWrap = true };
+            _label = new GUIStyle(GUI.skin.label) { fontSize = 14, wordWrap = true, richText = true };
             _small = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = true };
             _button = new GUIStyle(GUI.skin.button) { fontSize = 13 };
-            _heading = new GUIStyle(GUI.skin.label) { fontSize = 15, fontStyle = FontStyle.Bold };
+            _heading = new GUIStyle(GUI.skin.label) { fontSize = 15, fontStyle = FontStyle.Bold, richText = true };
             _heading.normal.textColor = new Color(0.35f, 0.75f, 1f);
             _item = new GUIStyle(GUI.skin.button) { fontSize = 14, alignment = TextAnchor.MiddleLeft, richText = true, wordWrap = true };
             _selected = new GUIStyle(GUI.skin.box);

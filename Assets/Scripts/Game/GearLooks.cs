@@ -65,6 +65,7 @@ namespace HunterSystem.Game
             look.name = ObjectName(gear);
             look.transform.localPosition = Anchor(gear.Slot);
             foreach (var collider in look.GetComponentsInChildren<Collider>()) Object.Destroy(collider);
+            if (gear.Rarity == Rarity.Legendary) LegendaryGlow.AddTo(look); // ticket 61: a Legendary's special look
             return look;
         }
 

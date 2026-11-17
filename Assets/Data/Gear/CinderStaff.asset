@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Cinder Staff
   description: Fire skills loose two more bolts, fanned out.
   slot: 0
+  rarity: 1
+  classIds:
+  - wizard
   tags:
   - fire
   - magic

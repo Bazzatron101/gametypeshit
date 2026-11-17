@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81390cbe24404c55b18a50d954cf5f5c, type: 3}
+  m_Name: SilverSceptre
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GearDefinitionAsset
+  id: silver-sceptre
+  displayName: Silver Sceptre
+  description: 'For the Cleric only. Light attack: Holy Bolt; heavy attack: Radiance.'
+  slot: 0
+  rarity: 1
+  classIds:
+  - cleric
+  tags:
+  - projectile
+  - magic
+  modifiers: []
+  statBonuses:
+  - stat: 4
+    amount: 3
+  lightAttack:
+    id: silver-bolt
+    displayName: Holy Bolt
+    effect: 2
+    tags:
+    - projectile
+    - magic
+    scalingStat: 3
+    damage: 12
+    range: 12
+    arcDegrees: 120
+    radius: 0.5
+    projectileSpeed: 17
+    pierces: 0
+    cooldownSeconds: 0.55
+    windupSeconds: 0
+  heavyAttack:
+    id: silver-radiance
+    displayName: Radiance
+    effect: 1
+    tags:
+    - area
+    - magic
+    scalingStat: 3
+    damage: 24
+    range: 2.5
+    arcDegrees: 120
+    radius: 3.4
+    projectileSpeed: 20
+    pierces: 0
+    cooldownSeconds: 1.6
+    windupSeconds: 0
+  sellValue: 120
+  look: {fileID: 5267887933267417337, guid: e34c2faa8991e7f40b74e0d810898a78, type: 3}

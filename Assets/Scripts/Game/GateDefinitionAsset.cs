@@ -95,6 +95,15 @@ namespace HunterSystem.Game
             return definition;
         }
 
+        /// <summary>For editor tooling: adds pieces to the gate's drop list (ticket 61), skipping any already in it.</summary>
+        public void AddToGearPool(IEnumerable<GearDefinitionAsset> pieces)
+        {
+            var list = new List<GearDefinitionAsset>(gearPool ?? new GearDefinitionAsset[0]);
+            foreach (var piece in pieces)
+                if (piece != null && !list.Contains(piece)) list.Add(piece);
+            gearPool = list.ToArray();
+        }
+
         /// <summary>For editor tooling: makes this gate a raid.</summary>
         public void SetRaid(RaidSettings settings) => raid = settings;
 

@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Hexed Rod
   description: Bolts of shadow; the heavy attack is a burst of darkness all round you.
   slot: 0
+  rarity: 0
+  classIds:
+  - warlock
   tags:
   - magic
   modifiers: []

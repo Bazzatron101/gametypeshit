@@ -16,6 +16,8 @@ MonoBehaviour:
   displayName: Ember Heart
   description: Fire skills deal 20% more damage.
   slot: 5
+  rarity: 2
+  classIds: []
   tags:
   - fire
   modifiers:

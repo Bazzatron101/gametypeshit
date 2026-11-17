@@ -16,6 +16,9 @@ MonoBehaviour:
   displayName: Hand Wraps
   description: Bare-handed fighting. Quick jabs, and a heavy palm that knocks the breath out of an enemy.
   slot: 0
+  rarity: 0
+  classIds:
+  - monk
   tags:
   - melee
   - physical
