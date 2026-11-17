@@ -51,8 +51,23 @@ namespace HunterSystem.Simulation
         /// <summary>What worn gear adds to each stat right now (ticket 51); negative for a loss. Never saved.</summary>
         public PlayerStats GearStats { get; }
 
-        /// <summary>A stat as it counts in play: the character's own plus worn gear's.</summary>
-        public int TotalStat(Stat stat) => Stats[stat] + GearStats[stat];
+        /// <summary>What the species adds to each stat at the hunter's rank right now (ticket 81). Never saved: it grows with rank.</summary>
+        public PlayerStats SpeciesStats { get; }
+
+        /// <summary>The hunter's species (ticket 81), or null.</summary>
+        public SpeciesDefinition Species { get; }
+
+        /// <summary>How the hunter travels when mounted (ticket 90): their species' style, or a run with none.</summary>
+        public TravelStyle Travel => Species?.Travel ?? TravelStyle.Run;
+
+        /// <summary>Mounted and flying (ticket 90).</summary>
+        public bool IsFlying => IsMounted && Travel == TravelStyle.Fly;
+
+        /// <summary>While flying, how high above the ground (ticket 90); 0 otherwise.</summary>
+        public float FlightHeight { get; }
+
+        /// <summary>A stat as it counts in play: the character's own plus worn gear's plus the species'.</summary>
+        public int TotalStat(Stat stat) => Stats[stat] + GearStats[stat] + SpeciesStats[stat];
 
         /// <summary>The six-slot skill bar (keys 1 to 6).</summary>
         public readonly IReadOnlyList<SkillSlotState> SkillSlots;
@@ -131,8 +146,11 @@ namespace HunterSystem.Simulation
             IReadOnlyList<GearDefinition> bag = null, IReadOnlyList<GearDefinition> worn = null, string name = null, CharacterLook look = default,
             bool hasMount = false, bool isMounted = false,
             IReadOnlyList<SpecialtyDefinition> specialties = null, IReadOnlyList<string> passedTrials = null, string specialtyPickWaiting = null,
-            PlayerStats gearStats = default)
+            PlayerStats gearStats = default, SpeciesDefinition species = null, PlayerStats speciesStats = default, float flightHeight = 0f)
         {
+            FlightHeight = flightHeight;
+            Species = species;
+            SpeciesStats = speciesStats;
             GearStats = gearStats;
             Specialties = specialties ?? System.Array.Empty<SpecialtyDefinition>();
             PassedTrials = passedTrials ?? System.Array.Empty<string>();

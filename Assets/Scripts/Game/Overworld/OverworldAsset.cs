@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -32,6 +33,17 @@ namespace HunterSystem.Game
         }
 
         /// <summary>A building the bake placed (ticket 49): which kind, where, turned how, and the ground it blocks.</summary>
+        /// <summary>A bridge's deck (developer playtest, 2026-11-17): points at the deck's height, the water flowing under it.</summary>
+        [Serializable]
+        public sealed class BridgeData
+        {
+            public string label;
+            public float halfWidth;
+            public List<Vector3> points = new List<Vector3>();
+
+            public BridgeDeck ToDeck() => new BridgeDeck(points.ConvertAll(p => new Vec3(p.x, p.y, p.z)), halfWidth);
+        }
+
         [Serializable]
         public sealed class BuildingData
         {
@@ -39,6 +51,7 @@ namespace HunterSystem.Game
             public Vector3 position;
             [Tooltip("Degrees about Y; 0 has the door facing +Z")] public float yaw;
             public Vector2 footprint;
+            [Tooltip("The region it stands in, for its look (ticket 84)")] public string region;
         }
 
         [Serializable]
@@ -62,7 +75,9 @@ namespace HunterSystem.Game
         [SerializeField] private Vector3 townCentre;
         [SerializeField] private float townRadius;
         [SerializeField] private List<RoadData> roads = new List<RoadData>();
+        [SerializeField, Tooltip("The towns' streets (ticket 83): drawn and kept clear like roads, but not roads between places")] private List<RoadData> streets = new List<RoadData>();
         [SerializeField] private List<LandmarkData> landmarks = new List<LandmarkData>();
+        [SerializeField, Tooltip("Bridge decks over the water, made by the bake from the recipe's bridge stamps")] private List<BridgeData> bridges = new List<BridgeData>();
         [SerializeField, Tooltip("Laid out by the bake from the environment's buildings (ticket 49); their footprints are blocked in the tiles")] private List<BuildingData> buildings = new List<BuildingData>();
 
         [Header("Rules")]
@@ -78,6 +93,10 @@ namespace HunterSystem.Game
         [SerializeField, Min(0f), Tooltip("Ground this far above the sea is drawn as sand")] private float sandAboveSea = 1.2f;
 
         [NonSerialized] private List<(List<Vector2> line, float halfWidth)> _roadLines;
+        [NonSerialized] private List<(Vector2 min, Vector2 max)> _roadBounds;
+
+        /// <summary>Beyond this many metres from every road's edge, <see cref="DistanceToRoad"/> answers infinity: every caller asks only about nearby roads.</summary>
+        public const float RoadReach = 60f;
         [NonSerialized] private Dictionary<long, List<BuildingData>> _buildingCells;
         private const float BuildingCellSize = 32f;
 
@@ -92,7 +111,9 @@ namespace HunterSystem.Game
         public Vector3 TownCentre => townCentre;
         public float TownRadius => townRadius;
         public IReadOnlyList<RoadData> Roads => roads;
+        public IReadOnlyList<RoadData> Streets => streets;
         public IReadOnlyList<LandmarkData> Landmarks => landmarks;
+        public IReadOnlyList<BridgeData> Bridges => bridges;
         public IReadOnlyList<BuildingData> Buildings => buildings;
         public float MeshCellSize => meshCellSize;
         public float FarMeshCellSize => farMeshCellSize;
@@ -102,15 +123,27 @@ namespace HunterSystem.Game
         /// <summary>True once the bake has written tiles for this world.</summary>
         public bool IsBaked => coarse != null && !string.IsNullOrEmpty(tileFolder);
 
-        /// <summary>How far (x, z) is outside the nearest road's width: 0 or less on a road, infinity with none. Safe off the main thread once called once on it.</summary>
+        /// <summary>How far (x, z) is outside the nearest road's width: 0 or less on a road, infinity with none within <see cref="RoadReach"/>. Safe off the main thread once called once on it.</summary>
         public float DistanceToRoad(float x, float z)
         {
-            _roadLines ??= roads.FindAll(r => r != null && r.points.Count > 0)
-                .ConvertAll(r => (r.points.ConvertAll(q => new Vector2(q.x, q.z)), r.halfWidth));
+            _roadLines ??= roads.Concat(streets ?? new List<RoadData>()).Where(r => r != null && r.points.Count > 0)
+                .Select(r => (r.points.ConvertAll(q => new Vector2(q.x, q.z)), r.halfWidth)).ToList(); // streets are drawn as road too
+            _roadBounds ??= _roadLines.ConvertAll(r =>
+            {
+                var min = new Vector2(float.MaxValue, float.MaxValue);
+                var max = new Vector2(float.MinValue, float.MinValue);
+                foreach (var q in r.line) { min = Vector2.Min(min, q); max = Vector2.Max(max, q); }
+                return (min - Vector2.one * (r.halfWidth + RoadReach), max + Vector2.one * (r.halfWidth + RoadReach));
+            });
             var best = float.PositiveInfinity;
             var p = new Vector2(x, z);
-            foreach (var (line, halfWidth) in _roadLines)
+            for (var i = 0; i < _roadLines.Count; i++)
+            {
+                var (min, max) = _roadBounds[i];
+                if (p.x < min.x || p.x > max.x || p.y < min.y || p.y > max.y) continue; // far from this road: skip it (hundreds of streets)
+                var (line, halfWidth) = _roadLines[i];
                 best = Mathf.Min(best, HeightSource.DistanceToLine(p, line, out _) - halfWidth);
+            }
             return best;
         }
 
@@ -152,7 +185,10 @@ namespace HunterSystem.Game
         }
 
         /// <summary>A new tiled ground for this world, with only the coarse map loaded: tiles are streamed into it.</summary>
-        public TiledGround CreateTiledGround() => new TiledGround(origin.x, origin.y, tileSize, tilesX, tilesZ, LoadCoarse());
+        public TiledGround CreateTiledGround() => new TiledGround(origin.x, origin.y, tileSize, tilesX, tilesZ, LoadCoarse())
+        {
+            Bridges = bridges.Where(b => b != null && b.points != null && b.points.Count >= 2 && b.halfWidth > 0f).Select(b => b.ToDeck()).ToArray(),
+        };
 
         /// <summary>Where <paramref name="tile"/>'s ground file is.</summary>
         public string TilePath(TileCoord tile) => Path.Combine(Application.streamingAssetsPath, tileFolder, TileFileName(tile));
@@ -229,8 +265,10 @@ namespace HunterSystem.Game
         /// <summary>For the bake, which writes the whole asset at once.</summary>
         public void Set(Vector2 mapOrigin, float tile, int countX, int countZ, string folder, TextAsset coarseGround,
             List<GateSiteData> gateSites, bool town, Vector3 townAt, float townReach, List<RoadData> roadList, List<LandmarkData> landmarkList,
-            float sea, float nearCell, float farCell, List<BuildingData> buildingList = null)
+            float sea, float nearCell, float farCell, List<BuildingData> buildingList = null, List<BridgeData> bridgeList = null, List<RoadData> streetList = null)
         {
+            streets = streetList ?? new List<RoadData>();
+            bridges = bridgeList ?? new List<BridgeData>();
             buildings = buildingList ?? new List<BuildingData>();
             _buildingCells = null;
             origin = mapOrigin;
@@ -245,6 +283,7 @@ namespace HunterSystem.Game
             townRadius = townReach;
             roads = roadList ?? new List<RoadData>();
             _roadLines = null;
+            _roadBounds = null;
             landmarks = landmarkList ?? new List<LandmarkData>();
             seaLevel = sea;
             meshCellSize = nearCell;

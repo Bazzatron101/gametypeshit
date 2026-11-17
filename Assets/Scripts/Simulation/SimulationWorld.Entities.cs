@@ -23,6 +23,9 @@ namespace HunterSystem.Simulation
 
             /// <summary>Riding it now.</summary>
             public bool Mounted;
+
+            /// <summary>Flying (ticket 90): how high above the ground. 0 for anyone not in the air on wings.</summary>
+            public float FlightHeight;
             public int Health;
             public int MaxHealth;
             public PlayerLifeState LifeState;
@@ -35,6 +38,12 @@ namespace HunterSystem.Simulation
 
             /// <summary>The character's class, or null.</summary>
             public ClassDefinition Class;
+
+            /// <summary>The hunter's species (ticket 81), or null (one from before species, a bare test player).</summary>
+            public SpeciesDefinition Species;
+
+            /// <summary>The last tick this player hit or was hit (ticket 81: the koala's healing waits for a quiet spell). 0: never.</summary>
+            public int LastFightTick;
 
             /// <summary>The specialties picked (ticket 26), one per tier, lowest first.</summary>
             public readonly List<SpecialtyDefinition> Specialties = new List<SpecialtyDefinition>();

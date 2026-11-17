@@ -59,10 +59,10 @@ namespace HunterSystem.Simulation
         {
             new RankDefinition { Id = "E", FirstLevel = 1 },
             new RankDefinition { Id = "D", FirstLevel = 16, OpensRegions = new[] { "fenward" }, GrantsMount = true },
-            new RankDefinition { Id = "C", FirstLevel = 36 },
-            new RankDefinition { Id = "B", FirstLevel = 56, OpensRegions = new[] { "ashen" } },
-            new RankDefinition { Id = "A", FirstLevel = 76 },
-            new RankDefinition { Id = "S", FirstLevel = 96 },
+            new RankDefinition { Id = "C", FlightCeiling = 10f, FirstLevel = 36 },
+            new RankDefinition { Id = "B", FlightCeiling = 20f, FirstLevel = 56, OpensRegions = new[] { "ashen" } },
+            new RankDefinition { Id = "A", FlightCeiling = 35f, FirstLevel = 76 },
+            new RankDefinition { Id = "S", FlightCeiling = 60f, FirstLevel = 96 },
         };
 
         /// <summary>The index in <see cref="Ranks"/> of the band <paramref name="level"/> is in; 0 with no ranks.</summary>
@@ -105,6 +105,12 @@ namespace HunterSystem.Simulation
 
         /// <summary>Whether a character reaching this rank gets their first mount (ADR 0015: it comes with D).</summary>
         public bool GrantsMount { get; set; }
+
+        /// <summary>
+        /// How high above the ground a flying hunter of this rank may go, in metres (ticket 90). At or below the
+        /// skimming height (<see cref="SimulationConfig.FlightSkimHeight"/>) they only skim; above it they climb and dive freely.
+        /// </summary>
+        public float FlightCeiling { get; set; }
     }
 
     /// <summary>

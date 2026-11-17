@@ -44,13 +44,27 @@ namespace HunterSystem.Simulation
         {
             if (!player.IsAirborne) return;
             var elapsed = tick - player.JumpStartTick + 1;
+            var peak = _config.JumpHeight * player.JumpHeightPercent / 100f;
+            if (HasPerk(player, SpeciesPerk.Glide))
+            {
+                // The sugar glider (ticket 81): up as anyone does, then a slower way down.
+                var rise = JumpTicks / 2f;
+                var fall = JumpFallTicks(player);
+                if (!player.IsAlive || elapsed >= rise + fall)
+                {
+                    Land(player);
+                    return;
+                }
+                var s = elapsed < rise ? 1f - elapsed / rise : (elapsed - rise) / fall;
+                player.Position = new Vec3(player.Position.X, Ground.HeightAt(player.Position) + peak * (1f - s * s), player.Position.Z);
+                return;
+            }
             if (!player.IsAlive || elapsed >= JumpTicks)
             {
                 Land(player);
                 return;
             }
             var t = elapsed / (float)JumpTicks;
-            var peak = _config.JumpHeight * player.JumpHeightPercent / 100f;
             player.Position = new Vec3(player.Position.X, Ground.HeightAt(player.Position) + 4f * peak * t * (1f - t), player.Position.Z);
         }
 
@@ -62,10 +76,12 @@ namespace HunterSystem.Simulation
         }
 
         /// <summary>How high <paramref name="player"/> is above the ground under them: 0 unless jumping.</summary>
-        private float HeightAboveGround(Player player) => player.IsAirborne ? MathF.Max(0f, player.Position.Y - Ground.HeightAt(player.Position)) : 0f;
+        private float HeightAboveGround(Player player) =>
+            IsFlying(player) ? player.FlightHeight // ticket 90
+            : player.IsAirborne ? MathF.Max(0f, player.Position.Y - Ground.HeightAt(player.Position)) : 0f;
 
         /// <summary>Whether <paramref name="player"/> is high enough in a jump to pass over <paramref name="enemy"/>.</summary>
-        private bool AboveEnemy(Player player, Enemy enemy) => player.IsAirborne && HeightAboveGround(player) >= enemy.Definition.Height;
+        private bool AboveEnemy(Player player, Enemy enemy) => (player.IsAirborne || IsFlying(player)) && HeightAboveGround(player) >= enemy.Definition.Height; // a flyer high enough too (ticket 90)
 
         /// <summary>
         /// Sets how high this player jumps, as a percentage of the base jump: the hook for classes

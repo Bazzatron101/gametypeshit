@@ -26,9 +26,9 @@ namespace HunterSystem.Game
         Climbable,
 
         /// <summary>
-        /// A bridge deck along the line (ticket 45): nothing within <see cref="HeightStamp.Radius"/> is lower than
-        /// <see cref="HeightStamp.Height"/>, ramping down over <see cref="HeightStamp.Blend"/>. Over the sea or a
-        /// river the deck stands above the water, so a road can cross.
+        /// A bridge along the line (ticket 45), <see cref="HeightStamp.Radius"/> wide each side. It leaves the ground
+        /// as it is, so a river or the sea flows on under it (developer playtest, 2026-11-17); the bake turns it into
+        /// a walkable deck above the water (<see cref="HunterSystem.Simulation.BridgeDeck"/>) and the scene draws it.
         /// </summary>
         Bridge,
     }
@@ -118,12 +118,7 @@ namespace HunterSystem.Game
                         break;
                     }
                     case HeightStampKind.Bridge:
-                    {
-                        var d = DistanceToLine(p, stamp.points, out _);
-                        var weight = 1f - Smooth(stamp.radius, stamp.radius + Mathf.Max(stamp.blend, 0.01f), d);
-                        if (h < stamp.height) h = Mathf.Lerp(h, stamp.height, weight);
-                        break;
-                    }
+                        break; // a deck above the ground, not a bank: the water flows under it
                     case HeightStampKind.Sea:
                     {
                         if (stamp.points.Count < 2) break;
@@ -140,8 +135,8 @@ namespace HunterSystem.Game
         }
 
         /// <summary>
-        /// Whether (x, z) is a river or lake on the painted water map (ticket 39). A road crossing it is a
-        /// bridge or ford, so it is not water there.
+        /// Whether (x, z) is a river or lake on the painted water map (ticket 39). Under a bridge it stays water, so
+        /// the river flows through; a road crossing it with no bridge is a ford, so it is not water there.
         /// </summary>
         public bool IsPaintedWater(float x, float z, Vector2 areaMin, Vector2 areaSize)
         {
@@ -150,7 +145,20 @@ namespace HunterSystem.Game
             var u = (x - areaMin.x) / areaSize.x;
             var v = (z - areaMin.y) / areaSize.y;
             if (u < 0f || u > 1f || v < 0f || v > 1f) return false;
-            return _waterPixels.Bilinear(u, v) > 0.5f && DistanceToRoad(x, z) > 0f;
+            return _waterPixels.Bilinear(u, v) > 0.5f && (DistanceToRoad(x, z) > 0f || IsUnderBridge(x, z));
+        }
+
+        /// <summary>Whether (x, z) is under a bridge stamp's deck.</summary>
+        public bool IsUnderBridge(float x, float z)
+        {
+            Prepare();
+            for (var i = 0; i < stamps.Count; i++)
+            {
+                var stamp = stamps[i];
+                if (stamp == null || stamp.kind != HeightStampKind.Bridge || stamp.points == null || stamp.points.Count < 2 || !_bounds[i].Contains(x, z)) continue;
+                if (DistanceToLine(new Vector2(x, z), stamp.points, out _) <= stamp.radius) return true;
+            }
+            return false;
         }
 
         /// <summary>Whether (x, z) is inside a climbable stamp.</summary>

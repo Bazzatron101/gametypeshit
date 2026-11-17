@@ -125,7 +125,7 @@ namespace HunterSystem.Simulation
                 if (site == null || IsGateFound(site.GateId)) continue;
                 foreach (var player in _players)
                 {
-                    if (!player.IsAlive || player.Away || Flat(site.Entrance - player.Position).Length > radius) continue;
+                    if (!player.IsAlive || player.Away || Flat(site.Entrance - player.Position).Length > SenseRadius(player, radius)) continue; // the platypus senses further (ticket 81)
                     _foundGates.Add(site.GateId);
                     _events.Add(new GateFound(tick, site.GateId, player.Id));
                     break;

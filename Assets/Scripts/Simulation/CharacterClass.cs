@@ -96,6 +96,7 @@ namespace HunterSystem.Simulation
                 Name = Name,
                 Look = Look,
                 ClassId = chosen.Id,
+                SpeciesId = SpeciesId,
                 Specialties = new List<string>(Specialties ?? new List<string>()),
                 PassedTrials = new List<string>(PassedTrials ?? new List<string>()),
                 Level = Level,

@@ -70,5 +70,27 @@ namespace HunterSystem.Tests
             Assert.That(world.Ground.KindAt(at), Is.EqualTo(GroundKind.Walkable), "the road is walkable ground");
             Assert.That(at.Y, Is.EqualTo(world.Ground.HeightAt(at)).Within(1e-3f), "standing on it");
         }
+
+        [UnityTest]
+        public IEnumerator AHunterStandsOnABridgeDeckAboveTheWater()
+        {
+            var world = _runner.World;
+            var scene = Object.FindAnyObjectByType<OverworldScene>();
+            var asset = scene.Overworld;
+            Assert.That(asset.Bridges.Count, Is.GreaterThanOrEqualTo(4), "the bake made the bridges' decks");
+            Assert.That(GameObject.Find("Bridges"), Is.Not.Null, "and the scene draws them");
+
+            var bridge = asset.Bridges.OrderByDescending(b => b.points.Count).First();
+            var middle = bridge.points[bridge.points.Count / 2];
+            var me = _runner.LocalPlayerId.Value;
+            world.PlacePlayer(me, new Vec3(middle.x, 0f, middle.z));
+            yield return new WaitForSeconds(1f); // its tile streams in
+
+            var at = world.GetPlayer(me).Position;
+            Assert.That(world.Ground.KindAt(at), Is.EqualTo(GroundKind.Walkable), "the deck is walked on");
+            Assert.That(at.Y, Is.EqualTo(middle.y).Within(0.05f), "at the deck's height");
+            var tile = scene.Ground.TileAt(at);
+            Assert.That(scene.Ground.IsLoaded(tile), Is.True);
+        }
     }
 }

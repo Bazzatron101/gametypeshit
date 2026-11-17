@@ -8,7 +8,7 @@ namespace HunterSystem.Tests
 {
     /// <summary>
     /// Mounts (ticket 42). A character with a mount rides it in the overworld at 16 m/s, whatever their
-    /// agility. A hit, or starting an attack or a dodge, puts the rider on foot, and so do the guild town,
+    /// agility. A hit, or starting an attack or a dodge, puts the rider on foot, and so do
     /// a gate and going down; jumping does not. A mount does not climb. It belongs to the character and is
     /// saved with it; a new character has none.
     /// </summary>
@@ -102,18 +102,28 @@ namespace HunterSystem.Tests
         // --- Where riding ends ------------------------------------------------------------------------------
 
         [Test]
-        public void NobodyRidesInTheTown()
+        public void RidingInTheTownIsAllowedForNow()
         {
             var inTown = World(at: new Vec3(10f, 0f, 0f));
             Step(inTown, Toggle);
-            Assert.That(Me(inTown).IsMounted, Is.False, "cannot get on in town");
+            Assert.That(Me(inTown).IsMounted, Is.True, "the developer lifted the town rule (2026-11-17)");
 
-            var rider = World(at: new Vec3(60f, 0f, 0f));
-            Step(rider, Toggle);
-            Assert.That(Me(rider).IsMounted, Is.True);
-            Step(rider, new PlayerCommand(-1f, 0f), 120); // rides into the town
-            Assert.That(Me(rider).IsMounted, Is.False, "the town puts a rider on foot");
-            Assert.That(Me(rider).Position.X, Is.LessThan(40f));
+            Step(inTown, new PlayerCommand(-1f, 0f), 60); // rides across the town's middle
+            Assert.That(Me(inTown).IsMounted, Is.True, "riding through the town keeps the rider up");
+            Assert.That(Me(inTown).Position.X, Is.EqualTo(10f - 16f).Within(0.5f), "16 m in a second");
+        }
+
+        [Test]
+        public void TheGameCanSayWhyRDoesNothing()
+        {
+            Assert.That(World(mount: false).WhyCannotMount(P), Is.EqualTo(MountBlock.NoMount));
+            Assert.That(World(overworld: false).WhyCannotMount(P), Is.EqualTo(MountBlock.NotInOverworld));
+            Assert.That(World(at: new Vec3(10f, 0f, 0f)).WhyCannotMount(P), Is.EqualTo(MountBlock.None), "in the town too");
+
+            var outside = World();
+            Assert.That(outside.WhyCannotMount(P), Is.EqualTo(MountBlock.None));
+            Step(outside, new PlayerCommand(0f, 0f, jump: true));
+            Assert.That(outside.WhyCannotMount(P), Is.EqualTo(MountBlock.Busy), "mid-jump");
         }
 
         [Test]
@@ -276,5 +286,48 @@ namespace HunterSystem.Tests
             Assert.That(guest.World.GetPlayer(me).Position.X, Is.EqualTo(onHost.Position.X).Within(1e-3f));
             Assert.That(guest.LargestCorrection, Is.LessThan(1e-3f), "never pulled back");
         }
+
+        // --- On the real test patch (the playtest: "I'm not able to get onto the mount") ----------------
+
+        [Test]
+        public void ARiderGetsOnAndRidesOnTheRealTestPatchFromTheTown()
+        {
+            var patch = UnityEditor.AssetDatabase.LoadAssetAtPath<HunterSystem.Game.OverworldAsset>("Assets/Data/Overworld/TestPatch.asset");
+            var content = UnityEditor.AssetDatabase.LoadAssetAtPath<HunterSystem.Game.GameContentAsset>("Assets/Data/GameContent.asset");
+            Assume.That(patch != null && patch.IsBaked, "the test patch is baked");
+            var ground = patch.LoadGround();
+            var town = new Vec3(patch.TownCentre.x, 0f, patch.TownCentre.z);
+
+            foreach (var (x, z) in new[] { (1f, 0f), (-1f, 0f), (0f, 1f), (0f, -1f) })
+            {
+                SimulationWorld Fresh(bool mounted)
+                {
+                    var config = new SimulationConfig();
+                    content.ApplyTo(config);
+                    patch.ApplyTo(config, ground);
+                    var world = new SimulationWorld(config);
+                    world.AddPlayer(P, town);
+                    world.GrantMount(P);
+                    Step(world, PlayerCommand.None);
+                    if (mounted) Step(world, Toggle);
+                    return world;
+                }
+
+                var walker = Fresh(mounted: false);
+                var rider = Fresh(mounted: true);
+                Assert.That(Me(rider).IsMounted, Is.True, $"gets on in the town ({x}, {z})");
+
+                var go = new PlayerCommand(x, z);
+                Step(walker, go, 180);
+                Step(rider, go, 180);
+
+                Assert.That(Me(rider).IsMounted, Is.True, $"still riding after 3 s ({x}, {z})");
+                var walked = Flat(Me(walker).Position - town);
+                var rode = Flat(Me(rider).Position - town);
+                Assert.That(rode, Is.GreaterThanOrEqualTo(walked - 0.5f), $"a rider gets at least as far as a walker ({x}, {z}): rode {rode:0.0} m, walked {walked:0.0} m");
+            }
+        }
+
+        private static float Flat(Vec3 v) => (float)System.Math.Sqrt(v.X * v.X + v.Z * v.Z);
     }
 }

@@ -27,6 +27,7 @@ namespace HunterSystem.Game
         private CharacterLook? _lookPending;
         private string _specialtyPending;
         private int? _skillSlotPending;
+        private sbyte _climbHeld;
         private readonly Queue<Stat> _statAllocations = new Queue<Stat>();
         private readonly Queue<SkillAssignment> _skillAssignments = new Queue<SkillAssignment>();
 
@@ -43,6 +44,7 @@ namespace HunterSystem.Game
             _jumpPending |= sampled.Jump;
             _mountPending |= sampled.ToggleMount;
             _sprintHeld = sampled.Sprint; // held, like movement: the latest state
+            _climbHeld = sampled.Climb; // flying up or down (ticket 90): held, the latest state
             _aimYawDegrees = sampled.AimYawDegrees; // where the camera looks now
             if (sampled.SetReady.HasValue) _setReadyPending = sampled.SetReady;
             if (sampled.UseSkillSlot.HasValue) _skillSlotPending = sampled.UseSkillSlot; // the latest press wins
@@ -74,6 +76,9 @@ namespace HunterSystem.Game
         /// <summary>Queues one stat point (from a UI click). Commands carry one per tick, in click order.</summary>
         public void QueueStatAllocation(Stat stat) => _statAllocations.Enqueue(stat);
 
+        /// <summary>Get on or off the mount (ticket 42), as R does; goes out with the next tick.</summary>
+        public void QueueToggleMount() => _mountPending = true;
+
         /// <summary>A defeated player asking to come back (the death panel's button); goes out with the next tick.</summary>
         public void QueueRespawn() => _respawnPending = true;
 
@@ -94,7 +99,7 @@ namespace HunterSystem.Game
                 lightAttack: _lightAttackPending, dodge: _dodgePending, heavyAttack: _heavyAttackPending,
                 allocateStat: allocate, useSkillSlot: _skillSlotPending, assignSkill: assign, heldSkillSlots: _heldSkillSlots, respawn: _respawnPending, setReady: _setReadyPending, jump: _jumpPending, sprint: _sprintHeld, aimYawDegrees: _aimYawDegrees, sellItemId: sell,
                 equipGearId: gear.equip, unequipSlot: gear.unequip, changeLook: _lookPending, toggleMount: _mountPending,
-                chooseSpecialtyId: _specialtyPending);
+                chooseSpecialtyId: _specialtyPending, climb: _climbHeld);
             _lookPending = null;
             _specialtyPending = null;
             _jumpPending = false;

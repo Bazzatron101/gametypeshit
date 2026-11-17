@@ -15,6 +15,7 @@ namespace HunterSystem.Simulation
                 Name = player.Name,
                 Look = player.Look,
                 ClassId = player.Class?.Id,
+                SpeciesId = player.Species?.Id,
                 Level = player.Level,
                 Xp = player.Xp,
                 UnspentStatPoints = player.UnspentStatPoints,
@@ -51,7 +52,10 @@ namespace HunterSystem.Simulation
             var player = _playersById[id];
             player.Name = HunterNames.Clean(character.Name);
             player.Look = new CharacterLook(character.Look.Colour, character.Look.Build);
+            player.Species = _config.SpeciesById(character.SpeciesId); // even a new hunter has one (ticket 81)
             if (!character.IsNew) Apply(player, character);
+            player.MaxHealth = ComputeMaxHealth(player); // the species may count towards Vitality
+            player.Health = player.MaxHealth;
         }
 
         /// <summary>
@@ -88,7 +92,13 @@ namespace HunterSystem.Simulation
             if (!_playersById.TryGetValue(id, out var player)) throw new ArgumentException($"{id} is not in the simulation.", nameof(id));
             player.Name = HunterNames.Clean(character.Name);
             player.Look = new CharacterLook(character.Look.Colour, character.Look.Build);
-            if (character.IsNew) return;
+            player.Species = _config.SpeciesById(character.SpeciesId);
+            if (character.IsNew)
+            {
+                player.MaxHealth = ComputeMaxHealth(player); // the species may count towards Vitality (ticket 81)
+                player.Health = player.MaxHealth;
+                return;
+            }
             player.ClearCharge();
             player.SkillReadyAtTick.Clear();
             player.SkillCooldownTicks.Clear();
@@ -174,6 +184,7 @@ namespace HunterSystem.Simulation
             // Gold, and duplicates the game still drops (one it no longer has cannot be priced, so it is dropped).
             player.HasMount = character.HasMount;
             player.Mounted = false; // a character arrives on foot
+            player.FlightHeight = 0f;
             player.Gold = Math.Max(0, character.Gold);
             player.Duplicates.Clear();
             foreach (var id in character.Duplicates ?? Enumerable.Empty<string>())

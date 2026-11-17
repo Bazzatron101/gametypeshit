@@ -15,6 +15,12 @@ namespace HunterSystem.Simulation
         /// <summary>A mounted rider's speed in metres per second (ticket 42: 2× sprint). Sprint and agility do not change it.</summary>
         public float MountSpeed { get; set; } = 16f;
 
+        /// <summary>How high above the ground a flyer skims (ticket 90): where they take off to, and the lowest a dive goes.</summary>
+        public float FlightSkimHeight { get; set; } = 3f;
+
+        /// <summary>How fast a flyer climbs or dives, in metres per second (ticket 90).</summary>
+        public float FlightClimbSpeed { get; set; } = 6f;
+
         /// <summary>Holding sprint: move speed as a percentage of walking.</summary>
         public int SprintSpeedPercent { get; set; } = 160;
 
@@ -67,6 +73,17 @@ namespace HunterSystem.Simulation
 
         /// <summary>The classes a character can be (ticket 24). Skills name their class by id.</summary>
         public IReadOnlyList<ClassDefinition> Classes { get; set; } = Array.Empty<ClassDefinition>();
+
+        /// <summary>The species a hunter can be (ticket 81). Saves and snapshots name them by id, so host and clients must hold the same list.</summary>
+        public IReadOnlyList<SpeciesDefinition> Species { get; set; } = SpeciesDefinition.Standard();
+
+        /// <summary>The species with this id, or null (none given, or not one of the game's).</summary>
+        public SpeciesDefinition SpeciesById(string id)
+        {
+            if (id == null || Species == null) return null;
+            foreach (var s in Species) if (s != null && s.Id == id) return s;
+            return null;
+        }
 
         /// <summary>A skill by id: one of <see cref="Skills"/>, or a weapon attack's hit (ticket 46). Null when there is none.</summary>
         public SkillDefinition FindSkill(string id)

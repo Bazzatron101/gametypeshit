@@ -17,17 +17,19 @@ namespace HunterSystem.Game
         /// <summary>One kind's rules, copied off its <see cref="EnvironmentAsset.PropKind"/> on the main thread.</summary>
         public readonly struct Rules
         {
-            public readonly float PerHectare, Cover, PatchSize, MinScale, MaxScale, MaxSlope, Clearance, Sink;
+            public readonly float PerHectare, Cover, PatchSize, MinScale, MaxScale, MaxSlope, Clearance, Sink, NearSteepWithin, SteepDegrees;
             public readonly int PatchGroup, Salt;
 
-            public Rules(float perHectare, float cover, float patchSize, int patchGroup, float minScale, float maxScale, float maxSlope, float clearance, float sink, int salt)
+            public Rules(float perHectare, float cover, float patchSize, int patchGroup, float minScale, float maxScale, float maxSlope, float clearance, float sink, int salt,
+                float nearSteepWithin = 0f, float steepDegrees = 30f)
             {
                 PerHectare = perHectare; Cover = cover; PatchSize = Math.Max(1f, patchSize); PatchGroup = patchGroup;
                 MinScale = minScale; MaxScale = Math.Max(minScale, maxScale); MaxSlope = maxSlope; Clearance = clearance; Sink = sink; Salt = salt;
+                NearSteepWithin = Math.Max(0f, nearSteepWithin); SteepDegrees = steepDegrees;
             }
 
             public static Rules From(EnvironmentAsset.PropKind kind, int index) => new Rules(kind.perHectare, kind.cover, kind.patchSize, kind.patchGroup,
-                kind.minScale, kind.maxScale, kind.maxSlope, kind.clearance, kind.sink, index * 7919 + 17);
+                kind.minScale, kind.maxScale, kind.maxSlope, kind.clearance, kind.sink, index * 7919 + 17, kind.nearSteepWithin, kind.steepDegrees);
         }
 
         /// <summary>A round area kept clear of nature: a town, a building, a gate entrance.</summary>
@@ -102,11 +104,34 @@ namespace HunterSystem.Game
                 var reach = area.Radius + rules.Clearance;
                 if (dx * dx + dz * dz < reach * reach) return false;
             }
+            if (SlopeAt(ground, x, z) > rules.MaxSlope) return false;
+            return rules.NearSteepWithin <= 0f || NearSteep(ground, x, z, rules.NearSteepWithin, rules.SteepDegrees);
+        }
+
+        /// <summary>The ground's slope at (x, z), in degrees.</summary>
+        public static double SlopeAt(IGround ground, float x, float z)
+        {
             const float step = 1f;
             var gx = (ground.HeightAt(new Vec3(x + step, 0f, z)) - ground.HeightAt(new Vec3(x - step, 0f, z))) / (2f * step);
             var gz = (ground.HeightAt(new Vec3(x, 0f, z + step)) - ground.HeightAt(new Vec3(x, 0f, z - step))) / (2f * step);
-            var slope = Math.Atan(Math.Sqrt(gx * gx + gz * gz)) * 180.0 / Math.PI;
-            return slope <= rules.MaxSlope;
+            return Math.Atan(Math.Sqrt(gx * gx + gz * gz)) * 180.0 / Math.PI;
+        }
+
+        /// <summary>Whether ground at least <paramref name="degrees"/> steep lies within <paramref name="within"/> metres: eight ways, at the full and half reach.</summary>
+        public static bool NearSteep(IGround ground, float x, float z, float within, float degrees)
+        {
+            for (var ring = 1; ring <= 2; ring++)
+            {
+                var r = within * ring / 2f;
+                for (var i = 0; i < 8; i++)
+                {
+                    var a = i * Math.PI / 4.0;
+                    var px = x + (float)Math.Cos(a) * r;
+                    var pz = z + (float)Math.Sin(a) * r;
+                    if (SlopeAt(ground, px, pz) >= degrees) return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>Upright, turned <paramref name="yaw"/> radians about Y, scaled evenly. Built by hand: safe off the main thread.</summary>

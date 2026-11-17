@@ -109,7 +109,7 @@ namespace HunterSystem.Game
                 go.transform.SetParent(root.transform, false);
                 go.transform.SetPositionAndRotation(b.position, Quaternion.Euler(0f, b.yaw, 0f));
                 go.AddComponent<MeshFilter>().sharedMesh = kind.mesh;
-                go.AddComponent<MeshRenderer>().sharedMaterials = kind.materials;
+                go.AddComponent<MeshRenderer>().sharedMaterials = environment.MaterialsFor(kind, b.region); // its region's look (ticket 84)
                 go.isStatic = true;
                 made++;
             }

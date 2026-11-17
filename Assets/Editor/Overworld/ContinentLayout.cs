@@ -72,6 +72,19 @@ namespace HunterSystem.Editor
             new Place("Peninsula castle", 375f, 560f, castle: true),
         };
 
+        /// <summary>The region a point on the drawing is in (ticket 84): that of the nearest gate spot.</summary>
+        public static string RegionNear(Vector2 pixel)
+        {
+            var best = "greenmarch";
+            var distance = float.MaxValue;
+            foreach (var gate in Gates)
+            {
+                var d = (gate.Pixel - pixel).sqrMagnitude;
+                if (d < distance && !string.IsNullOrEmpty(gate.Region)) { distance = d; best = gate.Region; }
+            }
+            return best;
+        }
+
         public static readonly GateSpot[] Gates =
         {
             // Greenmarch

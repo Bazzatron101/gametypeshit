@@ -35,8 +35,9 @@ namespace HunterSystem.Game
             foreach (var id in world.PlayerIds)
             {
                 if (me.HasValue && id == me.Value) continue;
-                var name = world.GetPlayer(id).Name;
-                if (!string.IsNullOrEmpty(name)) yield return (id, name);
+                var player = world.GetPlayer(id);
+                if (string.IsNullOrEmpty(player.Name)) continue;
+                yield return (id, player.Species != null ? $"{player.Name} · {player.Species.Name}" : player.Name); // the species too (ticket 81)
             }
         }
 

@@ -4,7 +4,7 @@
 
 **Blocked by:** 39: Terrain pipeline and a 1 km test patch, 40: Load the overworld in tiles around players
 
-**Status:** ready-for-human (open Assets/Scenes/Continent.unity, rebuild it from the menu first, press Play and walk; check the layout)
+**Status:** ready-for-human (open Assets/Scenes/Continent.unity, press Play and walk; cross a bridge and watch the river run under it)
 
 - [ ] Every region's ground generated and baked into tiles, with the sea, the mountain ranges, passes and climbable faces where ticket 36 puts them (ground, sea, ranges, rivers and bridges done; no climbable faces or passes yet)
 - [x] Every settlement and gate from ticket 36 placed as a marker (all 26 numbered sites; see ticket 36)
@@ -40,3 +40,31 @@
 - Build size: the continent scene is in the build list, so a player build carries its 415 MB of tiles.
 
 **2026-11-16 (agent):** All 26 numbered gate sites are placed (list on ticket 36); 2 are real gates, 24 are named spots. Heron isle and its causeway are now land. Rebuilt (1,302 tiles in 287 s) and tested: EditMode 671 passed, PlayMode 38 passed.
+
+**2026-11-17 (developer playtest, recorded by agent):** "There should be bridges for any of the water crossings as the water will need to flow through."
+
+**2026-11-17 (agent):** Bridges are now real bridges, not raised earth banks.
+- **The water flows under them:**
+  - A bridge stamp no longer raises the ground.
+  - Under a bridge the painted river stays water (`HeightSource.IsUnderBridge`).
+  - A road over water with no bridge is still a ford.
+- **A walkable deck:** the bake makes one for each bridge (`OverworldTools.PlanBridges`, `OverworldAsset.Bridges`). It stands 2.5 m over the water it crosses and ramps over 16 m down to each bank. An end still over water stays level.
+- **On the deck** the ground (`TiledGround.Bridges`, `BridgeDeck`) is the deck's height and can be walked. Off its side is the river.
+- **Drawn:** the scene draws each bridge as a greybox deck, rails and piers (`OverworldScene.BuildBridges`).
+- **Only real water:** bridges now go only over real water (below the sea or a painted river or lake). Two old "bridges" over low dry land by the sea were dropped. The continent now has 17 bridges, re-baked.
+- **Tests:**
+  - `BridgeDeckTest`: walked above the river, the river beside it, a hunter crosses by the bridge but not beside it.
+  - `ContinentCrossingTest.TheWaterFlowsUnderEveryBridge` and `EveryBridgeDeckClearsItsWaterAndMeetsItsBanks`.
+  - `ContinentMapsTest`: a river flows under a bridge.
+  - `ContinentSceneTest.AHunterStandsOnABridgeDeckAboveTheWater`.
+
+**843 EditMode and 45 PlayMode tests pass.** Not checked by eye.
+
+**2026-11-17 (developer playtest, recorded by agent):** "The bridges need to be a bit taller, as the water is quite a bit lower than the land overall in some of the regions."
+
+**2026-11-17 (agent):** A deck used to stand 2.5 m over the water, so where the banks were higher it dipped down into the gorge between them. Now:
+- **Level with the higher bank:** each deck is flat across at the higher bank's height, and at least 4 m over the water (`OverworldTools.BridgeClearance`).
+- **The lower bank ramps up to it** within what can be walked.
+- **Over the water it is always level,** never sagging.
+
+Re-baked: still 17 bridges. `ContinentCrossingTest.EveryBridgeDeckClearsItsWaterAndMeetsItsBanks` now checks the 4 m and that each deck is level over the water. **843 EditMode and 45 PlayMode tests pass.** Not checked by eye.

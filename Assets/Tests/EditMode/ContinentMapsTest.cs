@@ -55,6 +55,14 @@ namespace HunterSystem.Tests
             });
             Assert.That(source.IsPaintedWater(20f, 50f, min, size), Is.False, "the road is a bridge or ford");
             Assert.That(source.IsPaintedWater(20f, 70f, min, size), Is.True, "off the road it is still river");
+
+            source.stamps.Add(new HeightStamp
+            {
+                kind = HeightStampKind.Bridge, radius = 5f, blend = 2f,
+                points = new System.Collections.Generic.List<Vector2> { new Vector2(20f, 30f), new Vector2(20f, 10f) },
+            });
+            source.Refresh();
+            Assert.That(source.IsPaintedWater(20f, 20f, min, size), Is.True, "under a bridge the river flows on");
         }
 
         [Test]

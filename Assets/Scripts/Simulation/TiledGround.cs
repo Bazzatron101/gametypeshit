@@ -23,7 +23,7 @@ namespace HunterSystem.Simulation
     /// from a coarse map of the whole world, which is always loaded. Off the map is blocked. Tiles are put
     /// in and taken out between ticks by whoever streams them; the simulation only reads.
     /// </summary>
-    public sealed class TiledGround : IGround
+    public sealed class TiledGround : IGround, IMapBounds
     {
         private readonly Dictionary<TileCoord, IGround> _tiles = new Dictionary<TileCoord, IGround>();
         private readonly IGround _coarse;
@@ -52,6 +52,9 @@ namespace HunterSystem.Simulation
         /// <summary>The tiles loaded now.</summary>
         public IReadOnlyCollection<TileCoord> Loaded => _tiles.Keys;
 
+        /// <summary>On the map's tiles (ticket 90: where even a flyer stops).</summary>
+        public bool IsOnMap(Vec3 p) => IsOnMap(TileAt(p));
+
         public bool IsOnMap(TileCoord tile) => tile.X >= 0 && tile.Z >= 0 && tile.X < TilesX && tile.Z < TilesZ;
 
         /// <summary>The tile holding <paramref name="p"/> (it may be off the map: check <see cref="IsOnMap"/>).</summary>
@@ -71,17 +74,35 @@ namespace HunterSystem.Simulation
 
         public bool RemoveTile(TileCoord tile) => _tiles.Remove(tile);
 
+        /// <summary>Bridges over the water (developer playtest, 2026-11-17): walkable decks above ground left as it is.</summary>
+        public IReadOnlyList<BridgeDeck> Bridges { get; set; } = Array.Empty<BridgeDeck>();
+
         public float HeightAt(Vec3 p)
         {
-            if (_tiles.TryGetValue(Clamp(TileAt(p)), out var tile)) return tile.HeightAt(p);
-            return _coarse?.HeightAt(p) ?? 0f;
+            var h = _tiles.TryGetValue(Clamp(TileAt(p)), out var tile) ? tile.HeightAt(p) : _coarse?.HeightAt(p) ?? 0f;
+            var deck = DeckAt(p);
+            return deck.HasValue && deck.Value > h ? deck.Value : h;
         }
 
         public GroundKind KindAt(Vec3 p)
         {
             var at = TileAt(p);
             if (!IsOnMap(at)) return GroundKind.Blocked;
-            return _tiles.TryGetValue(at, out var tile) ? tile.KindAt(p) : GroundKind.Unloaded;
+            if (!_tiles.TryGetValue(at, out var tile)) return GroundKind.Unloaded;
+            var kind = tile.KindAt(p);
+            return kind != GroundKind.Walkable && DeckAt(p).HasValue ? GroundKind.Walkable : kind; // a deck is walked on, whatever is under it
+        }
+
+        /// <summary>The highest deck above <paramref name="p"/>, or null where there is none.</summary>
+        public float? DeckAt(Vec3 p)
+        {
+            float? best = null;
+            foreach (var bridge in Bridges)
+            {
+                var h = bridge.HeightAt(p.X, p.Z);
+                if (h.HasValue && (!best.HasValue || h.Value > best.Value)) best = h;
+            }
+            return best;
         }
 
         public Vec3 Confine(Vec3 from, Vec3 to) => GroundExtensions.Slide(this, from, to);

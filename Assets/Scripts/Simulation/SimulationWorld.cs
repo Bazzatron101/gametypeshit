@@ -65,6 +65,7 @@ namespace HunterSystem.Simulation
             _damagePerMillePerSense = (int)MathF.Round(config.StatEffects.DamagePerSense * 1000f);
             _knownTags = new HashSet<string>(config.KnownTags ?? SkillTags.Standard, StringComparer.OrdinalIgnoreCase);
             ValidateSkills(config.Skills, progression.LevelCap, _knownTags, config.Classes);
+            SpeciesDefinition.Validate(config.Species); // ticket 81
             ValidateSpecialties();
             IndexLootAndValidateShops();
             IndexAndValidateGear();
@@ -129,7 +130,14 @@ namespace HunterSystem.Simulation
                 p.Charge?.Slot, p.IsCharging ? ChargeFraction(p.Charge, Tick) : 0f, p.Away, p.Ready, p.IsAirborne, p.Sprinting, p.Class, p.JumpHeightPercent, p.Gold, p.Duplicates.ToArray(),
                 p.Bag.ToArray(), (GearDefinition[])p.Worn.Clone(), p.Name, p.Look,
                 hasMount: p.HasMount, isMounted: p.Mounted, specialties: p.Specialties.ToArray(), passedTrials: p.PassedTrials.ToArray(), specialtyPickWaiting: PickWaiting(p),
-                gearStats: GearStatsOf(p));
+                gearStats: GearStatsOf(p), species: p.Species, speciesStats: SpeciesStatsOf(p), flightHeight: p.FlightHeight);
+        }
+
+        private PlayerStats SpeciesStatsOf(Player p)
+        {
+            var bonuses = new int[PlayerStats.Count];
+            for (var i = 0; i < bonuses.Length; i++) bonuses[i] = SpeciesStatBonus(p, (Stat)i);
+            return new PlayerStats(bonuses);
         }
 
         private static PlayerStats GearStatsOf(Player p)
@@ -249,11 +257,12 @@ namespace HunterSystem.Simulation
                     continue; // charging: slowed, no attacks or other skills
                 }
 
-                if (cmd.Jump) TryJump(player, tick);
+                if (cmd.Jump && !IsFlying(player)) TryJump(player, tick); // a flyer's jump key climbs instead (ticket 90)
                 // Sprint while held, except just after an attack or skill has started: fighting breaks the run.
                 var sprinting = cmd.Sprint && tick >= player.SprintResumesAtTick && !player.Mounted;
                 MovePlayer(player, cmd, sprinting ? _config.SprintSpeedPercent / 100f : 1f);
                 player.Sprinting = sprinting && TryGetMoveDirection(cmd, out _, out _);
+                if (IsFlying(player)) Fly(player, cmd.Climb); // ticket 90
                 if (player.IsAirborne) continue; // no attacks or skills in the air (a jump keeps its run-up)
                 var eventsBefore = _events.Count;
                 if (cmd.UseSkillSlot.HasValue && TryUseSkill(player, cmd.UseSkillSlot.Value, cmd.IsSkillHeld(cmd.UseSkillSlot.Value), tick)) { }
@@ -266,7 +275,11 @@ namespace HunterSystem.Simulation
                 }
             }
 
-            foreach (var player in _players) UpdateJump(player, tick);
+            foreach (var player in _players)
+            {
+                UpdateJump(player, tick);
+                UpdateRestfulHealing(player, tick); // the koala's perk (ticket 81)
+            }
             UpdateProjectiles(tick);
             UpdateSummons(tick);
 

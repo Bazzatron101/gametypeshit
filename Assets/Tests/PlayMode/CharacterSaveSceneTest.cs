@@ -102,7 +102,7 @@ namespace HunterSystem.Tests
         public IEnumerator TheTestArenaUsesYourCharacterButKeepsNothing()
         {
             var root = TestSaves.UseFreshFolder();
-            new CharacterSaves(root).Save(new CharacterRecord { Level = 3, Xp = 10, ClassId = "warrior", Name = "Tester" });
+            new CharacterSaves(root).Save(new CharacterRecord { Level = 3, Xp = 10, ClassId = "warrior", Name = "Tester", SpeciesId = "kangaroo" });
             var saved = File.ReadAllBytes(new CharacterSaves(root).FilePath);
 
             yield return Load("Arena");

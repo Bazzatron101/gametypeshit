@@ -30,7 +30,7 @@ namespace HunterSystem.Simulation
             foreach (var player in _players)
             {
                 var lift = HeightAboveGround(player);
-                var settled = (player.Mounted ? RidingGround(ground) : ground).Confine(player.SetOffFrom, player.Position);
+                var settled = GroundFor(player, ground).Confine(player.SetOffFrom, player.Position); // riders do not climb; flyers cross cliffs (tickets 42, 90)
                 player.Position = new Vec3(settled.X, ground.HeightAt(settled) + lift, settled.Z);
             }
             foreach (var enemy in _enemies)

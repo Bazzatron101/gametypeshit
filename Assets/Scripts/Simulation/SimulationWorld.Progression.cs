@@ -13,10 +13,21 @@ namespace HunterSystem.Simulation
         private const int MinStatScalePerMille = 100;
 
         /// <summary>
-        /// The stat as it counts in play: the character's own value plus what worn gear adds (ticket 51).
-        /// Every stat effect goes through here, so gear reaches them all at once.
+        /// The stat as it counts in play: the character's own value plus what worn gear adds (ticket 51) plus
+        /// the species' bonus (ticket 81). Every stat effect goes through here, so both reach them all at once.
         /// </summary>
-        private static int EffectiveStat(Player player, Stat stat) => player.Stats[(int)stat] + GearStatBonus(player, stat);
+        private int EffectiveStat(Player player, Stat stat) => player.Stats[(int)stat] + GearStatBonus(player, stat) + SpeciesStatBonus(player, stat);
+
+        /// <summary>
+        /// What the player's species adds to <paramref name="stat"/> (ticket 81): its bonus at the hunter's own rank
+        /// (their level's band), so it grows at each promotion by itself. Never saved into the stats.
+        /// </summary>
+        private int SpeciesStatBonus(Player player, Stat stat)
+        {
+            var species = player.Species;
+            if (species == null || species.BonusStat != stat) return 0;
+            return species.BonusAtRank(Math.Max(0, _config.Progression.RankIndexAt(player.Level)));
+        }
 
         /// <summary>What the gear the player wears adds to <paramref name="stat"/> (negative for a loss).</summary>
         private static int GearStatBonus(Player player, Stat stat)
@@ -108,9 +119,9 @@ namespace HunterSystem.Simulation
         /// <summary>A level's class stats, on top of the free points (spec: "a few free points per level plus class bonuses").</summary>
         private void GainClassStats(Player player)
         {
-            if (player.Class == null) return;
-            for (var i = 0; i < player.Stats.Length; i++) player.Stats[i] += player.Class.StatPerLevel(i);
-            player.MaxHealth = ComputeMaxHealth(player);
+            if (player.Class != null)
+                for (var i = 0; i < player.Stats.Length; i++) player.Stats[i] += player.Class.StatPerLevel(i);
+            player.MaxHealth = ComputeMaxHealth(player); // a new rank raises the species' bonus too (ticket 81)
         }
 
         private void TryAllocateStat(Player player, Stat stat, int tick)

@@ -114,6 +114,53 @@ namespace HunterSystem.Tests
         }
 
         [Test]
+        public void MountainBouldersGrowOnlyNearSteepGround()
+        {
+            // Flat ground for the west half; a 45 degree mountainside rising from x = 100 m.
+            var heights = new float[101 * 101];
+            for (var r = 0; r <= 100; r++)
+            for (var c = 0; c <= 100; c++)
+                heights[r * 101 + c] = c * 2f <= 100f ? 10f : 10f + (c * 2f - 100f);
+            var ground = new HeightmapGround(0f, 0f, 2f, 100, 100, heights);
+            var boulder = new EnvironmentScatter.Rules(400f, 1f, 50f, 0, 1f, 1f, 30f, 0f, 0f, 1, nearSteepWithin: 30f, steepDegrees: 28f);
+
+            var pieces = Positions(EnvironmentScatter.Scatter(ground, 0f, 0f, 200f, World(boulder))[0]).ToList();
+
+            Assert.That(pieces, Is.Not.Empty, "at the mountain's foot");
+            Assert.That(pieces.All(p => p.x >= 100f - 30f - 2f), Is.True, "only within 30 m of the mountainside");
+        }
+
+        [Test]
+        public void TheTestPatchHasAnOldForestAndBouldersUnderItsMountains()
+        {
+            var environment = UnityEditor.AssetDatabase.LoadAssetAtPath<EnvironmentAsset>("Assets/Data/Overworld/Environment.asset");
+            var patch = UnityEditor.AssetDatabase.LoadAssetAtPath<OverworldAsset>(PatchPath);
+            Assume.That(environment != null && patch != null && patch.IsBaked);
+            var oldPine = environment.props.FirstOrDefault(k => k.id == "old-pine");
+            var boulders = environment.props.FirstOrDefault(k => k.id == "mountain-boulder");
+            Assert.That(oldPine, Is.Not.Null, "old pines");
+            Assert.That(oldPine.mesh.bounds.size.y * oldPine.minScale, Is.GreaterThan(15f), "old pines stand over 15 m");
+            Assert.That(boulders, Is.Not.Null, "mountain boulders");
+            Assert.That(boulders.nearSteepWithin, Is.GreaterThan(0f), "only under the mountains");
+            Assert.That(boulders.mesh.bounds.size.y * boulders.minScale, Is.GreaterThan(3f), "large");
+
+            var ground = patch.LoadGround();
+            var world = OverworldScene.ScatterWorld(environment, patch);
+            var index = System.Array.FindIndex(environment.props, k => k.id == "mountain-boulder");
+            var pines = System.Array.FindIndex(environment.props, k => k.id == "old-pine");
+            var placed = Enumerable.Range(0, patch.TilesX * patch.TilesZ).Select(t =>
+                EnvironmentScatter.Scatter(ground, patch.Origin.x + (t % patch.TilesX) * patch.TileSize, patch.Origin.y + (t / patch.TilesX) * patch.TileSize, patch.TileSize, world)).ToList();
+            Assert.That(placed.Sum(p => p[index].Length), Is.GreaterThan(5), "boulders stand under the ridge and the hill");
+            Assert.That(placed.Sum(p => p[pines].Length), Is.GreaterThan(100), "old pines fill the woods");
+            foreach (var colour in new[] { "flowers-yellow", "flowers-pink", "flowers-blue", "flowers-white", "red-mushroom", "brown-mushroom" })
+            {
+                var kind = System.Array.FindIndex(environment.props, k => k.id == colour);
+                Assert.That(kind, Is.GreaterThanOrEqualTo(0), colour);
+                Assert.That(placed.Sum(p => p[kind].Length), Is.GreaterThan(50), $"{colour} give the ground colour");
+            }
+        }
+
+        [Test]
         public void CoverIsRoughlyTheShareOfGroundAKindGrowsOn()
         {
             foreach (var cover in new[] { 0.25f, 0.5f, 0.75f })
@@ -178,14 +225,93 @@ namespace HunterSystem.Tests
         }
 
         [Test]
-        public void DoorsFaceTheSquare()
+        public void DoorsFaceTheSquareOrAStreet()
         {
-            foreach (var p in TownPlanner.Plan(Town(), Kinds).Where(p => p.Id != "well"))
+            var layout = TownPlanner.PlanTown(Town(), Kinds);
+            foreach (var p in layout.Buildings.Where(p => p.Id != "well"))
             {
                 TownPlanner.Axes(p.Yaw, out _, out var forward);
-                var toSquare = (new Vector2(100f, 100f) - p.Centre).normalized;
-                Assert.That(Vector2.Dot(forward, toSquare), Is.GreaterThan(0.99f), p.Id);
+                var door = p.Centre + forward * (p.Footprint.y / 2f + 0.5f);
+                var toSquare = Vector2.Dot(forward, (new Vector2(100f, 100f) - p.Centre).normalized) > 0.99f;
+                var toStreet = layout.Streets.Any(st => TownPlanner.DistanceToSegment(door, st.From, st.To) <= st.HalfWidth + TownPlanner.StreetSetback + 0.6f &&
+                                                        TownPlanner.DistanceToSegment(door, st.From, st.To) < TownPlanner.DistanceToSegment(p.Centre, st.From, st.To));
+                Assert.That(toSquare || toStreet, Is.True, $"{p.Id} at {p.Centre}: its door faces the square or a street");
             }
+        }
+
+        // --- Streets (ticket 83) and more buildings (ticket 84) ------------------------------------------
+
+        private static readonly TownPlanner.Kind[] MoreKinds = Kinds.Concat(new[]
+        {
+            new TownPlanner.Kind("market-hall", "market", new Vector2(9f, 7f)),
+            new TownPlanner.Kind("chapel", "chapel", new Vector2(6f, 11f)),
+            new TownPlanner.Kind("smithy", "smithy", new Vector2(7f, 6f)),
+            new TownPlanner.Kind("stables", "stables", new Vector2(11f, 5f)),
+            new TownPlanner.Kind("warehouse", "warehouse", new Vector2(10f, 8f)),
+            new TownPlanner.Kind("workshop", "workshop", new Vector2(7f, 5f)),
+            new TownPlanner.Kind("barn", "barn", new Vector2(9f, 7f)),
+            new TownPlanner.Kind("two-storey-house", "house", new Vector2(6f, 6f)),
+        }).ToArray();
+
+        [Test]
+        public void TheRoadsThatReachAPlaceBecomeItsMainStreetsWithLanesOffThem()
+        {
+            var site = Town();
+            site.Radius = 60f;
+            site.DistanceToRoad = (x, z) => Mathf.Abs(z - 100f) - 3f; // one road east-west through the middle
+            var layout = TownPlanner.PlanTown(site, MoreKinds);
+
+            var mains = layout.Streets.Where(s => s.Main).ToList();
+            Assert.That(mains.Count, Is.EqualTo(2), "east and west, along the road");
+            foreach (var main in mains)
+                Assert.That(Mathf.Abs((main.To - main.From).normalized.y), Is.LessThan(0.1f), "along the road");
+            Assert.That(layout.Streets.Count(s => !s.Main), Is.GreaterThan(0), "lanes branch off them");
+        }
+
+        [Test]
+        public void BuildingsNeverStandOnAStreetAndVillagesAndTownsAreFuller()
+        {
+            var town = Town();
+            town.Radius = 60f;
+            var layout = TownPlanner.PlanTown(town, MoreKinds);
+            foreach (var p in layout.Buildings.Where(p => p.Id != "well" && p.Id != "keep"))
+            foreach (var c in TownPlanner.Corners(p, 0f).Append(p.Centre))
+            foreach (var st in layout.Streets)
+                Assert.That(TownPlanner.DistanceToSegment(c, st.From, st.To), Is.GreaterThanOrEqualTo(st.HalfWidth + 1f), $"{p.Id} keeps off the street");
+            for (var i = 0; i < layout.Buildings.Count; i++)
+            for (var j = i + 1; j < layout.Buildings.Count; j++)
+                Assert.That(Overlap(layout.Buildings[i], layout.Buildings[j]), Is.False, $"{layout.Buildings[i].Id} and {layout.Buildings[j].Id}");
+            Assert.That(layout.Buildings.Count, Is.InRange(30, 60), "a town");
+            Assert.That(layout.Buildings.Select(b => b.Id), Does.Contain("market-hall").And.Contain("chapel").And.Contain("smithy"));
+
+            var village = Town(TownStyle.Village);
+            village.Radius = 48f;
+            village.SquareRadius = 7f;
+            village.KeepClear.Clear();
+            var houses = TownPlanner.PlanTown(village, MoreKinds).Buildings;
+            Assert.That(houses.Count, Is.InRange(10, 20), "a village");
+        }
+
+        [Test]
+        public void EachRegionHasItsOwnLook()
+        {
+            var environment = UnityEditor.AssetDatabase.LoadAssetAtPath<EnvironmentAsset>("Assets/Data/Overworld/Environment.asset");
+            var house = environment.Building("house");
+            Assert.That(house, Is.Not.Null);
+            var looks = new[] { "greenmarch", "brokenstone", "saltreach", "fenward", "ashen", "riftlands" }
+                .Select(r => string.Join(",", environment.MaterialsFor(house, r).Select(m => m.name))).ToList();
+            Assert.That(looks.Distinct().Count(), Is.EqualTo(6), "a house looks different in each region");
+            foreach (var kind in environment.buildings)
+            {
+                Assert.That(kind.mesh, Is.Not.Null, kind.id);
+                Assert.That(string.IsNullOrEmpty(kind.role), Is.False, kind.id);
+            }
+
+            var continent = UnityEditor.AssetDatabase.LoadAssetAtPath<OverworldAsset>("Assets/Data/Overworld/Continent.asset");
+            Assume.That(continent != null && continent.IsBaked);
+            Assert.That(continent.Streets.Count, Is.GreaterThan(continent.Roads.Count), "the places have streets of their own, apart from the roads between them");
+            Assert.That(continent.Buildings.All(b => !string.IsNullOrEmpty(b.region)), "every building knows its region");
+            Assert.That(continent.Buildings.Select(b => b.region).Distinct().Count(), Is.GreaterThanOrEqualTo(5), "places across the regions");
         }
 
         [Test]

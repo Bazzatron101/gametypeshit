@@ -29,6 +29,9 @@ namespace HunterSystem.Game
 
         public EnemyId Id { get; private set; }
 
+        /// <summary>Whether this view has been tied to an enemy in the simulation.</summary>
+        public bool IsBound => _bound;
+
         /// <summary>A colour the body always shows instead of its material's (a raid's crystal); null for the material's own.</summary>
         public Color? SteadyTint { get; set; }
 

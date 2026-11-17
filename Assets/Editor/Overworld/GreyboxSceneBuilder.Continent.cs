@@ -99,7 +99,8 @@ namespace HunterSystem.Editor
             // Villages and castle towns get buildings from the bake (ticket 49), inside their flattened squares.
             foreach (var place in ContinentLayout.Settlements)
                 Marker((place.Castle ? "Castle: " : "Village: ") + place.Name, at(place.Pixel))
-                    .Set(OverworldMarkerKind.Village, markerRadius: place.Castle ? 40f : 32f, markerLabel: place.Name, isCastle: place.Castle);
+                    .Set(OverworldMarkerKind.Village, markerRegion: ContinentLayout.RegionNear(place.Pixel), markerRadius: place.Castle ? 58f : 48f, // bigger places (ticket 84)
+                        markerLabel: place.Name, isCastle: place.Castle);
 
             var gates = AssetDatabase.FindAssets("t:GateDefinitionAsset")
                 .Select(guid => AssetDatabase.LoadAssetAtPath<GateDefinitionAsset>(AssetDatabase.GUIDToAssetPath(guid)))

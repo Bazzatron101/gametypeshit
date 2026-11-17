@@ -40,8 +40,16 @@ namespace HunterSystem.Tests
             yield return null;
 
             Assert.That(creator.IsOpen, Is.False);
-            Assert.That(picker.IsOpen, Is.True, "then the class");
+            var species = Object.FindAnyObjectByType<SpeciesPicker>();
+            Assert.That(species.IsOpen, Is.True, "then the species (ticket 81)");
+            Assert.That(picker.IsOpen, Is.False, "the class comes after the species");
             Assert.That(new CharacterSaves(saves).LoadOrNew().Name, Is.EqualTo("Ayla"), "saved at once");
+
+            species.Choose("wombat");
+            yield return null;
+            Assert.That(species.IsOpen, Is.False);
+            Assert.That(picker.IsOpen, Is.True, "then the class");
+            Assert.That(new CharacterSaves(saves).LoadOrNew().SpeciesId, Is.EqualTo("wombat"), "saved at once");
             Assert.That(runner.World.Tick, Is.EqualTo(tick), "still waiting, for the class");
 
             picker.Choose("warrior");
@@ -51,6 +59,7 @@ namespace HunterSystem.Tests
             Assert.That(me.Name, Is.EqualTo("Ayla"));
             Assert.That(me.Look, Is.EqualTo(RedBroad));
             Assert.That(me.Class.Id, Is.EqualTo("warrior"));
+            Assert.That(me.Species.Id, Is.EqualTo("wombat"));
             Assert.That(runner.World.Tick, Is.GreaterThan(tick), "and play starts");
 
             yield return SceneManager.LoadSceneAsync("Greybox", LoadSceneMode.Single);
@@ -71,9 +80,14 @@ namespace HunterSystem.Tests
             Assert.That(creator.Showing, Is.EqualTo(CharacterCreator.Mode.Create));
 
             creator.Create("Brann", default);
+            yield return null;
+            var species = Object.FindAnyObjectByType<SpeciesPicker>();
+            Assert.That(species.IsOpen, Is.True, "a hunter from before species is asked for one once (ticket 81)");
+            species.Choose("platypus");
             yield return new WaitForSeconds(0.2f);
 
             var me = Object.FindAnyObjectByType<SimulationRunner>().World.GetPlayer(LocalPlayer);
+            Assert.That(me.Species.Id, Is.EqualTo("platypus"));
             Assert.That(Object.FindAnyObjectByType<ClassPicker>().IsOpen, Is.False, "the class it had stays");
             Assert.That(me.Name, Is.EqualTo("Brann"));
             Assert.That(me.Level, Is.EqualTo(4));

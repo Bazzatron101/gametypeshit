@@ -40,8 +40,15 @@ namespace HunterSystem.Game
         // Before the views' own LateUpdate, so a new view draws on its first frame.
         private void Update()
         {
-            if (_runner == null || !_runner.IsOnline || _runner.World == null) return;
+            if (_runner == null || _runner.World == null) return;
             var world = _runner.World;
+            if (!_runner.IsOnline)
+            {
+                // Offline, the scene's own views stand for its players and placed enemies. The overworld's
+                // roaming monsters (ticket 43) are made as the game runs, so they need views made here.
+                if (world.InOverworld) ShowSpawnedEnemiesOffline(world);
+                return;
+            }
             if (world != _builtFor)
             {
                 Clear();
@@ -79,6 +86,38 @@ namespace HunterSystem.Game
                 _players.Remove(id);
             }
 
+            _goneEnemies.Clear();
+            foreach (var id in _enemies.Keys) if (!world.HasEnemy(id)) _goneEnemies.Add(id);
+            foreach (var id in _goneEnemies)
+            {
+                Destroy(_enemies[id].gameObject);
+                _enemies.Remove(id);
+            }
+        }
+
+        private void ShowSpawnedEnemiesOffline(SimulationWorld world)
+        {
+            if (world != _builtFor)
+            {
+                Clear();
+                _builtFor = world;
+            }
+            HashSet<EnemyId> placed = null; // enemies with a view of the scene's own, looked up only when an enemy is new
+            foreach (var id in world.EnemyIds)
+            {
+                if (_enemies.ContainsKey(id)) continue;
+                if (placed == null)
+                {
+                    placed = new HashSet<EnemyId>();
+                    foreach (var own in FindObjectsByType<EnemyView>(FindObjectsSortMode.None))
+                        if (own.IsBound && !_enemies.ContainsKey(own.Id)) placed.Add(own.Id);
+                }
+                if (placed.Contains(id)) continue;
+                var state = world.GetEnemy(id);
+                var view = GreyboxVisuals.CreateEnemy(state.Definition.Name, _runner.GetRenderPosition(id), null, enemyMaterial);
+                view.Bind(id);
+                _enemies.Add(id, view);
+            }
             _goneEnemies.Clear();
             foreach (var id in _enemies.Keys) if (!world.HasEnemy(id)) _goneEnemies.Add(id);
             foreach (var id in _goneEnemies)

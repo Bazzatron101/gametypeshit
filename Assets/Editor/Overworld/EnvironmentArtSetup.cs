@@ -51,6 +51,24 @@ namespace HunterSystem.Editor
             ["Stone"] = new Color(0.62f, 0.6f, 0.56f),
             ["Door"] = new Color(0.3f, 0.19f, 0.11f),
             ["Banner"] = new Color(0.2f, 0.36f, 0.72f),
+            // A look per region (ticket 84).
+            ["Whitewash"] = new Color(0.95f, 0.94f, 0.9f),
+            ["BlueTiles"] = new Color(0.25f, 0.4f, 0.62f),
+            ["Sandstone"] = new Color(0.8f, 0.66f, 0.45f),
+            ["GreyStone"] = new Color(0.52f, 0.54f, 0.58f),
+            ["SnowSlate"] = new Color(0.85f, 0.88f, 0.92f),
+            ["Reed"] = new Color(0.6f, 0.55f, 0.32f),
+            ["DarkTimber"] = new Color(0.28f, 0.2f, 0.13f),
+            ["Iron"] = new Color(0.25f, 0.25f, 0.27f),
+            // Colour on the ground (developer playtest, 2026-11-17): flowers and mushrooms.
+            ["Stem"] = new Color(0.3f, 0.52f, 0.22f),
+            ["FlowerYellow"] = new Color(0.98f, 0.84f, 0.2f),
+            ["FlowerPink"] = new Color(0.93f, 0.45f, 0.66f),
+            ["FlowerBlue"] = new Color(0.45f, 0.55f, 0.95f),
+            ["FlowerWhite"] = new Color(0.96f, 0.95f, 0.9f),
+            ["MushroomStem"] = new Color(0.9f, 0.86f, 0.76f),
+            ["CapRed"] = new Color(0.82f, 0.16f, 0.12f),
+            ["CapBrown"] = new Color(0.55f, 0.36f, 0.2f),
         };
 
         public static EnvironmentAsset SetUp()
@@ -67,12 +85,23 @@ namespace HunterSystem.Editor
             // Nature: id, mesh, materials, and the starting numbers (per hectare, cover, patch size, patch group, scale, slope, clearance, sink, draw distance, shadows).
             var props = new[]
             {
-                Prop("pine", Save("Pine", Pine()), M("Bark", "Pine"), 70f, 0.35f, 160f, 1, 0.8f, 1.4f, 30f, 4f, 0.3f, 600f, true),
-                Prop("leafy-tree", Save("LeafyTree", LeafyTree()), M("Bark", "Leaves"), 25f, 0.4f, 200f, 2, 0.8f, 1.3f, 22f, 4f, 0.3f, 600f, true),
-                Prop("bush", Save("Bush", Bush()), M("Bush"), 40f, 0.5f, 120f, 1, 0.7f, 1.3f, 30f, 2f, 0.2f, 250f, true),
+                // An old forest (developer playtest, 2026-11-17): tall, dense woods, with old pines standing over the younger ones.
+                Prop("pine", Save("Pine", Pine()), M("Bark", "Pine"), 110f, 0.45f, 260f, 1, 1.1f, 1.9f, 30f, 4f, 0.3f, 900f, true),
+                Prop("old-pine", Save("OldPine", OldPine()), M("Bark", "Pine"), 45f, 0.45f, 260f, 1, 0.9f, 1.35f, 28f, 5f, 0.5f, 1000f, true),
+                Prop("leafy-tree", Save("LeafyTree", LeafyTree()), M("Bark", "Leaves"), 40f, 0.45f, 220f, 2, 1.1f, 1.8f, 22f, 4f, 0.3f, 900f, true),
+                Prop("bush", Save("Bush", Bush()), M("Bush"), 60f, 0.5f, 160f, 1, 0.7f, 1.4f, 30f, 2f, 0.2f, 250f, true),
                 Prop("rock", Save("Rock", Rock(3)), M("Rock"), 6f, 0.6f, 90f, 3, 0.6f, 1.6f, 45f, 2f, 0.3f, 400f, true),
                 Prop("boulder", Save("Boulder", Rock(11)), M("Rock"), 1.2f, 0.5f, 140f, 4, 2f, 3.5f, 40f, 4f, 0.6f, 600f, true),
                 Prop("grass", Save("Grass", GrassTuft()), M("Grass"), 900f, 0.75f, 60f, 5, 0.7f, 1.3f, 35f, 0.5f, 0.05f, 90f, false),
+                // Flowers in meadow patches and mushrooms in the woods (developer playtest, 2026-11-17): colour on the ground.
+                Prop("flowers-yellow", Save("FlowersYellow", Flowers(41)), M("Stem", "FlowerYellow"), 220f, 0.35f, 45f, 7, 0.8f, 1.3f, 30f, 1f, 0.02f, 140f, false),
+                Prop("flowers-pink", Save("FlowersPink", Flowers(42)), M("Stem", "FlowerPink"), 180f, 0.3f, 40f, 8, 0.8f, 1.3f, 30f, 1f, 0.02f, 140f, false),
+                Prop("flowers-blue", Save("FlowersBlue", Flowers(43)), M("Stem", "FlowerBlue"), 160f, 0.3f, 50f, 9, 0.8f, 1.3f, 30f, 1f, 0.02f, 140f, false),
+                Prop("flowers-white", Save("FlowersWhite", Flowers(44)), M("Stem", "FlowerWhite"), 200f, 0.3f, 35f, 10, 0.8f, 1.2f, 30f, 1f, 0.02f, 140f, false),
+                Prop("red-mushroom", Save("RedMushroom", Mushrooms(51)), M("MushroomStem", "CapRed"), 60f, 0.45f, 260f, 1, 0.7f, 1.4f, 30f, 1.5f, 0.02f, 110f, false),
+                Prop("brown-mushroom", Save("BrownMushroom", Mushrooms(52)), M("MushroomStem", "CapBrown"), 90f, 0.45f, 260f, 1, 0.7f, 1.4f, 30f, 1.5f, 0.02f, 110f, false),
+                // Large boulders under the mountains (developer playtest, 2026-11-17): only near steep ground.
+                NearSteep(Prop("mountain-boulder", Save("MountainBoulder", Rock(17)), M("Rock"), 5f, 0.9f, 200f, 6, 3.5f, 7f, 40f, 4f, 1.2f, 1000f, true), 35f, 28f),
             };
             var buildings = new[]
             {
@@ -85,6 +114,28 @@ namespace HunterSystem.Editor
                 Building("well", "well", new Vector2(2.4f, 2.4f), Save("Well", Well()), M("Stone", "Tiles", "Timber")),
                 Building("tower", "tower", new Vector2(5.5f, 5.5f), Save("Tower", Tower()), M("Stone", "Slate")),
                 Building("keep", "keep", new Vector2(11f, 11f), Save("Keep", Keep()), M("Stone", "Slate", "Door", "Banner")),
+                // More kinds, with a purpose (ticket 84).
+                Building("two-storey-house", "house", new Vector2(6f, 6f), Save("TwoStoreyHouse", House(6f, 6f, 5.5f, 2.4f)), M("Plaster", "Tiles", "Door", "Timber")),
+                Building("small-cottage", "house", new Vector2(4.5f, 4f), Save("SmallCottage", House(4.5f, 4f, 2.4f, 1.7f)), M("Plaster", "Thatch", "Door", "Timber")),
+                Building("smithy", "smithy", new Vector2(7f, 6f), Save("Smithy", Smithy()), M("Stone", "Slate", "Door", "Iron")),
+                Building("chapel", "chapel", new Vector2(6f, 11f), Save("Chapel", Chapel()), M("Stone", "Slate", "Door", "Banner")),
+                Building("stables", "stables", new Vector2(11f, 5f), Save("Stables", House(11f, 5f, 2.6f, 1.6f)), M("Timber", "Thatch", "Door", "Timber")),
+                Building("barn", "barn", new Vector2(9f, 7f), Save("Barn", House(9f, 7f, 3.6f, 3.2f)), M("Timber", "Thatch", "Door", "Timber")),
+                Building("warehouse", "warehouse", new Vector2(10f, 8f), Save("Warehouse", House(10f, 8f, 4.2f, 2.2f)), M("Timber", "Tiles", "Door", "Timber")),
+                Building("workshop", "workshop", new Vector2(7f, 5f), Save("Workshop", Workshop()), M("Plaster", "Tiles", "Door", "Timber")),
+                Building("market-hall", "market", new Vector2(9f, 7f), Save("MarketHall", MarketHall()), M("Stone", "Tiles", "Timber", "Banner")),
+            };
+
+            // A look per region (ticket 84): the same buildings in each region's own materials.
+            EnvironmentAsset.MaterialSwap Swap(string from, string to) => new EnvironmentAsset.MaterialSwap { from = materials[from], to = materials[to] };
+            var looks = new[]
+            {
+                new EnvironmentAsset.RegionLook { region = "greenmarch" }, // the kinds' own: plaster, thatch, red tiles, timber
+                new EnvironmentAsset.RegionLook { region = "brokenstone", swaps = new[] { Swap("Plaster", "Stone"), Swap("Thatch", "Slate"), Swap("Tiles", "Slate"), Swap("Timber", "Stone") } },
+                new EnvironmentAsset.RegionLook { region = "saltreach", swaps = new[] { Swap("Plaster", "Whitewash"), Swap("Tiles", "BlueTiles"), Swap("Thatch", "BlueTiles") } },
+                new EnvironmentAsset.RegionLook { region = "fenward", swaps = new[] { Swap("Plaster", "DarkTimber"), Swap("Tiles", "Reed"), Swap("Thatch", "Reed"), Swap("Timber", "DarkTimber") } },
+                new EnvironmentAsset.RegionLook { region = "ashen", swaps = new[] { Swap("Plaster", "Sandstone"), Swap("Thatch", "Tiles"), Swap("Stone", "Sandstone") } },
+                new EnvironmentAsset.RegionLook { region = "riftlands", swaps = new[] { Swap("Plaster", "GreyStone"), Swap("Thatch", "SnowSlate"), Swap("Tiles", "SnowSlate"), Swap("Slate", "SnowSlate"), Swap("Stone", "GreyStone") } },
             };
 
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentAsset>(EnvironmentPath);
@@ -93,6 +144,7 @@ namespace HunterSystem.Editor
                 environment = ScriptableObject.CreateInstance<EnvironmentAsset>();
                 environment.props = props;
                 environment.buildings = buildings;
+                environment.regionLooks = looks;
                 AssetDatabase.CreateAsset(environment, EnvironmentPath);
             }
             else
@@ -100,6 +152,7 @@ namespace HunterSystem.Editor
                 // Keep the numbers and any real art; fill in what is missing, and add kinds that are new.
                 environment.props = Merge(environment.props, props, k => k.id, (have, made) => { if (have.mesh == null) { have.mesh = made.mesh; have.materials = made.materials; } });
                 environment.buildings = Merge(environment.buildings, buildings, k => k.id, (have, made) => { if (have.mesh == null) { have.mesh = made.mesh; have.materials = made.materials; } });
+                environment.regionLooks = Merge(environment.regionLooks, looks, l => l.region, (have, made) => { if (have.swaps == null || have.swaps.Length == 0) have.swaps = made.swaps; });
                 EditorUtility.SetDirty(environment);
             }
             AssetDatabase.SaveAssets();
@@ -124,6 +177,13 @@ namespace HunterSystem.Editor
             id = id, mesh = mesh, materials = materials, perHectare = perHectare, cover = cover, patchSize = patch, patchGroup = group,
             minScale = minScale, maxScale = maxScale, maxSlope = slope, clearance = clearance, sink = sink, drawDistance = draw, castShadows = shadows,
         };
+
+        private static EnvironmentAsset.PropKind NearSteep(EnvironmentAsset.PropKind kind, float within, float degrees)
+        {
+            kind.nearSteepWithin = within;
+            kind.steepDegrees = degrees;
+            return kind;
+        }
 
         private static EnvironmentAsset.BuildingKind Building(string id, string role, Vector2 footprint, Mesh mesh, Material[] materials) =>
             new EnvironmentAsset.BuildingKind { id = id, role = role, footprint = footprint, mesh = mesh, materials = materials };
@@ -196,6 +256,52 @@ namespace HunterSystem.Editor
             return kit.Build();
         }
 
+        /// <summary>An old pine: a tall bare trunk and a narrow crown high up, about 20 m in all.</summary>
+        private static Mesh OldPine()
+        {
+            var kit = new MeshKit(2);
+            kit.Prism(0, Vector3.zero, 0.55f, 0.3f, 10f, 7);
+            kit.Cone(1, new Vector3(0f, 7.5f, 0f), 3.2f, 5.0f, 8);
+            kit.Cone(1, new Vector3(0f, 10.5f, 0f), 2.6f, 4.4f, 8, 0.4f);
+            kit.Cone(1, new Vector3(0f, 13.5f, 0f), 2.0f, 4.0f, 8, 0.8f);
+            kit.Cone(1, new Vector3(0f, 16.5f, 0f), 1.3f, 3.6f, 8, 1.2f);
+            return kit.Build();
+        }
+
+        /// <summary>A small cluster of flowers: stems (submesh 0) and round heads (submesh 1).</summary>
+        private static Mesh Flowers(int seed)
+        {
+            var kit = new MeshKit(2);
+            var random = new System.Random(seed);
+            for (var i = 0; i < 6; i++)
+            {
+                var a = i * 1.05f + (float)random.NextDouble();
+                var r = 0.08f + 0.2f * (float)random.NextDouble();
+                var at = new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                var height = 0.28f + 0.2f * (float)random.NextDouble();
+                kit.Prism(0, at, 0.015f, 0.012f, height, 4);
+                kit.Blob(1, at + new Vector3(0f, height + 0.03f, 0f), new Vector3(0.09f, 0.06f, 0.09f), seed * 10 + i, 0.1f);
+            }
+            return kit.Build();
+        }
+
+        /// <summary>A few mushrooms of different sizes: pale stems (submesh 0) and domed caps (submesh 1).</summary>
+        private static Mesh Mushrooms(int seed)
+        {
+            var kit = new MeshKit(2);
+            var random = new System.Random(seed);
+            for (var i = 0; i < 3; i++)
+            {
+                var a = i * 2.1f + (float)random.NextDouble();
+                var r = i == 0 ? 0f : 0.15f + 0.1f * (float)random.NextDouble();
+                var at = new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r);
+                var size = i == 0 ? 1f : 0.55f + 0.25f * (float)random.NextDouble();
+                kit.Prism(0, at, 0.045f * size, 0.035f * size, 0.18f * size, 6);
+                kit.Blob(1, at + new Vector3(0f, 0.2f * size, 0f), new Vector3(0.26f, 0.12f, 0.26f) * size, seed * 10 + i, 0.08f);
+            }
+            return kit.Build();
+        }
+
         private static Mesh LeafyTree()
         {
             var kit = new MeshKit(2);
@@ -244,6 +350,57 @@ namespace HunterSystem.Editor
             foreach (var x in new[] { -width / 2f, width / 2f })
             foreach (var z in new[] { -depth / 2f, depth / 2f })
                 kit.Box(3, new Vector3(x - 0.15f, 0f, z - 0.15f), new Vector3(x + 0.15f, wallHeight, z + 0.15f));
+            return kit.Build();
+        }
+
+        /// <summary>A smithy: a stone house with a big chimney and an anvil out front.</summary>
+        private static Mesh Smithy()
+        {
+            var kit = new MeshKit(4);
+            kit.Box(0, new Vector3(-3.5f, 0f, -3f), new Vector3(3.5f, 3f, 3f));
+            kit.Gable(1, 7.6f, 6.8f, 3f, 1.8f);
+            kit.Box(2, new Vector3(-0.7f, 0f, 2.95f), new Vector3(0.7f, 2.2f, 3.08f));
+            kit.Box(0, new Vector3(2f, 0f, -2.5f), new Vector3(3.3f, 6.5f, -1.2f)); // the chimney
+            kit.Box(3, new Vector3(-2.2f, 0f, 3.6f), new Vector3(-1.4f, 0.7f, 4.1f)); // the anvil
+            kit.Box(3, new Vector3(-2.5f, 0.7f, 3.5f), new Vector3(-1.1f, 0.9f, 4.2f));
+            return kit.Build();
+        }
+
+        /// <summary>A chapel: a long, tall nave with a bell tower over the door.</summary>
+        private static Mesh Chapel()
+        {
+            var kit = new MeshKit(4);
+            kit.Box(0, new Vector3(-3f, 0f, -5.5f), new Vector3(3f, 5f, 5.5f));
+            kit.Gable(1, 6.6f, 11.4f, 5f, 3.4f);
+            kit.Box(0, new Vector3(-1.5f, 0f, 3.5f), new Vector3(1.5f, 10f, 5.5f)); // the tower at the front
+            kit.Cone(1, new Vector3(0f, 10f, 4.5f), 2f, 4f, 4, Mathf.PI / 4f);
+            kit.Box(2, new Vector3(-0.8f, 0f, 5.45f), new Vector3(0.8f, 2.8f, 5.6f));
+            kit.Box(3, new Vector3(-0.5f, 6.5f, 5.5f), new Vector3(0.5f, 8f, 5.6f)); // the bell window
+            return kit.Build();
+        }
+
+        /// <summary>A workshop: a house with a lean-to shelter on one side.</summary>
+        private static Mesh Workshop()
+        {
+            var kit = new MeshKit(4);
+            kit.Box(0, new Vector3(-3.5f, 0f, -2.5f), new Vector3(1.5f, 3f, 2.5f));
+            kit.Gable(1, 5.6f, 5.8f, 3f, 1.8f);
+            kit.Box(2, new Vector3(-1.6f, 0f, 2.45f), new Vector3(-0.4f, 2.1f, 2.58f));
+            kit.Slab(1, new Vector3(3.5f, 2f, -2.5f), new Vector3(1.5f, 2.8f, 2.5f), 0.1f); // the lean-to roof
+            foreach (var z in new[] { -2.3f, 2.3f }) kit.Box(3, new Vector3(3.3f, 0f, z - 0.12f), new Vector3(3.55f, 2.1f, z + 0.12f));
+            return kit.Build();
+        }
+
+        /// <summary>A market hall: a roof on posts, open underneath, over a stone floor.</summary>
+        private static Mesh MarketHall()
+        {
+            var kit = new MeshKit(4);
+            kit.Box(0, new Vector3(-4.5f, 0f, -3.5f), new Vector3(4.5f, 0.3f, 3.5f));
+            foreach (var x in new[] { -4.2f, 0f, 4.2f })
+            foreach (var z in new[] { -3.2f, 3.2f })
+                kit.Box(2, new Vector3(x - 0.2f, 0.3f, z - 0.2f), new Vector3(x + 0.2f, 3.6f, z + 0.2f));
+            kit.Gable(1, 9.8f, 7.8f, 3.6f, 2.2f);
+            kit.Box(3, new Vector3(-0.6f, 2.6f, 3.4f), new Vector3(0.6f, 3.6f, 3.5f)); // a banner over the front
             return kit.Build();
         }
 

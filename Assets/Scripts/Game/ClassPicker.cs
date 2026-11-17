@@ -14,7 +14,7 @@ namespace HunterSystem.Game
         private bool _holdingCursor;
         private GUIStyle _title, _name, _text;
 
-        public bool IsOpen => _runner != null && _runner.NeedsClass && !_runner.NeedsCreation; // after the name and looks (ticket 28)
+        public bool IsOpen => _runner != null && _runner.NeedsClass && !_runner.NeedsCreation && !_runner.NeedsSpecies; // after the name and looks (ticket 28) and the species (ticket 81)
 
         private void Start()
         {

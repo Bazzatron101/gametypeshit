@@ -252,6 +252,7 @@ namespace HunterSystem.Simulation
                 resolved.BaseHealing = PercentOf(resolved.BaseHealing, 100 + damagePercent);
             }
 
+            resolved.CooldownTicks = WithQuickThinking(player, resolved.CooldownTicks); // the cockatoo's perk (ticket 81)
             player.SkillReadyAtTick[skill.Id] = tick + resolved.CooldownTicks;
             player.SkillCooldownTicks[skill.Id] = resolved.CooldownTicks;
             _events.Add(new SkillUsed(tick, player.Id, skill, slot, resolved.Range, resolved.Radius, chargeFraction, counter));

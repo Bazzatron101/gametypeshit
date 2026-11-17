@@ -63,3 +63,5 @@ Boxes left open:
 - **Arrival scene** (five lines): narration at the poster board, the recruiting poster, narration of signing up and setting out with friends, a friend's line, and the guild giving the training mission at Goblin Warren.
 - **Goblin Warren intel:** a guild notice for the training mission (it had no slot of its own and fell back to the default).
 - The "System intel" wording is gone from Thornwood Hollow, the default intel marker, and the gate board's comments.
+
+**2026-11-17 (developer, recorded by agent):** **Gate intel includes the leak radius** (ticket 36): how far the gate's leaked monsters reach. Leaks are not built yet, so there is nothing to show today. When they are, the radius should come from the gate's data rather than be typed into the notice text, so the two cannot disagree.

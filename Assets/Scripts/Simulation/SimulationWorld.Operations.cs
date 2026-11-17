@@ -117,6 +117,7 @@ namespace HunterSystem.Simulation
             player.DodgeEndsAtTick = 0;
             player.InvulnerableUntilTick = 0;
             player.Mounted = false; // back on their feet, on foot
+            player.FlightHeight = 0f; // and out of the air (ticket 90)
             Land(player);
         }
 

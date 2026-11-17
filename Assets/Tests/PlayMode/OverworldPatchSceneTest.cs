@@ -23,7 +23,7 @@ namespace HunterSystem.Tests
         [UnitySetUp]
         public IEnumerator HostOnThePatch()
         {
-            TestSaves.UseFreshFolder();
+            TestSaves.UseFreshFolder(speciesId: "wombat"); // a wombat rides a bicycle, drawn as "Mount" (ticket 90)
             yield return SceneManager.LoadSceneAsync("OverworldPatch", LoadSceneMode.Single);
             yield return null;
             _runner = Object.FindAnyObjectByType<SimulationRunner>();
@@ -98,6 +98,28 @@ namespace HunterSystem.Tests
             Assert.That(world.GetPlayer(me).Position.X, Is.EqualTo(site.Entrance.X - 5f).Within(0.5f), "still standing by the gate");
             Assert.That(world.IsGateFound("thornwood-hollow"), Is.True, "found by standing near it");
             Assert.That(world.GateEntranceNear(me)?.GateId, Is.Null.Or.EqualTo("thornwood-hollow"));
+        }
+
+        [UnityTest]
+        public IEnumerator AHunterGetsOnAMountInTheTownAndIsDrawnRiding()
+        {
+            var world = _runner.World;
+            var me = _runner.LocalPlayerId.Value;
+            world.GrantMount(me); // what F2 does
+            yield return new WaitForSeconds(0.1f);
+            Assert.That(world.GetPlayer(me).HasMount, Is.True);
+
+            _runner.RequestToggleMount(me); // what R does
+            yield return new WaitForSeconds(0.1f);
+
+            Assert.That(world.GetPlayer(me).IsMounted, Is.True, "riding, in the town where a hunter starts");
+            var view = Object.FindObjectsByType<PlayerView>(FindObjectsSortMode.None).First(v => v.PlayerId.Equals(me));
+            var mount = view.transform.Find("Mount");
+            Assert.That(mount != null && mount.gameObject.activeSelf, Is.True, "the rider is drawn on the bicycle");
+
+            _runner.RequestToggleMount(me);
+            yield return new WaitForSeconds(0.1f);
+            Assert.That(world.GetPlayer(me).IsMounted, Is.False, "R again gets off");
         }
     }
 }

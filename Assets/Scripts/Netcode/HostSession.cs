@@ -60,6 +60,7 @@ namespace HunterSystem.Netcode
         private readonly HashSet<int> _awaitingHello = new HashSet<int>();
         private readonly Dictionary<PlayerId, PlayerCommand> _commands = new Dictionary<PlayerId, PlayerCommand>();
         private readonly List<SimulationEvent> _eventsSinceSnapshot = new List<SimulationEvent>();
+        private readonly SimulationConfig _config;
         private int _nextPlayerId = 1;
         private int _ticksSinceSnapshot;
 
@@ -67,6 +68,7 @@ namespace HunterSystem.Netcode
         public HostSession(SimulationConfig config, IHostTransport transport, Func<PlayerId, Vec3> spawnPoint, int snapshotEveryTicks = 3)
         {
             World = new SimulationWorld(config);
+            _config = config;
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _spawnPoint = spawnPoint ?? throw new ArgumentNullException(nameof(spawnPoint));
             _snapshotEveryTicks = Math.Max(1, snapshotEveryTicks);
@@ -156,6 +158,7 @@ namespace HunterSystem.Netcode
                 character.Name = record.Name;
                 character.Look = CompanionParty.LookFor(_companions.Count, character.ClassId);
             }
+            if (character.SpeciesId == null) character.SpeciesId = CompanionParty.SpeciesFor(character.ClassId, _config); // a teammate from before species (ticket 81)
             World.AddPlayer(id, _spawnPoint(id), character);
             _companions.Add((id, new CompanionBrain(record, seed) { Leader = LocalPlayerId }));
             return id;

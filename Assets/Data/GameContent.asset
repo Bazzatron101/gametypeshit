@@ -355,3 +355,84 @@ MonoBehaviour:
     legendary: 2
     rankBonusPercent: 25
     luckBonusPercent: 2
+  species:
+  - id: kangaroo
+    displayName: Kangaroo
+    description: Powerful legs and a solid tail. Hits push ordinary enemies back.
+    stat: 0
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 1
+    perkAmount: 1.2
+    perkThreshold: 0
+    travel: 0
+  - id: tasmanian-devil
+    displayName: Tasmanian devil
+    description: Small, loud and relentless. Hits on badly hurt enemies do more damage.
+    stat: 0
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 2
+    perkAmount: 15
+    perkThreshold: 30
+    travel: 0
+  - id: sugar-glider
+    displayName: Sugar glider
+    description: Light and quick. Glides on the way down from a jump.
+    stat: 1
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 3
+    perkAmount: 60
+    perkThreshold: 0
+    travel: 2
+  - id: wombat
+    displayName: Wombat
+    description: Built like a barrel, with a hard rump. Takes less damage from behind.
+    stat: 2
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 4
+    perkAmount: 20
+    perkThreshold: 0
+    travel: 1
+  - id: koala
+    displayName: Koala
+    description: Calm and unhurried. Slowly regains health out of a fight.
+    stat: 2
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 5
+    perkAmount: 1
+    perkThreshold: 6
+    travel: 1
+  - id: cockatoo
+    displayName: Cockatoo
+    description: Clever and noisy. Skills cool down a little faster.
+    stat: 3
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 6
+    perkAmount: 8
+    perkThreshold: 0
+    travel: 2
+  - id: platypus
+    displayName: Platypus
+    description: Feels the world through its bill. Senses hidden things from further away.
+    stat: 4
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 7
+    perkAmount: 50
+    perkThreshold: 0
+    travel: 1
+  - id: quokka
+    displayName: Quokka
+    description: Always smiling, somehow. Slightly better drops.
+    stat: 5
+    bonusAtFirstRank: 2
+    bonusPerRank: 1
+    perk: 8
+    perkAmount: 5
+    perkThreshold: 0
+    travel: 1

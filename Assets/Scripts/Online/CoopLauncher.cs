@@ -19,7 +19,7 @@ namespace HunterSystem.Online
     /// <para>
     /// The same can be done from the command line, which is how two built copies are tested
     /// without anyone at the keyboard:
-    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-class ID] [-companions N] [-bot [SEED] [-bot-expect CLIENTS] [-bot-gate GATE-ID]] [-autotest SECONDS FILE]</c>.
+    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-species ID] [-class ID] [-companions N] [-bot [SEED] [-bot-expect CLIENTS] [-bot-gate GATE-ID]] [-autotest SECONDS FILE]</c>.
     /// With <c>-bot</c> this copy's player is a <see cref="BotPlayer"/> (the 10-bot stress test).
     /// Steam's "Join Game" passes <c>+connect STEAMID</c>, which joins over Steam; a copy already
     /// running at the menu (or disconnected) gets the same request from Steam and joins straight away.
@@ -243,9 +243,15 @@ namespace HunterSystem.Online
             var steam = Arg("-transport") == "steam";
             var connect = Arg("+connect");
             if ((steam || connect != null) && !_steamReady) return; // the status already says Steam is unavailable
-            // Automated runs (-coop) make their hunter without asking: -name NAME (or "Hunter"), and -class ID or the first class.
+            // Automated runs (-coop) make their hunter without asking: -name NAME (or "Hunter"), -species ID or the first species, and -class ID or the first class.
             if (Arg("-coop") != null && _runner.NeedsCreation)
                 _runner.CreateCharacter(HunterNames.Clean(Arg("-name")) ?? (Array.IndexOf(args, "-bot") >= 0 ? $"Bot {Arg("-bot")}" : "Hunter"), default);
+            if (Arg("-coop") != null && _runner.NeedsSpecies)
+            {
+                var wanted = Arg("-species");
+                if (wanted != null && _runner.SpeciesById(wanted) == null) Debug.LogWarning($"-species {wanted}: there is no such species; playing {_runner.Species[0].Id}.");
+                _runner.ChooseSpecies(_runner.SpeciesById(wanted)?.Id ?? _runner.Species[0].Id);
+            }
             if (Arg("-coop") != null && _runner.NeedsClass)
             {
                 var wanted = Arg("-class");
@@ -433,7 +439,7 @@ namespace HunterSystem.Online
             if (_network == null)
             {
                 DrawCharacterAndSaves();
-                if (_runner.NeedsSetup) GUILayout.Label(_runner.NeedsCreation ? "Make your hunter to play." : "Choose your class to play.", _label);
+                if (_runner.NeedsSetup) GUILayout.Label(_runner.NeedsCreation ? "Make your hunter to play." : _runner.NeedsSpecies ? "Choose your species to play." : "Choose your class to play.", _label);
                 GUI.enabled = !_runner.NeedsSetup;
                 var bring = GUILayout.Toggle(_companions > 0, $" Bring {CompanionParty.Size} bot teammates (they learn as they play)");
                 _companions = bring ? CompanionParty.Size : 0;
@@ -509,6 +515,8 @@ namespace HunterSystem.Online
             var character = _runner.Character;
             var className = _runner.ClassById(character.ClassId)?.Name ?? "no class yet";
             var name = character.Name ?? "Unnamed";
+            var species = _runner.SpeciesById(character.SpeciesId)?.Name; // ticket 81
+            if (species != null) className = $"{species.ToLowerInvariant()} {className}";
             GUILayout.Label(character.IsNew ? $"Your hunter: {name}, new {className} (level 1)" : $"Your hunter: {name}, level {character.Level} {className}", _label);
             if (saves.LastProblemOnLoad != null) GUILayout.Label(saves.LastProblemOnLoad, _label);
 

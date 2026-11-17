@@ -177,7 +177,7 @@ namespace HunterSystem.Simulation
     /// round a point; kinds are per cell. Outside the grid is <see cref="GroundKind.Blocked"/>, the edge
     /// of the map. Meant to be baked from the Unity Terrain (ticket 39) so the art and the rules agree.
     /// </summary>
-    public sealed class HeightmapGround : IGround
+    public sealed class HeightmapGround : IGround, IMapBounds
     {
         private readonly float[] _heights;
         private readonly GroundKind[] _kinds;
@@ -216,6 +216,9 @@ namespace HunterSystem.Simulation
         /// <summary>The grid's far corner.</summary>
         public float MaxX => OriginX + Columns * CellSize;
         public float MaxZ => OriginZ + Rows * CellSize;
+
+        /// <summary>Inside the grid (ticket 90: where even a flyer stops).</summary>
+        public bool IsOnMap(Vec3 p) => p.X >= OriginX && p.Z >= OriginZ && p.X <= MaxX && p.Z <= MaxZ;
 
         /// <summary>Blended between the four samples round <paramref name="p"/>; outside the grid, the height at its nearest edge.</summary>
         public float HeightAt(Vec3 p)

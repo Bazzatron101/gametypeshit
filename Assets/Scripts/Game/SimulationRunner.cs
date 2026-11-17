@@ -57,8 +57,12 @@ namespace HunterSystem.Game
         public ClientSession Client { get; private set; }
         public bool IsOnline => Host != null || Client != null;
 
-        /// <summary>The player on this machine: the host's own, the client's once welcomed, or null offline.</summary>
-        public PlayerId? LocalPlayerId => Host != null ? Host.LocalPlayerId : Client?.PlayerId;
+        /// <summary>
+        /// The player on this machine: the host's own, the client's once welcomed, or offline the scene's local
+        /// player. (It used to be null offline, which left the gear panel, F2's mount and the mount messages with
+        /// nobody to act for in the offline scenes: the test patch, the continent, the arena.)
+        /// </summary>
+        public PlayerId? LocalPlayerId => Host != null ? Host.LocalPlayerId : Client != null ? Client.PlayerId : _offlineLocalId;
 
         /// <summary>The player's save on this PC (and its optional Steam Cloud backup).</summary>
         public CharacterSaves Saves { get; private set; }
@@ -87,8 +91,48 @@ namespace HunterSystem.Game
         /// </summary>
         public bool NeedsCreation => !IsOnline && Character != null && Character.Name == null;
 
-        /// <summary>True until the local character is made: named, dressed and given a class. Play and going online wait for it.</summary>
-        public bool NeedsSetup => NeedsCreation || NeedsClass;
+        /// <summary>The species a hunter can be (ticket 81), in the order the picker shows them.</summary>
+        public IReadOnlyList<SpeciesDefinition> Species => _config.Species;
+
+        /// <summary>The species with this id, or null.</summary>
+        public SpeciesDefinition SpeciesById(string id) => _config.SpeciesById(id);
+
+        /// <summary>
+        /// True while the local hunter has no species (ticket 81): a new hunter, or one saved before species, and
+        /// the game has species. Asked after the name and looks and before the class; play and going online wait for it.
+        /// </summary>
+        public bool NeedsSpecies => !IsOnline && _config.Species.Count > 0 && Character != null && _config.SpeciesById(Character.SpeciesId) == null;
+
+        /// <summary>True until the local character is made: named, dressed, given a species and a class. Play and going online wait for it.</summary>
+        public bool NeedsSetup => NeedsCreation || NeedsSpecies || NeedsClass;
+
+        /// <summary>
+        /// Makes the local hunter a <paramref name="speciesId"/>, permanently, and saves it at once (ticket 81). A hunter
+        /// from before species keeps its class and progress. Only at the menu or offline.
+        /// </summary>
+        public void ChooseSpecies(string speciesId)
+        {
+            if (IsOnline) throw new InvalidOperationException("Pick a species at the menu, before going online.");
+            if (!NeedsSpecies) throw new InvalidOperationException("This hunter already has a species; the choice is permanent.");
+            var chosen = _config.SpeciesById(speciesId) ?? throw new ArgumentException($"There is no species '{speciesId}'.", nameof(speciesId));
+            CharacterRecord record;
+            if (_offlineLocalId is { } me && _offlineWorld.HasPlayer(me))
+            {
+                var current = _offlineWorld.CaptureCharacter(me);
+                current.IsNew = Character.IsNew;
+                current.SpeciesId = null; // one the game no longer has
+                record = current.WithSpecies(chosen);
+                _offlineWorld.ReplaceCharacter(me, record);
+            }
+            else
+            {
+                var copy = CharacterCodec.Decode(CharacterCodec.Encode(Character)); // the loaded record is left alone
+                copy.SpeciesId = null;
+                record = copy.WithSpecies(chosen);
+            }
+            Character = record;
+            Autosave.SaveNow(record);
+        }
 
         /// <summary>The player on this machine: the online one, or the scene's local player offline; null if none.</summary>
         public PlayerId? MyPlayerId => SavedPlayerId;
@@ -170,8 +214,10 @@ namespace HunterSystem.Game
             if (GetComponent<CharacterCreator>() == null) gameObject.AddComponent<CharacterCreator>(); // and make a hunter, and restyle in the hub (ticket 28)
             if (GetComponent<Nameplates>() == null) gameObject.AddComponent<Nameplates>();
             if (GetComponent<DamageNumbers>() == null) gameObject.AddComponent<DamageNumbers>(); // a landed hit shows its number (ticket 47)
+            if (GetComponent<SpeciesPicker>() == null) gameObject.AddComponent<SpeciesPicker>(); // a hunter's species, before the class (ticket 81)
             if (GetComponent<SpecialtyPicker>() == null) gameObject.AddComponent<SpecialtyPicker>(); // the pick after a class's trial (ticket 26)
             if (GetComponent<SummonView>() == null) gameObject.AddComponent<SummonView>(); // summons drawn where they stand (ticket 57)
+            if (FindAnyObjectByType<OnlineViews>() == null) gameObject.AddComponent<OnlineViews>(); // offline, it draws the overworld's roaming monsters (ticket 43)
             _config = new SimulationConfig(); // defaults apply when a bare test scene has no content
             if (content != null) content.ApplyTo(_config);
             var overworldScene = FindAnyObjectByType<OverworldScene>(); // an overworld scene's ground and markers (ticket 39)
@@ -415,6 +461,9 @@ namespace HunterSystem.Game
 
         /// <summary>A defeated player asking to come back, sent as a command on the next tick. The gate's death rules decide what happens.</summary>
         public void RequestRespawn(PlayerId id) => BufferFor(id).QueueRespawn();
+
+        /// <summary>Get on or off the mount (ticket 42), as R does: for a button, a gamepad, or a test.</summary>
+        public void RequestToggleMount(PlayerId id) => BufferFor(id).QueueToggleMount();
 
         /// <summary>In the hub: marks the player ready (or not) for the next gate, as a command on the next tick.</summary>
         public void RequestReady(PlayerId id, bool ready) => BufferFor(id).QueueSetReady(ready);

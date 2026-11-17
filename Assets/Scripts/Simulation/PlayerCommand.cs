@@ -14,15 +14,15 @@ namespace HunterSystem.Simulation
 
         /// <summary>This command with a different stat allocation (or none).</summary>
         public PlayerCommand WithAllocateStat(Stat? stat) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount, ChooseSpecialtyId);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, stat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount, ChooseSpecialtyId, Climb);
 
         /// <summary>This command with a piece of gear to wear (or none).</summary>
         public PlayerCommand WithEquipGear(string gearId) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, gearId, UnequipSlot, ChangeLook, ToggleMount, ChooseSpecialtyId);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, gearId, UnequipSlot, ChangeLook, ToggleMount, ChooseSpecialtyId, Climb);
 
         /// <summary>This command with a specialty to take (or none), ticket 26.</summary>
         public PlayerCommand WithChooseSpecialty(string specialtyId) =>
-            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount, specialtyId);
+            new PlayerCommand(MoveX, MoveZ, LightAttack, Dodge, HeavyAttack, AllocateStat, UseSkillSlot, AssignSkill, HeldSkillSlots, Respawn, SetReady, Jump, Sprint, AimYawDegrees, SellItemId, EquipGearId, UnequipSlot, ChangeLook, ToggleMount, specialtyId, Climb);
 
         public readonly float MoveX, MoveZ;
         public readonly bool LightAttack;
@@ -77,6 +77,12 @@ namespace HunterSystem.Simulation
         /// </summary>
         public readonly string ChooseSpecialtyId;
 
+        /// <summary>
+        /// While flying (ticket 90): +1 to climb, -1 to dive, 0 to hold the height. Held, like movement. Ignored
+        /// on foot and by riders and runners.
+        /// </summary>
+        public readonly sbyte Climb;
+
         /// <summary>Steps of the aim's yaw in a full turn. The aim is stored in these steps, so it is exactly the same after the wire.</summary>
         public const int AimSteps = 65536;
 
@@ -105,8 +111,9 @@ namespace HunterSystem.Simulation
             Stat? allocateStat = null, int? useSkillSlot = null, SkillAssignment? assignSkill = null, int heldSkillSlots = 0,
             bool respawn = false, bool? setReady = null, bool jump = false, bool sprint = false, float? aimYawDegrees = null, string sellItemId = null,
             string equipGearId = null, GearSlot? unequipSlot = null, CharacterLook? changeLook = null, bool toggleMount = false,
-            string chooseSpecialtyId = null)
+            string chooseSpecialtyId = null, int climb = 0)
         {
+            Climb = (sbyte)Math.Sign(climb);
             ChooseSpecialtyId = chooseSpecialtyId;
             ToggleMount = toggleMount;
             ChangeLook = changeLook;

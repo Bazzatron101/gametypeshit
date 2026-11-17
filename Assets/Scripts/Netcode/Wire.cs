@@ -148,7 +148,7 @@ namespace HunterSystem.Netcode
                 w.Write(command.ChangeLook.Value.Colour);
                 w.Write((byte)command.ChangeLook.Value.Build);
             }
-            w.Write((byte)(command.ToggleMount ? 1 : 0));
+            w.Write((byte)((command.ToggleMount ? 1 : 0) | (command.Climb > 0 ? 2 : 0) | (command.Climb < 0 ? 4 : 0))); // ticket 90: climbing or diving
             w.Write(command.ChooseSpecialtyId != null);
             if (command.ChooseSpecialtyId != null) w.Write(command.ChooseSpecialtyId);
         });
@@ -191,7 +191,8 @@ namespace HunterSystem.Netcode
                 setReady: (buttons & SetReadyBit) != 0 ? (buttons & ReadyValueBit) != 0 : (bool?)null,
                 jump: (buttons & JumpBit) != 0, sprint: (buttons & SprintBit) != 0, aimYawDegrees: aim, sellItemId: sell,
                 equipGearId: equip, unequipSlot: unequip >= 0 && unequip < GearDefinition.SlotCount ? (GearSlot)unequip : (GearSlot?)null,
-                changeLook: look, toggleMount: (more & 1) != 0, chooseSpecialtyId: specialty));
+                changeLook: look, toggleMount: (more & 1) != 0, chooseSpecialtyId: specialty,
+                climb: (more & 2) != 0 ? 1 : (more & 4) != 0 ? -1 : 0));
         });
 
         private static float Finite(float value) => float.IsNaN(value) || float.IsInfinity(value) ? 0f : value;

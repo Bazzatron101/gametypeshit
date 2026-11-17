@@ -25,12 +25,13 @@ namespace HunterSystem.Game
             [Min(1), Tooltip("The first level of this rank's band")] public int firstLevel;
             [Tooltip("Regions whose guilds start giving work when the host's world is promoted to this rank")] public string[] opensRegions;
             [Tooltip("A character reaching this rank gets their first mount (ADR 0015: D)")] public bool grantsMount;
+            [Min(0f), Tooltip("Ticket 90: how high above the ground a flying hunter of this rank may go, in metres. At or below the skimming height (3 m) they only skim")] public float flightCeiling;
         }
 
         [SerializeField, Tooltip("The guild's ranks, lowest first: each band starts at its first level (ticket 25). The first rank is every new hunter's.")]
         private Rank[] ranks = ProgressionDefinition.DefaultRanks().Select(r => new Rank
         {
-            id = r.Id, firstLevel = r.FirstLevel, opensRegions = r.OpensRegions.ToArray(), grantsMount = r.GrantsMount,
+            id = r.Id, firstLevel = r.FirstLevel, opensRegions = r.OpensRegions.ToArray(), grantsMount = r.GrantsMount, flightCeiling = r.FlightCeiling,
         }).ToArray();
 
         [Header("Stat effects, per point above the starting value")]
@@ -49,7 +50,7 @@ namespace HunterSystem.Game
             XpToNextLevel = (int[])xpToNextLevel.Clone(),
             Ranks = (ranks ?? new Rank[0]).Select(r => new RankDefinition
             {
-                Id = r.id, FirstLevel = r.firstLevel, OpensRegions = (r.opensRegions ?? new string[0]).ToArray(), GrantsMount = r.grantsMount,
+                Id = r.id, FirstLevel = r.firstLevel, OpensRegions = (r.opensRegions ?? new string[0]).ToArray(), GrantsMount = r.grantsMount, FlightCeiling = r.flightCeiling,
             }).ToArray(),
         };
 

@@ -4,7 +4,7 @@
 
 **Blocked by:** 37: Give the simulation real ground, 38: The overworld as a third kind of place
 
-**Status:** ready-for-human (walk up to a gate in the overworld and meet what leaks from it; bring your teammates)
+**Status:** done
 
 - [x] Each found or hidden gate leaks a configured number of monsters of its own types and rank around its entrance; a cleared gate stops
 - [x] Monsters exist only while their gate's tile is active (ticket 40)
@@ -29,3 +29,29 @@
 - A steered monster's last-found way is not in snapshots, so a world restored mid-chase may take a slightly different line for up to a quarter of a second. Guests never run leaks, and the host never restores, so nothing sees it today.
 - Leaks scale with gate rank once ranks exist (ticket 25), and with story events that reopen cleared gates.
 - The stress-test bots (`BotBrain`) do not use the overworld yet: ticket 44.
+
+**2026-11-17 (developer playtest, recorded by agent):** "It doesn't work for me." The gear panel did not open in the open-world scenes, and the roaming monsters did not show either.
+
+**2026-11-17 (agent):** Found the cause. The open-world scenes (and the arena and greybox) play offline, with no co-op launcher. Offline, `SimulationRunner.LocalPlayerId` was null, so everything that acts for "you" did nothing there:
+- **Gear panel:** I freed the mouse, but the panel drew nothing.
+- **Mount:** F2 gave nobody a mount, so R had nothing to ride, and the mount messages never showed.
+
+The earlier tests passed because they started the scene as a host.
+
+Separately, offline nothing drew monsters spawned during play. `OnlineViews` only ran online and is not in the overworld scenes, so the monsters that leak from gates existed but were invisible.
+
+Fixed:
+- **`LocalPlayerId` offline is the scene's local player.**
+- **`OnlineViews` draws spawned enemies offline in the overworld** (the scene's own placed enemies keep their views). The runner adds it to scenes without one.
+- **The player does spawn on the world's tiles:** in the town, on the map, at ground height.
+
+Evidence: `OverworldOfflineSceneTest` plays the test patch offline, as the developer does:
+- "you" is the scene's player;
+- a hunter gets a mount, gets on in the town, and is drawn riding;
+- every monster leaked from Goblin Warren is drawn.
+
+**837 EditMode and 44 PlayMode tests pass.** Nobody has played it by hand yet.
+
+Also noticed: the editor has Enter Play Mode Options on, with domain reload off. Old script state can carry over between presses of Play, so if something odd persists, turning domain reload back on is worth a try.
+
+**2026-11-17 (developer playtest, recorded by agent):** "It all works now and the speed feels good." The mount, the gear panel and the roaming monsters work in the open-world scenes. Bot teammates on the overworld were not mentioned.

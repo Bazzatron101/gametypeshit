@@ -40,82 +40,136 @@ MonoBehaviour:
     - {x: 230, y: 10.001831, z: 80}
     - {x: 330, y: 10.34496, z: 110}
     - {x: 420, y: 8.826221, z: 250}
+  streets:
+  - halfWidth: 3
+    points:
+    - {x: -388.40887, y: 10.541827, z: -96.89417}
+    - {x: -363.29483, y: 11.008871, z: -90.16488}
+  - halfWidth: 3
+    points:
+    - {x: -411.59113, y: 10.170299, z: -103.10583}
+    - {x: -436.70517, y: 10.170299, z: -109.83513}
+  - halfWidth: 2
+    points:
+    - {x: -376.81778, y: 10.831912, z: -93.78834}
+    - {x: -369.57083, y: 10.170299, z: -120.83426}
+  - halfWidth: 2
+    points:
+    - {x: -376.81778, y: 10.831912, z: -93.78834}
+    - {x: -384.06473, y: 10.170299, z: -66.74242}
+  - halfWidth: 2
+    points:
+    - {x: -423.18222, y: 10.170299, z: -106.21167}
+    - {x: -430.42917, y: 10.170299, z: -79.16575}
+  - halfWidth: 2
+    points:
+    - {x: -423.18222, y: 10.170299, z: -106.21167}
+    - {x: -415.93527, y: 10.170299, z: -133.25758}
   landmarks:
   - label: Lookout Hill
     position: {x: -180, y: 52.837063, z: 160}
+  bridges: []
   buildings:
   - kindId: guild-hall
     position: {x: -400, y: 10.170299, z: -79}
     yaw: 180
     footprint: {x: 12, y: 9}
+    region: greenmarch
   - kindId: inn
-    position: {x: -418.5456, y: 10.170299, z: -93.97417}
-    yaw: 108.00001
+    position: {x: -417.623, y: 10.170299, z: -91.65249}
+    yaw: 115.34561
     footprint: {x: 9, y: 7}
+    region: greenmarch
   - kindId: shop
     position: {x: -383.68274, y: 10.170299, z: -107.59911}
     yaw: -65.02815
     footprint: {x: 6, y: 6}
+    region: greenmarch
   - kindId: well
     position: {x: -400, y: 10.170299, z: -108.4}
     yaw: 0
     footprint: {x: 2.4, y: 2.4}
+    region: greenmarch
+  - kindId: market-hall
+    position: {x: -393.97415, y: 10.170299, z: -118.5456}
+    yaw: -18.000008
+    footprint: {x: 9, y: 7}
+    region: greenmarch
+  - kindId: chapel
+    position: {x: -410.0141, y: 10.170299, z: -117.88764}
+    yaw: 29.24157
+    footprint: {x: 6, y: 11}
+    region: greenmarch
+  - kindId: smithy
+    position: {x: -431.66068, y: 10.170299, z: -99.68363}
+    yaw: 74.99997
+    footprint: {x: 7, y: 6}
+    region: greenmarch
+  - kindId: stables
+    position: {x: -426.26016, y: 10.170299, z: -117.90681}
+    yaw: 74.99996
+    footprint: {x: 11, y: 5}
+    region: greenmarch
+  - kindId: warehouse
+    position: {x: -372.67917, y: 10.170299, z: -80.25608}
+    yaw: -105.00003
+    footprint: {x: 10, y: 8}
+    region: greenmarch
+  - kindId: workshop
+    position: {x: -385.33093, y: 10.170299, z: -85.199036}
+    yaw: 74.99997
+    footprint: {x: 7, y: 5}
+    region: greenmarch
+  - kindId: long-house
+    position: {x: -367.65756, y: 10.170299, z: -104.79245}
+    yaw: -105.00003
+    footprint: {x: 8, y: 5}
+    region: greenmarch
+  - kindId: long-house
+    position: {x: -433.89536, y: 10.170299, z: -89.412}
+    yaw: 74.99997
+    footprint: {x: 8, y: 5}
+    region: greenmarch
+  - kindId: house
+    position: {x: -376.40167, y: 10.170299, z: -118.52347}
+    yaw: 74.99997
+    footprint: {x: 6, y: 5}
+    region: greenmarch
   - kindId: cottage
-    position: {x: -416.1779, y: 10.170299, z: -106.67278}
-    yaw: 67.585655
+    position: {x: -388.97174, y: 10.170299, z: -70.64545}
+    yaw: 74.99997
     footprint: {x: 5, y: 4.5}
+    region: greenmarch
+  - kindId: two-storey-house
+    position: {x: -414.08914, y: 10.170299, z: -76.9675}
+    yaw: 148.5456
+    footprint: {x: 6, y: 6}
+    region: greenmarch
+  - kindId: small-cottage
+    position: {x: -393.30054, y: 10.170299, z: -131.54646}
+    yaw: -11.989688
+    footprint: {x: 4.5, y: 4}
+    region: greenmarch
+  - kindId: small-cottage
+    position: {x: -382.3913, y: 10.170299, z: -127.01845}
+    yaw: -33.093445
+    footprint: {x: 4.5, y: 4}
+    region: greenmarch
   - kindId: cottage
-    position: {x: -409.95337, y: 10.170299, z: -114.39376}
-    yaw: 34.664112
+    position: {x: -402.11456, y: 10.170299, z: -133.4332}
+    yaw: 3.6189885
     footprint: {x: 5, y: 4.5}
-  - kindId: house
-    position: {x: -399.77148, y: 10.170299, z: -117.99855}
-    yaw: -0.72741586
-    footprint: {x: 6, y: 5}
-  - kindId: house
-    position: {x: -418.9802, y: 10.170299, z: -80.79709}
-    yaw: 135.33418
-    footprint: {x: 6, y: 5}
-  - kindId: long-house
-    position: {x: -385.50037, y: 10.170299, z: -73.7367}
-    yaw: -151.09749
-    footprint: {x: 8, y: 5}
-  - kindId: long-house
-    position: {x: -427.7332, y: 10.170299, z: -88.56013}
-    yaw: 112.41604
-    footprint: {x: 8, y: 5}
-  - kindId: long-house
-    position: {x: -429.98203, y: 10.170299, z: -101.038475}
-    yaw: 88.016266
-    footprint: {x: 8, y: 5}
-  - kindId: house
-    position: {x: -379.03314, y: 10.170299, z: -82.988525}
-    yaw: -129.05415
-    footprint: {x: 6, y: 5}
-  - kindId: house
-    position: {x: -424.67017, y: 10.170299, z: -110.9719}
-    yaw: 66.0232
-    footprint: {x: 6, y: 5}
-  - kindId: cottage
-    position: {x: -382.72784, y: 10.170299, z: -118.75961}
-    yaw: -42.636063
-    footprint: {x: 5, y: 4.5}
-  - kindId: long-house
-    position: {x: -420.23965, y: 10.170299, z: -122.14398}
-    yaw: 42.42741
-    footprint: {x: 8, y: 5}
-  - kindId: long-house
-    position: {x: -370.6955, y: 10.170299, z: -106.422295}
-    yaw: -77.63865
-    footprint: {x: 8, y: 5}
-  - kindId: house
-    position: {x: -390.32825, y: 10.170299, z: -125.20828}
-    yaw: -20.990473
-    footprint: {x: 6, y: 5}
-  - kindId: long-house
-    position: {x: -409.39798, y: 10.170299, z: -128.48996}
-    yaw: 18.25614
-    footprint: {x: 8, y: 5}
+    region: greenmarch
+  - kindId: two-storey-house
+    position: {x: -409.26837, y: 10.170299, z: -65.21355}
+    yaw: 165.08089
+    footprint: {x: 6, y: 6}
+    region: greenmarch
+  - kindId: two-storey-house
+    position: {x: -398.49847, y: 10.170299, z: -64.03133}
+    yaw: -177.60954
+    footprint: {x: 6, y: 6}
+    region: greenmarch
   startingRegions:
   - greenmarch
   entranceRadius: 3

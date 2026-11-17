@@ -200,7 +200,8 @@ namespace HunterSystem.Simulation
                 if (player.IsCharging) CounterWithCharge(player, boss, tick); // a perfect dodge
                 return;
             }
-            var amount = player.TakeDamage(PartyScalingDefinition.Scale(attack.Damage, boss.DamagePercent), out var defeated);
+            NoteFight(player, tick);
+            var amount = player.TakeDamage(WithThickHide(player, boss.Position, PartyScalingDefinition.Scale(attack.Damage, boss.DamagePercent)), out var defeated);
             if (amount == 0) return;
             Dismount(player, tick); // a hit knocks a rider off (ticket 42)
             _events.Add(new PlayerDamaged(tick, boss.Id, player.Id, amount, player.Health));

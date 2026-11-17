@@ -26,6 +26,9 @@ namespace HunterSystem.Simulation
         /// <summary>The class chosen when the character was made, or null (a character from before classes).</summary>
         public string ClassId;
 
+        /// <summary>The species chosen when the hunter was made (ticket 81), or null (a hunter from before species). Permanent.</summary>
+        public string SpeciesId;
+
         /// <summary>The specialties picked (ticket 26), one per tier, lowest first. Permanent.</summary>
         public List<string> Specialties = new List<string>();
 
@@ -91,8 +94,8 @@ namespace HunterSystem.Simulation
     {
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("HSCH");
 
-        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates. Version 4: and gear, and modifiers that count worn gear. Version 5: and the name and look. Version 6: and the mount. Version 7: and the specialty.</summary>
-        public const byte Version = 7;
+        /// <summary>Version 1: level, XP, unspent points, stats, known skills, bar, modifiers. Version 2: and the class. Version 3: and gold and duplicates. Version 4: and gear, and modifiers that count worn gear. Version 5: and the name and look. Version 6: and the mount. Version 7: and the specialty. Version 8: and the species.</summary>
+        public const byte Version = 8;
 
         public static byte[] Encode(CharacterRecord c) => Encode(c, Version);
 
@@ -113,6 +116,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>Writes a character as the game before specialties did (for tests of loading old saves).</summary>
         public static byte[] EncodeVersion6ForTests(CharacterRecord c) => Encode(c, 6);
+
+        /// <summary>Writes a character as the game before species did (for tests of loading old saves).</summary>
+        public static byte[] EncodeVersion7ForTests(CharacterRecord c) => Encode(c, 7);
 
         private static byte[] Encode(CharacterRecord c, byte version)
         {
@@ -163,6 +169,7 @@ namespace HunterSystem.Simulation
                 w.Write(c.PassedTrials.Count);
                 foreach (var rank in c.PassedTrials) w.Write(rank ?? "");
             }
+            if (version >= 8) SimulationWorld.WriteNullable(w, c.SpeciesId);
             w.Flush();
             return stream.ToArray();
         }
@@ -219,6 +226,7 @@ namespace HunterSystem.Simulation
                     for (int i = 0, n = Count(r, bytes); i < n; i++) c.Specialties.Add(r.ReadString());
                     for (int i = 0, n = Count(r, bytes); i < n; i++) c.PassedTrials.Add(r.ReadString());
                 }
+                if (version >= 8) c.SpeciesId = SimulationWorld.ReadNullable(r);
                 return c;
             }
             catch (Exception e) when (e is EndOfStreamException || e is IOException || e is FormatException)

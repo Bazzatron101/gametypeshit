@@ -246,6 +246,8 @@ namespace HunterSystem.Simulation
             w.Write(p.Sprinting);
             w.Write(p.SprintResumesAtTick);
             WriteNullable(w, p.Class?.Id);
+            WriteNullable(w, p.Species?.Id);
+            w.Write(p.LastFightTick);
             w.Write(p.Gold);
             w.Write(p.Duplicates.Count);
             foreach (var d in p.Duplicates) w.Write(d.Id);
@@ -257,6 +259,7 @@ namespace HunterSystem.Simulation
             w.Write((byte)p.Look.Build);
             w.Write(p.HasMount);
             w.Write(p.Mounted);
+            w.Write(p.FlightHeight);
             w.Write(p.Specialties.Count);
             foreach (var s in p.Specialties) w.Write(s.Id);
             w.Write(p.PassedTrials.Count);
@@ -536,6 +539,10 @@ namespace HunterSystem.Simulation
             var classId = ReadNullable(r);
             if (classId != null)
                 p.Class = _config.ClassById(classId) ?? throw new FormatException($"The snapshot names class '{classId}', which this world does not have.");
+            var speciesId = ReadNullable(r);
+            p.Species = speciesId == null ? null
+                : _config.SpeciesById(speciesId) ?? throw new FormatException($"The snapshot names species '{speciesId}', which this world does not have.");
+            p.LastFightTick = r.ReadInt32();
             p.Gold = r.ReadInt32();
             for (int i = 0, n = ReadCount(r); i < n; i++)
             {
@@ -555,6 +562,7 @@ namespace HunterSystem.Simulation
             p.Look = new CharacterLook(r.ReadByte(), (Build)r.ReadByte());
             p.HasMount = r.ReadBoolean();
             p.Mounted = r.ReadBoolean();
+            p.FlightHeight = r.ReadSingle();
             for (int i = 0, n = ReadCount(r); i < n; i++)
             {
                 var specialtyId = r.ReadString();

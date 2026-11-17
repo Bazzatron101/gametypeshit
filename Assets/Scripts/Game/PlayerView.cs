@@ -32,12 +32,14 @@ namespace HunterSystem.Game
         private Vector3 _bodyScale;
         private Vector3 _bodyPosition;
         private GameObject _mount;
+        private GameObject _speciesParts;
+        private string _shownSpecies;
         private System.Collections.Generic.Dictionary<string, GameObject> _gearLooks;
         private readonly string[] _shownGear = new string[GearDefinition.SlotCount]; // by id: a new world (a rejoin) has new definitions of the same pieces
         private readonly GameObject[] _gearObjects = new GameObject[GearDefinition.SlotCount];
 
         /// <summary>How much higher a rider sits (ticket 42).</summary>
-        private const float SaddleHeight = 0.9f;
+        private const float BicycleSeatHeight = 0.45f;
 
         public PlayerId PlayerId => new PlayerId(playerId);
         public bool IsLocal => isLocal;
@@ -96,27 +98,58 @@ namespace HunterSystem.Game
             transform.rotation = Quaternion.LookRotation(new Vector3(state.Facing.X, 0f, state.Facing.Z), Vector3.up);
             if (swingMarker != null) swingMarker.SetActive(!state.IsDefeated && Time.time < _swingUntil);
             if (body != null) PoseBody(state);
+            if (body != null) ShowSpecies(state);
             if (body != null) ShowGear(state);
-            ShowMount(state.IsMounted && !state.IsDefeated);
+            ShowMount(state.IsMounted && !state.IsDefeated, state.Travel);
         }
 
-        /// <summary>A greybox mount under a rider (ticket 42): a long brown block, until there is a model.</summary>
-        private void ShowMount(bool riding)
+        private TravelStyle? _mountStyle;
+
+        /// <summary>
+        /// How a mounted hunter is drawn (tickets 42 and 90), in greybox until there are models: a bicycle under a
+        /// slow species; a fast one leans into a run on its own legs; a flyer lies level in the air.
+        /// </summary>
+        private void ShowMount(bool riding, TravelStyle style)
         {
-            if (riding && _mount == null && body != null)
+            if (body == null) return;
+            if (_mount != null && _mountStyle != style)
             {
-                _mount = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                _mount.name = "Mount";
-                Destroy(_mount.GetComponent<Collider>());
-                _mount.transform.SetParent(transform, false);
-                _mount.transform.localPosition = new Vector3(0f, 0.55f, 0f);
-                _mount.transform.localScale = new Vector3(0.9f, 1.1f, 2.2f);
-                var renderer = _mount.GetComponent<Renderer>();
-                renderer.sharedMaterial = body.sharedMaterial;
-                renderer.material.color = new Color(0.45f, 0.3f, 0.18f);
+                Destroy(_mount);
+                _mount = null;
+            }
+            if (riding && _mount == null && style == TravelStyle.Bicycle)
+            {
+                _mount = TravelLooks.Bicycle(transform, body.sharedMaterial);
+                _mountStyle = style;
             }
             if (_mount != null) _mount.SetActive(riding);
-            if (riding && body != null) body.transform.localPosition += Vector3.up * SaddleHeight;
+            if (!riding) return;
+            var t = body.transform;
+            switch (style)
+            {
+                case TravelStyle.Bicycle:
+                    t.localPosition += Vector3.up * BicycleSeatHeight;
+                    t.localRotation = Quaternion.Euler(15f, 0f, 0f) * t.localRotation; // leaning to the handlebars
+                    break;
+                case TravelStyle.Run:
+                    t.localRotation = Quaternion.Euler(25f, 0f, 0f) * t.localRotation; // bounding or galloping
+                    t.localPosition += Vector3.up * (0.15f * Mathf.Abs(Mathf.Sin(Time.time * 9f))); // a bound in each stride
+                    break;
+                case TravelStyle.Fly:
+                    t.localRotation = Quaternion.Euler(70f, 0f, 0f) * t.localRotation; // body level, wings out
+                    t.localPosition += Vector3.up * (0.1f * Mathf.Sin(Time.time * 3f)); // a gentle bob
+                    break;
+            }
+        }
+
+        /// <summary>The species' ears, snout or beak and tail (ticket 81), rebuilt only when the species changes.</summary>
+        private void ShowSpecies(PlayerState state)
+        {
+            var id = state.Species?.Id;
+            if (id == _shownSpecies) return;
+            if (_speciesParts != null) Destroy(_speciesParts);
+            _shownSpecies = id;
+            _speciesParts = SpeciesLooks.Build(id, body);
         }
 
         /// <summary>Draws each worn piece on the body, swapping a look only when what is worn changes (ticket 34).</summary>
@@ -139,7 +172,7 @@ namespace HunterSystem.Game
         private void PoseBody(PlayerState state)
         {
             var t = body.transform;
-            var build = CharacterLooks.Scale(state.Look.Build); // ticket 28: slim, average or broad
+            var build = Vector3.Scale(CharacterLooks.Scale(state.Look.Build), SpeciesLooks.Proportions(state.Species?.Id)); // ticket 28: slim, average or broad; ticket 81: the species' shape
             var bodyScale = Vector3.Scale(_bodyScale, build);
             var bodyPosition = new Vector3(_bodyPosition.x, _bodyPosition.y * build.y, _bodyPosition.z);
             if (state.IsDefeated)

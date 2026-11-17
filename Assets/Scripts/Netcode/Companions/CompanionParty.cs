@@ -73,6 +73,27 @@ namespace HunterSystem.Netcode
             return new CharacterLook(1 + index % (CharacterLook.ColourCount - 1), build); // colour 0 is left for the player's default
         }
 
+        /// <summary>
+        /// A teammate's species (ticket 81): one that suits its class. The cleric heals, so a koala; the other
+        /// casters think fast, so cockatoos; the tank a wombat, the archer a platypus, the rogue a sugar glider.
+        /// Falls back to the game's first species when the suited one is not in the game; null with none.
+        /// </summary>
+        public static string SpeciesFor(string classId, SimulationConfig config)
+        {
+            string wanted;
+            switch (classId)
+            {
+                case "cleric": wanted = "koala"; break;
+                case "warrior": wanted = "wombat"; break;
+                case "archer": wanted = "platypus"; break;
+                case "rogue": wanted = "sugar-glider"; break;
+                default: wanted = CompanionRoles.ForClass(classId) == CompanionRole.Caster ? "cockatoo" : "tasmanian-devil"; break;
+            }
+            var species = config?.Species;
+            if (species == null || species.Count == 0) return null;
+            return config.SpeciesById(wanted)?.Id ?? species[0].Id;
+        }
+
         /// <summary>Five new rookie teammates for a player of <paramref name="playerClassId"/>, at level 1.</summary>
         public static List<CompanionRecord> NewParty(string playerClassId, SimulationConfig config)
         {
@@ -87,7 +108,7 @@ namespace HunterSystem.Netcode
                 party.Add(new CompanionRecord
                 {
                     Name = name,
-                    Character = new CharacterRecord { IsNew = true, ClassId = classId, Name = name, Look = LookFor(party.Count, classId) },
+                    Character = new CharacterRecord { IsNew = true, ClassId = classId, SpeciesId = SpeciesFor(classId, config), Name = name, Look = LookFor(party.Count, classId) },
                 });
             }
             return party;
@@ -121,6 +142,7 @@ namespace HunterSystem.Netcode
                 Name = character.Name,
                 Look = character.Look,
                 ClassId = character.ClassId,
+                SpeciesId = character.SpeciesId,
                 Level = level,
                 Xp = 0,
                 UnspentStatPoints = Math.Max(0, character.UnspentStatPoints) + progression.FreePointsPerLevel * gained,

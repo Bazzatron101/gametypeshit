@@ -21,28 +21,34 @@ MonoBehaviour:
     firstLevel: 1
     opensRegions: []
     grantsMount: 0
+    flightCeiling: 0
   - id: D
     firstLevel: 16
     opensRegions:
     - fenward
     grantsMount: 1
+    flightCeiling: 0
   - id: C
     firstLevel: 36
     opensRegions: []
     grantsMount: 0
+    flightCeiling: 10
   - id: B
     firstLevel: 56
     opensRegions:
     - ashen
     grantsMount: 0
+    flightCeiling: 20
   - id: A
     firstLevel: 76
     opensRegions: []
     grantsMount: 0
+    flightCeiling: 35
   - id: S
     firstLevel: 96
     opensRegions: []
     grantsMount: 0
+    flightCeiling: 60
   damagePerStrength: 0.05
   damagePerAgility: 0.05
   damagePerSense: 0.05

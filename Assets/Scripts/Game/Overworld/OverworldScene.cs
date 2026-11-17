@@ -78,6 +78,7 @@ namespace HunterSystem.Game
         private void Awake()
         {
             if (!Application.isPlaying) return;
+            if (GetComponent<MountHud>() == null) gameObject.AddComponent<MountHud>(); // says why R does nothing (ticket 42)
             foreach (var terrain in FindObjectsByType<Terrain>(FindObjectsSortMode.None)) terrain.gameObject.SetActive(false);
             if (overworld == null || !overworld.IsBaked) return;
             _ground ??= overworld.CreateTiledGround();
@@ -87,12 +88,65 @@ namespace HunterSystem.Game
             _environmentView = environment != null ? new EnvironmentView(environment, _ground.TileSize) : null;
             Shown = BuildFarGround();
             EnvironmentView.PlaceBuildings(environment, overworld, Shown.transform);
+            BuildBridges(Shown.transform);
             _streamer = NewStreamer();
 
             // The first tiles load before anyone moves: around the scene's players and the town.
             var starts = FindObjectsByType<PlayerView>(FindObjectsSortMode.None).Select(v => ToVec3(v.transform.position)).ToList();
             if (overworld.HasTown) starts.Add(ToVec3(overworld.TownCentre));
             _streamer.LoadNow(starts);
+        }
+
+        /// <summary>
+        /// Draws each bridge (developer playtest, 2026-11-17): a deck along its points, a rail each side, and piers
+        /// down into the water every few segments. Greybox shapes until there is a model; the water shows under it.
+        /// </summary>
+        private void BuildBridges(Transform parent)
+        {
+            if (overworld.Bridges.Count == 0) return;
+            var root = new GameObject("Bridges").transform;
+            root.SetParent(parent, false);
+            var deckMaterial = SurfaceMaterial(TerrainSurface.Road);
+            var stoneMaterial = SurfaceMaterial(TerrainSurface.Rock);
+            foreach (var bridge in overworld.Bridges)
+            {
+                if (bridge == null || bridge.points == null || bridge.points.Count < 2) continue;
+                var holder = new GameObject("Bridge: " + bridge.label).transform;
+                holder.SetParent(root, false);
+                for (var i = 0; i + 1 < bridge.points.Count; i++)
+                {
+                    var a = bridge.points[i];
+                    var b = bridge.points[i + 1];
+                    var along = b - a;
+                    if (along.sqrMagnitude < 1e-4f) continue;
+                    var rotation = Quaternion.LookRotation(along.normalized, Vector3.up);
+                    var middle = (a + b) / 2f;
+                    var length = along.magnitude + 0.05f;
+                    var width = bridge.halfWidth * 2f;
+                    Block(holder, "Deck", middle + rotation * new Vector3(0f, -0.25f, 0f), rotation, new Vector3(width, 0.5f, length), deckMaterial);
+                    foreach (var side in new[] { -1f, 1f })
+                        Block(holder, "Rail", middle + rotation * new Vector3(side * (bridge.halfWidth - 0.15f), 0.5f, 0f), rotation, new Vector3(0.3f, 1f, length), stoneMaterial);
+                    if (i % 3 == 1)
+                        Block(holder, "Pier", a + new Vector3(0f, -6.25f, 0f), Quaternion.Euler(0f, rotation.eulerAngles.y, 0f), new Vector3(width * 0.8f, 12f, 1.2f), stoneMaterial);
+                }
+            }
+        }
+
+        private Material SurfaceMaterial(TerrainSurface surface)
+        {
+            var index = (int)surface;
+            return surfaceMaterials != null && index < surfaceMaterials.Length ? surfaceMaterials[index] : null;
+        }
+
+        private static void Block(Transform parent, string name, Vector3 position, Quaternion rotation, Vector3 scale, Material material)
+        {
+            var block = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            block.name = name;
+            Destroy(block.GetComponent<Collider>());
+            block.transform.SetParent(parent, false);
+            block.transform.SetPositionAndRotation(position, rotation);
+            block.transform.localScale = scale;
+            if (material != null) block.GetComponent<Renderer>().sharedMaterial = material;
         }
 
         private TileStreamer NewStreamer()

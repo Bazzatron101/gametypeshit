@@ -4,7 +4,7 @@
 
 **Blocked by:** 38: The overworld as a third kind of place, 40: Load the overworld in tiles around players
 
-**Status:** ready-for-human (ride the test patch: press F2 for a mount, then R)
+**Status:** done
 
 - [x] Mount and dismount commands in the simulation, predicted like other movement (ADR 0004)
 - [x] Mounted speed is a configuration value (16 m/s to start), beside walking and sprint
@@ -36,3 +36,58 @@
 - No gamepad button for the mount yet; R on the keyboard only.
 - Bot teammates do not ride yet (ticket 43: they must keep up on a mount).
 - A real mount model and animations.
+- Travel that suits the species (fly, run or bicycle): ticket 90.
+
+**2026-11-17 (developer playtest, recorded by agent):** "I'm not able to get onto the mount for the open world play tests."
+
+**2026-11-17 (agent):** The mount itself was working. The game gave no sign of what was happening:
+- F2 gave a mount silently.
+- R does nothing inside the guild town (40 m round it on the test patch, 60 m on the continent), and a hunter starts in the town.
+
+Added:
+- **`MountHud`,** added by `OverworldScene`, shows a message for a few seconds:
+  - when the character gets a mount: "Leave the town, then press R to ride";
+  - when R does nothing, why: no mount yet (press F2), still in the town and how many metres to its edge, mid-jump or mid-attack, or inside a gate.
+- **`SimulationWorld.WhyCannotMount`** (`MountBlock`) and **`MetresToTownEdge`** in the simulation, with the test `MountTest.TheGameCanSayWhyRDoesNothing`.
+
+Not verified: nobody has seen the messages on screen yet. (The tests ran later; see below.)
+
+**2026-11-17 (developer, recorded by agent):** "Remove the not being able to ride in town for now and fix the riding as it's not working."
+
+**2026-11-17 (agent):**
+- **Riding in the town is allowed for now:** `CanRideAt` is just "in the overworld". Riding into the town no longer dismounts, and the town message is gone.
+- **Riding works in the simulation and the input path:** R reaches the simulation, and from R to the simulation every step checks out. Nothing else was found broken, so the town rule (a hunter starts inside it) looks like the whole cause.
+- **`SimulationRunner.RequestToggleMount`** (for a gamepad button or UI later) lets tests press "mount" the way R does.
+- **New tests:**
+  - `MountTest.RidingInTheTownIsAllowedForNow` (replaces `NobodyRidesInTheTown`).
+  - `MountTest.ARiderGetsOnAndRidesOnTheRealTestPatchFromTheTown`: rides on the real baked ground from the town, four ways, and goes at least as far as a walker.
+  - `OverworldPatchSceneTest.AHunterGetsOnAMountInTheTownAndIsDrawnRiding`: in the real scene, gets on in the town, is drawn on the mount, and R again gets off.
+- **No mount model yet:** a rider is drawn on a brown greybox block made in code (`PlayerView.ShowMount`).
+
+Evidence: **837 EditMode and 41 PlayMode tests pass**, including the three new ones. Not verified: nobody has ridden it in the editor yet.
+
+**2026-11-17 (developer playtest, recorded by agent):** "It doesn't work for me." The gear panel did not open in the open-world scenes, and the roaming monsters did not show either.
+
+**2026-11-17 (agent):** Found the cause. The open-world scenes (and the arena and greybox) play offline, with no co-op launcher. Offline, `SimulationRunner.LocalPlayerId` was null, so everything that acts for "you" did nothing there:
+- **Gear panel:** I freed the mouse, but the panel drew nothing.
+- **Mount:** F2 gave nobody a mount, so R had nothing to ride, and the mount messages never showed.
+
+The earlier tests passed because they started the scene as a host.
+
+Separately, offline nothing drew monsters spawned during play. `OnlineViews` only ran online and is not in the overworld scenes, so the monsters that leak from gates existed but were invisible.
+
+Fixed:
+- **`LocalPlayerId` offline is the scene's local player.**
+- **`OnlineViews` draws spawned enemies offline in the overworld** (the scene's own placed enemies keep their views). The runner adds it to scenes without one.
+- **The player does spawn on the world's tiles:** in the town, on the map, at ground height.
+
+Evidence: `OverworldOfflineSceneTest` plays the test patch offline, as the developer does:
+- "you" is the scene's player;
+- a hunter gets a mount, gets on in the town, and is drawn riding;
+- every monster leaked from Goblin Warren is drawn.
+
+**837 EditMode and 44 PlayMode tests pass.** Nobody has played it by hand yet.
+
+Also noticed: the editor has Enter Play Mode Options on, with domain reload off. Old script state can carry over between presses of Play, so if something odd persists, turning domain reload back on is worth a try.
+
+**2026-11-17 (developer playtest, recorded by agent):** "It all works now and the speed feels good." The mount, the gear panel and the roaming monsters work in the open-world scenes.

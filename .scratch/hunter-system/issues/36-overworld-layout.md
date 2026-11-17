@@ -4,7 +4,7 @@
 
 **Blocked by:** None
 
-**Status:** ready-for-human (open questions below)
+**Status:** done
 
 - [x] Scale settled: ~10.5 × 7.5 km on the drawn map, ~40 minutes walking (2026-11-15; first aimed for an hour, ~12 × 7 km); grow if playtests say it is too close
 - [x] Region list, order and what opens each one settled (first sketch, 2026-11-14; region sketch 2026-11-15)
@@ -137,7 +137,7 @@ Either size is far more ground than can be built by hand at ~250 hours a year (s
 
 **2026-11-15 (developer, recorded by agent):** A leak is **not visible.** No scorched ground or darker sky: you find out when its monsters show up.
 - The gate itself can still be seen; only how far its leak reaches is hidden.
-- The board's intel (ticket 20) is the way to learn about a leak before meeting it, if intel covers leaks at all (to decide with ticket 20).
+- The board's intel (ticket 20) is the way to learn about a leak before meeting it. Settled 2026-11-17: intel includes the leak radius (see below).
 
 **2026-11-15 (developer, recorded by agent):** Clearing a gate **stops its leak for a while.**
 - After a clear, the gate's leaked monsters stop coming and the ground around it (the road, the town's entrance) is safe; then the leak starts again.
@@ -171,7 +171,7 @@ Either size is far more ground than can be built by hand at ~250 hours a year (s
 - Every other gate (side gates, farming gates) is hidden until walked to or learned from a cart.
 - In a gate's data this is one flag ("known to the guild"), set on story gates and on the first gate of each region.
 
-**2026-11-15 (developer, recorded by agent):** The cart reward is **random**, rolled for each player who protected it: gold, or a hidden gate's location.
+**2026-11-15 (developer, recorded by agent):** The cart reward is **random**, rolled for each player who protected it: gold, or a hidden gate's location. (Refined 2026-11-17: the information is an area, not an exact spot. See below.)
 - The chance of each is a configuration value.
 - If no hidden gate is left to reveal (suggested: in the cart's region), the roll gives gold.
 - A revealed location is world progress, so one player's roll reveals the gate for the whole party.
@@ -366,3 +366,45 @@ Still to settle: which crossed swords are which gate (the region table predates 
 - The Riverbed gate sits in the Brokenstone hills by Quarry brook, not the Ashen steppe as the region table had it: site 18 is there.
 - Heron isle (21) is the islet off the far west coast, reached by a narrow shallows causeway from the cave (now land in the elevation map).
 - The demon king's gate under Saltreach stays unmarked. Story-spawned sites are still to choose.
+
+**2026-11-17 (agent):** Closed. Every box is ticked and all five open questions are settled (see Comments). The terrain, streaming and mounts are built in tickets 39-45.
+
+**2026-11-17 (developer, recorded by agent):** **What the cart reward pays.** The developer: "for the gold reward it wont be a lot of gold but the information ill give the payer a area if they have no intel on the gate or itll reduce the area of the gate if they have some information in it already".
+- **Gold:** a small amount. A cart is a nice bonus, not a way to farm money. The amount is a configuration value.
+- **Information is an area, not an exact spot.** It does not mark the gate as found.
+  - **No intel on the gate yet:** the reward shows an area on the map that the gate is somewhere inside.
+  - **Some intel already:** the reward shrinks that area around the gate.
+  - The gate is still found only by walking to it. This replaces "reveals the gate" in the earlier comments: a cart reward narrows the search instead.
+- The intel belongs to the host's world, like found gates, so one player's reward narrows the area for the whole party.
+- Still to settle:
+  - ~~How big the first area is~~ Settled below: the leak radius. How much each reward shrinks it is still open.
+  - ~~Whether enough rewards can shrink it to the exact spot~~ Settled below: yes.
+  - ~~Which gate a reward points at~~ Settled below: a gate that already exists in the world.
+
+**2026-11-17 (developer, recorded by agent):** **Gate intel includes the leak radius** (developer: "lead radius", read as leak radius). The board's intel on a gate says how far its leak reaches, so a party can learn which roads and town entrances are at risk before meeting the monsters. The leak itself stays invisible in the world. Recorded on ticket 20 too.
+
+**2026-11-17 (developer, recorded by agent):** **How cart intel narrows down a gate.** The developer: "the first intel will show the leak radius and it will shrink enough to show the exact gate point. it will show a existing gate so the play will have to go to the guild to collect a bounty for the gate".
+- **First reward on a gate:** the area shown is the gate's leak radius, centred on the gate.
+  - Why (developer): "the leak boarder is a easy way for us to give a start for the gates location and we will shrink it after that". Every gate already has a leak border, so it is a ready-made first area that needs no extra data.
+- **Each later reward** shrinks the area, and enough of them show the gate's exact point.
+- **The gate is one that already exists** in the world (a hidden gate, not one made up for the reward).
+- **The bounty:** a gate learned this way has a bounty at the guild, and the player goes to the guild to collect it.
+- Still to settle:
+  - ~~How many rewards it takes to pinpoint a gate~~ Settled below: five.
+  - ~~Whether the bounty is taken before or claimed after~~ Settled below: claimed after.
+  - ~~What the bounty pays~~ Settled below: gold and development of the town. Whether the 25 % beyond-licence cut applies to it is still open.
+
+**2026-11-17 (developer, recorded by agent):** The bounty is **claimed after the clear.** Nothing is taken at the guild first: clear the gate, then go back to the guild to collect the bounty.
+
+**2026-11-17 (developer, recorded by agent):** **Five cart protections reveal a gate.** The developer: "5 protection quests will lead to the gate to be revealed".
+- The first shows the leak border; each of the next ones shrinks the area; the fifth reveals the gate's exact point.
+- Five is a configuration value, so it can be tuned after playtests.
+- ~~Whether all five protections count, or only information rolls~~ Settled below: all five count.
+
+**2026-11-17 (developer, recorded by agent):** **Every protection counts** toward the five, whatever the random roll gave. A gate is revealed after five protected carts.
+- Still to settle: since every protection moves the search on, what the gold-or-information roll still decides (for example, whether an information roll moves the search further than a gold one).
+
+**2026-11-17 (developer, recorded by agent):** **The bounty pays gold and develops the town.** The developer: "the bounty will pay with gold and development of the location here the bounty was claimed/made".
+- The player gets gold.
+- The town whose guild posted the bounty, and where it is claimed, develops.
+- **New:** towns can develop (ticket 91, needs triage). Settlements today (tickets 82-89) are generated with no growth. Still to settle: what development changes in a town (more buildings, more trades, better shops, a bigger reach), whether it belongs to the host's world like other progress, and whether bounties are the only thing that develops a town.

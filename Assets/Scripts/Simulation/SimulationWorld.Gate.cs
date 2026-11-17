@@ -212,7 +212,7 @@ namespace HunterSystem.Simulation
                 var candidates = nothingForThem ? new List<LootDefinition>() : usable.Where(item => !Owns(player, item)).ToList();
                 var duplicate = candidates.Count == 0;
                 if (duplicate) candidates = usable;
-                var luck = Math.Max(0, PointsAboveStart(player, Stat.Luck));
+                var luck = DropLuck(player);
                 var reward = WeightedPick(candidates, item => _config.RarityOdds.WeightOf(item is GearDefinition g ? g.Rarity : Rarity.Common, rankSteps, luck),
                     Mix((uint)tick, (uint)player.Id.Value, (uint)_gate.Attempt));
                 if (duplicate)

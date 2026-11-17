@@ -27,6 +27,38 @@ namespace HunterSystem.Game
         [SerializeField, Tooltip("How gates' enemies scale with party size")] private PartyScalingAsset partyScaling;
         [SerializeField, Tooltip("Stores that buy duplicates, wherever they stand")] private ShopAsset[] shops = new ShopAsset[0];
         [SerializeField, Tooltip("The odds of each rarity in a gate's clear draw, and how gate rank and Luck tip them (ticket 61)")] private RarityOdds rarityOdds = RarityOdds.Default;
+        [SerializeField, Tooltip("The species a hunter can be (ticket 81), in the order the picker shows them. Saves name them by id: never rename an id")] private Species[] species = Species.Standard();
+
+        /// <summary>One species as authored (ticket 81). See <see cref="SpeciesDefinition"/> and <see cref="SpeciesPerk"/> for what the perk numbers mean.</summary>
+        [System.Serializable]
+        public struct Species
+        {
+            [Tooltip("Stable, unique id. Saves and snapshots refer to it; never rename it once players have hunters")] public string id;
+            public string displayName;
+            [TextArea, Tooltip("Shown in the species picker and on the stat screen")] public string description;
+            [Tooltip("The stat the species is good at")] public Stat stat;
+            [Min(0), Tooltip("Added to the stat at E-rank")] public int bonusAtFirstRank;
+            [Min(0), Tooltip("Added on top at each rank promotion")] public int bonusPerRank;
+            [Tooltip("The species' small perk")] public SpeciesPerk perk;
+            [Tooltip("Ticket 90: how the hunter travels when they mount up. Every style goes at the same speed")] public TravelStyle travel;
+            [Min(0), Tooltip("The perk's size: metres for knockback; Luck points for Lucky; a percentage for the rest")] public float perkAmount;
+            [Min(0), Tooltip("FinishingBlow: the enemy's health %, at or below. RestfulHealing: quiet seconds first. Unused by the rest")] public float perkThreshold;
+
+            public SpeciesDefinition ToDefinition() => new SpeciesDefinition
+            {
+                Id = id, Name = displayName, Description = description, BonusStat = stat, BonusAtFirstRank = bonusAtFirstRank, BonusPerRank = bonusPerRank,
+                Perk = perk, PerkAmount = perkAmount, PerkThreshold = perkThreshold, Travel = travel,
+            };
+
+            public static Species From(SpeciesDefinition d) => new Species
+            {
+                id = d.Id, displayName = d.Name, description = d.Description, stat = d.BonusStat, bonusAtFirstRank = d.BonusAtFirstRank, bonusPerRank = d.BonusPerRank,
+                perk = d.Perk, perkAmount = d.PerkAmount, perkThreshold = d.PerkThreshold, travel = d.Travel,
+            };
+
+            /// <summary>The eight the game ships with (ticket 81).</summary>
+            public static Species[] Standard() => System.Array.ConvertAll(SpeciesDefinition.Standard(), From);
+        }
 
         /// <summary>The rarity odds as authored (ticket 61). See <see cref="RarityOddsDefinition"/>.</summary>
         [System.Serializable]
@@ -65,6 +97,7 @@ namespace HunterSystem.Game
         public IReadOnlyList<TextSceneAsset> Scenes => scenes;
         public PartyScalingAsset PartyScaling => partyScaling;
         public IReadOnlyList<ShopAsset> Shops => shops;
+        public IReadOnlyList<Species> SpeciesList => species ?? new Species[0];
 
         /// <summary>
         /// Fills the content parts of a simulation config. The runner and the content tests both go
@@ -83,6 +116,7 @@ namespace HunterSystem.Game
                 classList.Add(asset.ToDefinition());
             }
             config.Classes = classList.ToArray();
+            config.Species = species != null && species.Length > 0 ? System.Array.ConvertAll(species, s => s.ToDefinition()) : SpeciesDefinition.Standard(); // ticket 81
 
             var list = new List<SkillDefinition>();
             foreach (var asset in skills)

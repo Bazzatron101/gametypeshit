@@ -31,6 +31,8 @@ namespace HunterSystem.Game
             [Min(0f), Tooltip("Sunk this far into the ground, so slopes show no gap")] public float sink = 0.2f;
             [Min(10f), Tooltip("Drawn only on tiles this close to the camera")] public float drawDistance = 600f;
             public bool castShadows = true;
+            [Min(0f), Tooltip("Grows only within this many metres of steep ground (mountain sides): boulders under the peaks. 0 = anywhere.")] public float nearSteepWithin;
+            [Range(5f, 80f), Tooltip("What counts as steep ground for Near Steep Within, in degrees")] public float steepDegrees = 30f;
         }
 
         /// <summary>One kind of building, for town layouts.</summary>
@@ -44,14 +46,47 @@ namespace HunterSystem.Game
             [Tooltip("What it is in a layout: hall, inn, shop, house, well, tower or keep")] public string role = "house";
         }
 
+        /// <summary>
+        /// A region's look for its buildings (ticket 84): each material listed is swapped for another, so the same
+        /// house is thatch and timber in one region and stone and slate in the next.
+        /// </summary>
+        [Serializable]
+        public sealed class RegionLook
+        {
+            [Tooltip("The region's id, as gates and places name it: greenmarch, brokenstone, saltreach, fenward, ashen, riftlands")] public string region = "";
+            public MaterialSwap[] swaps = new MaterialSwap[0];
+        }
+
+        [Serializable]
+        public sealed class MaterialSwap
+        {
+            public Material from;
+            public Material to;
+        }
+
         [Tooltip("Changes every tile's scatter at once")] public int seed = 49;
         public PropKind[] props = new PropKind[0];
         public BuildingKind[] buildings = new BuildingKind[0];
+        [Tooltip("Each region's materials for its buildings (ticket 84); a region not listed keeps the kinds' own")] public RegionLook[] regionLooks = new RegionLook[0];
 
         [Header("Towns")]
         [Min(0f), Tooltip("Open ground kept round a town's centre (the square, the board, where players stand)")] public float squareRadius = 12f;
         [Min(0f), Tooltip("Metres a building keeps from a road's edge")] public float roadClearance = 3f;
         [Min(0f), Tooltip("Metres between buildings")] public float buildingGap = 3f;
+
+        /// <summary>A building kind's materials as they look in <paramref name="region"/>.</summary>
+        public Material[] MaterialsFor(BuildingKind kind, string region)
+        {
+            if (kind == null) return new Material[0];
+            RegionLook look = null;
+            foreach (var l in regionLooks ?? new RegionLook[0]) if (l != null && l.region == region) { look = l; break; }
+            if (look == null || look.swaps == null || look.swaps.Length == 0) return kind.materials;
+            var result = (Material[])kind.materials.Clone();
+            for (var i = 0; i < result.Length; i++)
+                foreach (var swap in look.swaps)
+                    if (swap != null && swap.from != null && swap.to != null && result[i] == swap.from) { result[i] = swap.to; break; }
+            return result;
+        }
 
         public BuildingKind Building(string id)
         {

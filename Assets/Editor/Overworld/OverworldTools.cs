@@ -204,7 +204,7 @@ namespace HunterSystem.Editor
             var ground = new HeightmapGround(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds);
 
             // Towns and villages get their buildings (ticket 49), and nobody walks through them: their footprints are blocked.
-            var buildings = PlanBuildings(source, (x, z) => ground.HeightAt(new Vec3(x, 0f, z)), (x, z) => ground.KindAt(new Vec3(x, 0f, z)) == GroundKind.Walkable);
+            var buildings = PlanBuildings(source, (x, z) => ground.HeightAt(new Vec3(x, 0f, z)), (x, z) => ground.KindAt(new Vec3(x, 0f, z)) == GroundKind.Walkable, out var streets);
             BlockFootprints(kinds, columns, rows, source.origin.x, source.origin.y, cellSize, buildings);
             ground = new HeightmapGround(source.origin.x, source.origin.y, cellSize, columns, rows, heights, kinds);
 
@@ -247,7 +247,7 @@ namespace HunterSystem.Editor
             AssetDatabase.Refresh();
             var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
 
-            var asset = WriteOverworldAsset(source, coarseAsset, p => OnGround(ground, p), buildings, out var gateCount, out var roadCount);
+            var asset = WriteOverworldAsset(source, coarseAsset, p => OnGround(ground, p), buildings, out var gateCount, out var roadCount, streets);
             Debug.Log($"Baked {source.outputName}: {columns} × {rows} cells of {cellSize:0.###} m, {gateCount} gates, {roadCount} roads, " +
                       $"{kinds.Count(k => k == GroundKind.Blocked)} blocked, {kinds.Count(k => k == GroundKind.Water)} water, {kinds.Count(k => k == GroundKind.Climbable)} climbable cells.");
             return asset;
@@ -286,7 +286,7 @@ namespace HunterSystem.Editor
             // Towns and villages get their buildings (ticket 49), planned on the recipe's ground; each tile blocks the footprints on it.
             var dryAbove = source.rules.seaLevel + 1.5f;
             var buildings = PlanBuildings(source, (x, z) => heights.Sample(x, z, areaMin, areaSize),
-                (x, z) => heights.Sample(x, z, areaMin, areaSize) >= dryAbove && !heights.IsPaintedWater(x, z, areaMin, areaSize));
+                (x, z) => heights.Sample(x, z, areaMin, areaSize) >= dryAbove && !heights.IsPaintedWater(x, z, areaMin, areaSize), out var streets);
             try
             {
                 for (var j = 0; j < source.tilesZ; j++)
@@ -358,7 +358,7 @@ namespace HunterSystem.Editor
             var coarseAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(source.CoarsePath);
 
             Vector3 OnRecipe(Vector3 p) => new Vector3(p.x, heights.Sample(p.x, p.z, areaMin, areaSize), p.z);
-            var asset = WriteOverworldAsset(source, coarseAsset, OnRecipe, buildings, out var gateCount, out var roadCount);
+            var asset = WriteOverworldAsset(source, coarseAsset, OnRecipe, buildings, out var gateCount, out var roadCount, streets);
             Debug.Log($"Baked {source.outputName} from its recipe in {clock.Elapsed.TotalSeconds:0.0} s: {total} tiles ({sculpted} sculpted), " +
                       $"{gateCount} gates, {roadCount} roads, {buildings.Count} buildings, {blocked} blocked, {water} water, {climbable} climbable cells.");
             return asset;
@@ -366,7 +366,7 @@ namespace HunterSystem.Editor
 
         /// <summary>The overworld asset from the scene's markers: gates, the town, roads and landmarks, each put on the ground.</summary>
         private static OverworldAsset WriteOverworldAsset(OverworldSourceAsset source, TextAsset coarseAsset, Func<Vector3, Vector3> onGround,
-            List<OverworldAsset.BuildingData> buildings, out int gateCount, out int roadCount)
+            List<OverworldAsset.BuildingData> buildings, out int gateCount, out int roadCount, List<OverworldAsset.RoadData> streets = null)
         {
             var gates = new List<OverworldAsset.GateSiteData>();
             var roads = new List<OverworldAsset.RoadData>();
@@ -403,12 +403,67 @@ namespace HunterSystem.Editor
             }
             asset.Set(source.origin, source.tileSize, source.tilesX, source.tilesZ, source.TileFolder, coarseAsset,
                 gates, town != null, town != null ? onGround(town.transform.position) : Vector3.zero, town != null ? town.Radius : 0f,
-                roads, landmarks, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize, buildings);
+                roads, landmarks, source.rules.seaLevel, source.meshCellSize, source.farMeshCellSize, buildings, PlanBridges(source, onGround), streets);
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
             gateCount = gates.Count;
             roadCount = roads.Count;
             return AssetDatabase.LoadAssetAtPath<OverworldAsset>(source.OverworldPath);
+        }
+
+        // --- Bridges (developer playtest, 2026-11-17) ------------------------------------------------------
+
+        /// <summary>How high a deck stands over the water it crosses, at least, in metres.</summary>
+        public const float BridgeClearance = 4f;
+
+        /// <summary>How far each end of a deck ramps down to its bank, in metres.</summary>
+        public const float BridgeRamp = 16f;
+
+        /// <summary>
+        /// A deck for every bridge stamp: points every few metres along it, level with its higher bank and at least
+        /// <see cref="BridgeClearance"/> over the water it crosses (the sea, or a river's surface), so it never sags into
+        /// a river that runs well below the land (developer playtest, 2026-11-17); the lower bank ramps up to it. The
+        /// ground under it is left as it is, so the water flows on under the deck.
+        /// </summary>
+        public static List<OverworldAsset.BridgeData> PlanBridges(OverworldSourceAsset source, Func<Vector3, Vector3> onGround)
+        {
+            var result = new List<OverworldAsset.BridgeData>();
+            var sea = source.rules.seaLevel;
+            foreach (var stamp in source.heights.stamps)
+            {
+                if (stamp == null || stamp.kind != HeightStampKind.Bridge || stamp.points == null || stamp.points.Count < 2) continue;
+                var line = ContinentSetup.Walk(stamp.points, 4f);
+                if (line.Count < 2) continue;
+                var ground = line.Select(p => onGround(new Vector3(p.x, 0f, p.y)).y).ToList();
+                var top = float.NegativeInfinity;
+                var wet = new bool[line.Count];
+                for (var i = 0; i < line.Count; i++)
+                {
+                    wet[i] = ground[i] < sea || source.heights.IsPaintedWater(line[i].x, line[i].y, source.origin, source.AreaSize);
+                    if (wet[i]) top = Mathf.Max(top, Mathf.Max(ground[i], sea));
+                }
+                if (float.IsNegativeInfinity(top)) top = ground.Max();
+                top += BridgeClearance;
+                var banks = Enumerable.Range(0, line.Count).Where(i => !wet[i]).Select(i => ground[i]).DefaultIfEmpty(top).Max();
+                top = Mathf.Max(top, banks); // level with the higher bank: no dip down into the gorge
+
+                var along = new float[line.Count];
+                for (var i = 1; i < line.Count; i++) along[i] = along[i - 1] + Vector2.Distance(line[i - 1], line[i]);
+                var length = along[line.Count - 1];
+                // Each end ramps down to its bank; an end still over the water (a road that stops there) stays level.
+                var start = wet[0] ? top : ground[0];
+                var end = wet[line.Count - 1] ? top : ground[line.Count - 1];
+                var points = new List<Vector3>();
+                for (var i = 0; i < line.Count; i++)
+                {
+                    var fromStart = start + (top - start) * Mathf.Clamp01(along[i] / BridgeRamp);
+                    var fromEnd = end + (top - end) * Mathf.Clamp01((length - along[i]) / BridgeRamp);
+                    var y = wet[i] ? top : Mathf.Max(ground[i], Mathf.Min(top, Mathf.Min(fromStart, fromEnd))); // over the water, always the full height
+                    points.Add(new Vector3(line[i].x, y, line[i].y));
+                }
+                result.Add(new OverworldAsset.BridgeData { label = stamp.label, halfWidth = stamp.radius, points = points });
+            }
+            return result;
         }
 
         // --- Buildings (ticket 49) ------------------------------------------------------------------------
@@ -417,9 +472,15 @@ namespace HunterSystem.Editor
         /// Lays out the buildings of the scene's town and villages (<see cref="TownPlanner"/>) from the environment's
         /// building kinds, on the ground given, off the roads and clear of the gate board. None without an environment.
         /// </summary>
-        public static List<OverworldAsset.BuildingData> PlanBuildings(OverworldSourceAsset source, Func<float, float, float> heightAt, Func<float, float, bool> buildable)
+        public static List<OverworldAsset.BuildingData> PlanBuildings(OverworldSourceAsset source, Func<float, float, float> heightAt, Func<float, float, bool> buildable) =>
+            PlanBuildings(source, heightAt, buildable, out _);
+
+        /// <summary>As above, and the towns' streets (ticket 83), to be drawn and kept clear as roads.</summary>
+        public static List<OverworldAsset.BuildingData> PlanBuildings(OverworldSourceAsset source, Func<float, float, float> heightAt, Func<float, float, bool> buildable,
+            out List<OverworldAsset.RoadData> streets)
         {
             var result = new List<OverworldAsset.BuildingData>();
+            streets = new List<OverworldAsset.RoadData>();
             var environment = AssetDatabase.LoadAssetAtPath<EnvironmentAsset>(EnvironmentArtSetup.EnvironmentPath);
             if (environment == null || environment.buildings.Length == 0) return result;
             var kinds = environment.buildings.Where(b => b != null && !string.IsNullOrEmpty(b.id))
@@ -449,7 +510,7 @@ namespace HunterSystem.Editor
                     Centre = centre,
                     Radius = marker.Radius,
                     Style = isTown ? TownStyle.GuildTown : marker.Castle ? TownStyle.Castle : TownStyle.Village,
-                    SquareRadius = isTown ? environment.squareRadius : environment.squareRadius * 0.6f,
+                    SquareRadius = isTown ? environment.squareRadius : marker.Castle ? Mathf.Max(environment.squareRadius * 0.6f, 10f) : environment.squareRadius * 0.6f, // a keep needs room
                     RoadClearance = environment.roadClearance,
                     Gap = environment.buildingGap,
                     HeightAt = heightAt,
@@ -457,12 +518,23 @@ namespace HunterSystem.Editor
                 };
                 if (roads.Count > 0) site.DistanceToRoad = DistanceToRoad;
                 if (isTown) site.KeepClear.Add((centre + board, 4f));
-                foreach (var p in TownPlanner.Plan(site, kinds))
+                var layout = TownPlanner.PlanTown(site, kinds);
+                foreach (var p in layout.Buildings)
                 {
                     // It stands on its lowest corner, so no gap shows underneath on a gentle slope.
                     var low = TownPlanner.Corners(p, 0f).Append(p.Centre).Min(c => heightAt(c.x, c.y));
-                    result.Add(new OverworldAsset.BuildingData { kindId = p.Id, position = new Vector3(p.Centre.x, low, p.Centre.y), yaw = p.Yaw, footprint = p.Footprint });
+                    result.Add(new OverworldAsset.BuildingData
+                    {
+                        kindId = p.Id, position = new Vector3(p.Centre.x, low, p.Centre.y), yaw = p.Yaw, footprint = p.Footprint,
+                        region = isTown ? "greenmarch" : marker.Region, // its region's look (ticket 84)
+                    });
                 }
+                foreach (var street in layout.Streets)
+                    streets.Add(new OverworldAsset.RoadData
+                    {
+                        halfWidth = street.HalfWidth,
+                        points = new List<Vector3> { new Vector3(street.From.x, heightAt(street.From.x, street.From.y), street.From.y), new Vector3(street.To.x, heightAt(street.To.x, street.To.y), street.To.y) },
+                    });
             }
             return result;
         }

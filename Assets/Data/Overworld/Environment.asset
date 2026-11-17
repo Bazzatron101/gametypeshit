@@ -19,48 +19,54 @@ MonoBehaviour:
     materials:
     - {fileID: 2100000, guid: 08c9a0bc3b14a834ea70d4f3094b4244, type: 2}
     - {fileID: 2100000, guid: 461721c9d07469145b3de6cfebd620a9, type: 2}
-    perHectare: 70
-    cover: 0.35
-    patchSize: 160
+    perHectare: 110
+    cover: 0.45
+    patchSize: 260
     patchGroup: 1
-    minScale: 0.8
-    maxScale: 1.4
+    minScale: 1.1
+    maxScale: 1.9
     maxSlope: 30
     clearance: 4
     sink: 0.3
-    drawDistance: 600
+    drawDistance: 900
     castShadows: 1
+    nearSteepWithin: 0
+    steepDegrees: 30
   - id: leafy-tree
     mesh: {fileID: 4300000, guid: 284d27ae62cd3824d9f91f06015bf351, type: 2}
     materials:
     - {fileID: 2100000, guid: 08c9a0bc3b14a834ea70d4f3094b4244, type: 2}
     - {fileID: 2100000, guid: 6b5b31deb104c604aab117c6ff2cb087, type: 2}
-    perHectare: 25
-    cover: 0.4
-    patchSize: 200
+    perHectare: 40
+    cover: 0.45
+    patchSize: 220
     patchGroup: 2
-    minScale: 0.8
-    maxScale: 1.3
+    minScale: 1.1
+    maxScale: 1.8
     maxSlope: 22
     clearance: 4
     sink: 0.3
-    drawDistance: 600
+    drawDistance: 900
     castShadows: 1
+    nearSteepWithin: 0
+    steepDegrees: 30
   - id: bush
     mesh: {fileID: 4300000, guid: 7cad314bdb4a95542b84f684df8651f9, type: 2}
     materials:
     - {fileID: 2100000, guid: 55e11615de1dbdd4ba95db7cce5eeb7c, type: 2}
-    perHectare: 40
+    perHectare: 60
     cover: 0.5
-    patchSize: 120
+    patchSize: 160
     patchGroup: 1
     minScale: 0.7
-    maxScale: 1.3
+    maxScale: 1.4
     maxSlope: 30
     clearance: 2
     sink: 0.2
     drawDistance: 250
     castShadows: 1
+    nearSteepWithin: 0
+    steepDegrees: 30
   - id: rock
     mesh: {fileID: 4300000, guid: f0b220e1c7a176a4fbfb4b2f6667371a, type: 2}
     materials:
@@ -76,6 +82,8 @@ MonoBehaviour:
     sink: 0.3
     drawDistance: 400
     castShadows: 1
+    nearSteepWithin: 0
+    steepDegrees: 30
   - id: boulder
     mesh: {fileID: 4300000, guid: 2ad95f4c43e8e0e4b9295dfe19a918a7, type: 2}
     materials:
@@ -91,6 +99,8 @@ MonoBehaviour:
     sink: 0.6
     drawDistance: 600
     castShadows: 1
+    nearSteepWithin: 0
+    steepDegrees: 30
   - id: grass
     mesh: {fileID: 4300000, guid: 2679d617f67d1834289cd2c2bbdc081c, type: 2}
     materials:
@@ -106,6 +116,151 @@ MonoBehaviour:
     sink: 0.05
     drawDistance: 90
     castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: old-pine
+    mesh: {fileID: 4300000, guid: 8852e597f60dab9439033d4179781a2b, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 08c9a0bc3b14a834ea70d4f3094b4244, type: 2}
+    - {fileID: 2100000, guid: 461721c9d07469145b3de6cfebd620a9, type: 2}
+    perHectare: 45
+    cover: 0.45
+    patchSize: 260
+    patchGroup: 1
+    minScale: 0.9
+    maxScale: 1.35
+    maxSlope: 28
+    clearance: 5
+    sink: 0.5
+    drawDistance: 1000
+    castShadows: 1
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: mountain-boulder
+    mesh: {fileID: 4300000, guid: bff3859df1b65b14b86709787e961fcc, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c5a260be1d5ce3f4aba317eb2418a170, type: 2}
+    perHectare: 5
+    cover: 0.9
+    patchSize: 200
+    patchGroup: 6
+    minScale: 3.5
+    maxScale: 7
+    maxSlope: 40
+    clearance: 4
+    sink: 1.2
+    drawDistance: 1000
+    castShadows: 1
+    nearSteepWithin: 35
+    steepDegrees: 28
+  - id: flowers-yellow
+    mesh: {fileID: 4300000, guid: fe916cc7f9d620641956c612a3a064c0, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 9fb6d43284367c947aa0b948b5022c3b, type: 2}
+    - {fileID: 2100000, guid: c63364677ee44f644a8fe73b097d73ff, type: 2}
+    perHectare: 220
+    cover: 0.35
+    patchSize: 45
+    patchGroup: 7
+    minScale: 0.8
+    maxScale: 1.3
+    maxSlope: 30
+    clearance: 1
+    sink: 0.02
+    drawDistance: 140
+    castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: flowers-pink
+    mesh: {fileID: 4300000, guid: 267cee371925bcd44ad8fd2935666488, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 9fb6d43284367c947aa0b948b5022c3b, type: 2}
+    - {fileID: 2100000, guid: 420c0d9e1e51bb84c9c5b7be1419e2bd, type: 2}
+    perHectare: 180
+    cover: 0.3
+    patchSize: 40
+    patchGroup: 8
+    minScale: 0.8
+    maxScale: 1.3
+    maxSlope: 30
+    clearance: 1
+    sink: 0.02
+    drawDistance: 140
+    castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: flowers-blue
+    mesh: {fileID: 4300000, guid: 05d55697863ee7145b214d8f0ded50ec, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 9fb6d43284367c947aa0b948b5022c3b, type: 2}
+    - {fileID: 2100000, guid: cb5b51a7b714e774da2b17af7b1206cd, type: 2}
+    perHectare: 160
+    cover: 0.3
+    patchSize: 50
+    patchGroup: 9
+    minScale: 0.8
+    maxScale: 1.3
+    maxSlope: 30
+    clearance: 1
+    sink: 0.02
+    drawDistance: 140
+    castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: flowers-white
+    mesh: {fileID: 4300000, guid: 7c59336bc9edbd44b90032bd584c1daf, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 9fb6d43284367c947aa0b948b5022c3b, type: 2}
+    - {fileID: 2100000, guid: 77fca1b0e0635f743a1f041d230159df, type: 2}
+    perHectare: 200
+    cover: 0.3
+    patchSize: 35
+    patchGroup: 10
+    minScale: 0.8
+    maxScale: 1.2
+    maxSlope: 30
+    clearance: 1
+    sink: 0.02
+    drawDistance: 140
+    castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: red-mushroom
+    mesh: {fileID: 4300000, guid: 9c902f7a241ad754ab9dbe2b173aedfb, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 29fe2d4eb08f7694e903a2da3f5c8db5, type: 2}
+    - {fileID: 2100000, guid: d84fe359c0eb8b041909136114462d50, type: 2}
+    perHectare: 60
+    cover: 0.45
+    patchSize: 260
+    patchGroup: 1
+    minScale: 0.7
+    maxScale: 1.4
+    maxSlope: 30
+    clearance: 1.5
+    sink: 0.02
+    drawDistance: 110
+    castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
+  - id: brown-mushroom
+    mesh: {fileID: 4300000, guid: bb991ac3385d6b54b9ee633bf11a1e1f, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 29fe2d4eb08f7694e903a2da3f5c8db5, type: 2}
+    - {fileID: 2100000, guid: f6fd3bf57a2748b43b5b0aa5bbc3f8e6, type: 2}
+    perHectare: 90
+    cover: 0.45
+    patchSize: 260
+    patchGroup: 1
+    minScale: 0.7
+    maxScale: 1.4
+    maxSlope: 30
+    clearance: 1.5
+    sink: 0.02
+    drawDistance: 110
+    castShadows: 0
+    nearSteepWithin: 0
+    steepDegrees: 30
   buildings:
   - id: guild-hall
     mesh: {fileID: 4300000, guid: ca9f58871d5ebc34980906a08f45d879, type: 2}
@@ -185,6 +340,138 @@ MonoBehaviour:
     - {fileID: 2100000, guid: 7e9368e82d9f568408ff81804db002ae, type: 2}
     footprint: {x: 11, y: 11}
     role: keep
+  - id: two-storey-house
+    mesh: {fileID: 4300000, guid: a6e91463f3b210c4c8d7767974c93f0c, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 6, y: 6}
+    role: house
+  - id: small-cottage
+    mesh: {fileID: 4300000, guid: 81ed250e26233dc42a472f074f01aea0, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 4.5, y: 4}
+    role: house
+  - id: smithy
+    mesh: {fileID: 4300000, guid: 993ead5e132c7e54cbf6c870e4df6988, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: 92c10823658c18f48acf6c80282cfad8, type: 2}
+    footprint: {x: 7, y: 6}
+    role: smithy
+  - id: chapel
+    mesh: {fileID: 4300000, guid: 0b8252c14b17e3140a560c803186f2ec, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: 7e9368e82d9f568408ff81804db002ae, type: 2}
+    footprint: {x: 6, y: 11}
+    role: chapel
+  - id: stables
+    mesh: {fileID: 4300000, guid: bbf3f5d279d469f40b91e3a57b78231a, type: 2}
+    materials:
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    - {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 11, y: 5}
+    role: stables
+  - id: barn
+    mesh: {fileID: 4300000, guid: d56dac31b49289545bdb0a655b5d2bb2, type: 2}
+    materials:
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    - {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 9, y: 7}
+    role: barn
+  - id: warehouse
+    mesh: {fileID: 4300000, guid: f7963b32c684f0f43a3e2d3c688da491, type: 2}
+    materials:
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 10, y: 8}
+    role: warehouse
+  - id: workshop
+    mesh: {fileID: 4300000, guid: 9e6dec63e1f564b4d96fd123c945c8b0, type: 2}
+    materials:
+    - {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: 315251477419dd143a2da2239fbeff7f, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    footprint: {x: 7, y: 5}
+    role: workshop
+  - id: market-hall
+    mesh: {fileID: 4300000, guid: 63e630608ee40d74d900c2210ff0f5ac, type: 2}
+    materials:
+    - {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+    - {fileID: 2100000, guid: 7e9368e82d9f568408ff81804db002ae, type: 2}
+    footprint: {x: 9, y: 7}
+    role: market
+  regionLooks:
+  - region: greenmarch
+    swaps: []
+  - region: brokenstone
+    swaps:
+    - from: {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+      to: {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+    - from: {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+      to: {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    - from: {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+      to: {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+    - from: {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+      to: {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+  - region: saltreach
+    swaps:
+    - from: {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+      to: {fileID: 2100000, guid: a936947593042804c8e4cf93ada3846f, type: 2}
+    - from: {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+      to: {fileID: 2100000, guid: 59e38463b23e16a4494c07e0ef79819f, type: 2}
+    - from: {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+      to: {fileID: 2100000, guid: 59e38463b23e16a4494c07e0ef79819f, type: 2}
+  - region: fenward
+    swaps:
+    - from: {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+      to: {fileID: 2100000, guid: 0c6a6dacc49207e49ad94b87f5fa72ae, type: 2}
+    - from: {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+      to: {fileID: 2100000, guid: 10e49b6e123a5e442be9c6852d7bbeda, type: 2}
+    - from: {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+      to: {fileID: 2100000, guid: 10e49b6e123a5e442be9c6852d7bbeda, type: 2}
+    - from: {fileID: 2100000, guid: b12b7bfe7e66ae44896f7a4f577eb5bc, type: 2}
+      to: {fileID: 2100000, guid: 0c6a6dacc49207e49ad94b87f5fa72ae, type: 2}
+  - region: ashen
+    swaps:
+    - from: {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+      to: {fileID: 2100000, guid: c8a60372027bfdd42a27329e0a0fe669, type: 2}
+    - from: {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+      to: {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+    - from: {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+      to: {fileID: 2100000, guid: c8a60372027bfdd42a27329e0a0fe669, type: 2}
+  - region: riftlands
+    swaps:
+    - from: {fileID: 2100000, guid: c250a90df478e634a89f9363e7d6b664, type: 2}
+      to: {fileID: 2100000, guid: bbd60c87d5ae03a4eaeabbbebea817b3, type: 2}
+    - from: {fileID: 2100000, guid: 09ef0fc012f934245b775561d261d672, type: 2}
+      to: {fileID: 2100000, guid: 7e154da359e0f3c4b9122ccac75e6111, type: 2}
+    - from: {fileID: 2100000, guid: 189684892c4961745991c75234c21e27, type: 2}
+      to: {fileID: 2100000, guid: 7e154da359e0f3c4b9122ccac75e6111, type: 2}
+    - from: {fileID: 2100000, guid: af5473ab487b8d14785ea37431f833b5, type: 2}
+      to: {fileID: 2100000, guid: 7e154da359e0f3c4b9122ccac75e6111, type: 2}
+    - from: {fileID: 2100000, guid: 809bd5cdcfca1a24db1fe1b549dc71fd, type: 2}
+      to: {fileID: 2100000, guid: bbd60c87d5ae03a4eaeabbbebea817b3, type: 2}
   squareRadius: 12
   roadClearance: 3
   buildingGap: 3

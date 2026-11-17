@@ -4,7 +4,7 @@
 
 **Blocked by:** 39: Terrain pipeline and a 1 km test patch
 
-**Status:** ready-for-human (open Assets/Scenes/OverworldPatch.unity, press Play and walk the town and the woods; then rebuild the continent from the menu to dress its villages)
+**Status:** ready-for-human (walk the test patch: an old forest, and boulders under the ridge and hill)
 
 - [x] Decide where the art comes from (asset store packs, made by hand, or placeholders first) and the art style
 - [x] The guild town has buildings
@@ -56,3 +56,30 @@ Not done:
 - **Not looked at in play.** No agent screenshot of the dressed world. The look, the density, and how big the world feels need your eye; tune them in `Environment.asset`.
 - Trees do not block movement, and there are no paths through woods.
 - Buildings have no interiors, and the hub's shops are not tied to the shop building.
+
+**2026-11-17 (developer playtest, recorded by agent):** "I liked the trees and the town but would like the forest to be taller and possibly denser to make it feel like it's an old forest, and have some large boulders near the mountains."
+
+**2026-11-17 (agent):** Done, on the test patch (the continent's scene has no nature yet):
+- **An old forest:**
+  - Pines are taller (1.1 to 1.9 times) and denser (110 a hectare).
+  - Leafy trees are taller (1.1 to 1.8) and denser (40).
+  - More bushes underneath.
+  - The woods are bigger (260 m patches), and trees draw from 900 m.
+- **Old pines** (new, about 20 m tall) stand over the younger trees in the same woods.
+- **Mountain boulders** (new, 7 to 14 m) grow only within 35 m of steep ground (28° or more): under the Spine ridge and Lookout Hill. A new scatter rule, `nearSteepWithin` and `steepDegrees` on a nature kind.
+- **New placeholder meshes,** labelled AI: `Env_OldPine_AI`, `Env_MountainBoulder_AI`.
+- **Tests:**
+  - `EnvironmentTest.MountainBouldersGrowOnlyNearSteepGround`.
+  - `EnvironmentTest.TheTestPatchHasAnOldForestAndBouldersUnderItsMountains`: old pines over 15 m fill the woods, and boulders stand under the mountains.
+
+Not checked by eye; denser woods may cost frame time.
+
+**2026-11-17 (developer playtest, recorded by agent):** "Looks amazing, just need to add some mushrooms and flowers to give it a bit of colour."
+
+**2026-11-17 (agent):** Added:
+- **Flowers:** four colours (yellow, pink, blue, white) in small clusters, each in its own meadow patches.
+- **Mushrooms:** red-capped and brown, in the woods (the same patches as the pines).
+- **Draw distance:** both are drawn close up only (110 to 140 m), with no shadows.
+- **Placeholder meshes,** labelled AI: `Env_Flowers*_AI`, `Env_RedMushroom_AI`, `Env_BrownMushroom_AI`.
+
+`EnvironmentTest.TheTestPatchHasAnOldForestAndBouldersUnderItsMountains` now also checks that each grows on the patch. **843 EditMode and 45 PlayMode tests pass.** Not checked by eye.

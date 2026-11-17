@@ -278,7 +278,8 @@ namespace HunterSystem.Game
         private void DrawStatScreen(PlayerState state)
         {
             const float rowHeight = 34f;
-            var box = new Rect((Screen.width - 500) / 2f, (Screen.height - 330) / 2f, 500, 120 + StatRows.Length * rowHeight);
+            var speciesRow = state.Species != null ? 24f : 0f; // ticket 81: the species and its perk
+            var box = new Rect((Screen.width - 500) / 2f, (Screen.height - 330) / 2f, 500, 120 + speciesRow + StatRows.Length * rowHeight);
             Fill(box, PanelColor);
             Outline(box, SystemBlue);
 
@@ -286,20 +287,31 @@ namespace HunterSystem.Game
             GUI.Label(new Rect(box.x + 16, box.y + 12, 460, 26), $"[ STATUS ]   Level {state.Level}", _title);
             _label.normal.textColor = state.UnspentStatPoints > 0 ? SystemBlue : Color.gray;
             GUI.Label(new Rect(box.x + 16, box.y + 42, 380, 22), $"Unspent points: {state.UnspentStatPoints}", _label);
+            if (state.Species != null)
+            {
+                _label.normal.textColor = SpeciesColour;
+                GUI.Label(new Rect(box.x + 16, box.y + 66, 468, 22), $"{state.Species.Name}: {state.Species.Description}", _label);
+            }
 
             for (var i = 0; i < StatRows.Length; i++)
             {
                 var (stat, effect) = StatRows[i];
-                var y = box.y + 74 + i * rowHeight;
+                var y = box.y + 74 + speciesRow + i * rowHeight;
                 _label.normal.textColor = Color.white;
                 GUI.Label(new Rect(box.x + 16, y, 130, 26), stat.ToString(), _label);
                 // The total as it counts in play, with worn gear's part beside it (ticket 51): "14 (+4 gear)".
                 GUI.Label(new Rect(box.x + 140, y, 40, 26), state.TotalStat(stat).ToString(), _label);
                 var fromGear = state.GearStats[stat];
+                var fromSpecies = state.SpeciesStats[stat]; // ticket 81: grows with rank
                 if (fromGear != 0)
                 {
                     _label.normal.textColor = fromGear > 0 ? new Color(0.45f, 0.95f, 0.45f) : new Color(1f, 0.5f, 0.45f);
-                    GUI.Label(new Rect(box.x + 176, y, 80, 26), fromGear > 0 ? $"(+{fromGear} gear)" : $"({fromGear} gear)", _label);
+                    GUI.Label(new Rect(box.x + 176, y, 80, 26), fromSpecies != 0 ? $"(+{fromGear}g +{fromSpecies}s)".Replace("+-", "-") : fromGear > 0 ? $"(+{fromGear} gear)" : $"({fromGear} gear)", _label);
+                }
+                else if (fromSpecies != 0)
+                {
+                    _label.normal.textColor = SpeciesColour;
+                    GUI.Label(new Rect(box.x + 176, y, 84, 26), $"(+{fromSpecies} {state.Species?.Name?.Split(' ')[0].ToLowerInvariant() ?? "species"})", _label);
                 }
                 _label.normal.textColor = Color.gray;
                 GUI.Label(new Rect(box.x + 260, y, 180, 26), effect, _label);
@@ -312,6 +324,8 @@ namespace HunterSystem.Game
             _label.normal.textColor = Color.gray;
             GUI.Label(new Rect(box.x + 16, box.yMax - 32, 380, 22), "[Tab] close", _label);
         }
+
+        private static readonly Color SpeciesColour = new Color(0.95f, 0.8f, 0.45f);
 
         private void Bar(Rect rect, int value, int max, Color color, string text)
         {

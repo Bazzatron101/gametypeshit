@@ -91,11 +91,12 @@ namespace HunterSystem.Editor
             {
                 Stamp("Square: " + ContinentLayout.GuildTown.Name, HeightStampKind.Flatten, 45f, 0f, 25f, W(ContinentLayout.GuildTown.Pixel)),
             };
-            stamps.AddRange(ContinentLayout.Settlements.Select(p => Stamp("Square: " + p.Name, HeightStampKind.Flatten, p.Castle ? 35f : 25f, 0f, 20f, W(p.Pixel))));
+            stamps.AddRange(ContinentLayout.Settlements.Select(p => Stamp("Square: " + p.Name, HeightStampKind.Flatten, p.Castle ? 45f : 35f, 0f, 20f, W(p.Pixel)) /* bigger places, ticket 84 */));
             source.heights.stamps = stamps;
             source.heights.Refresh();
 
-            // Bridges: where a road, before it is laid, would be under the sea or in a river or lake.
+            // Bridges: where a road, before it is laid, would be under the sea or in a river or lake. Only real water:
+            // low dry land just above the sea is walked over (a bridge there would have no water to flow under it).
             var bridges = new List<HeightStamp>();
             foreach (var road in ContinentLayout.Roads)
             {
@@ -104,7 +105,7 @@ namespace HunterSystem.Editor
                 int? wetFrom = null;
                 for (var i = 0; i <= steps.Count; i++)
                 {
-                    var wet = i < steps.Count && (source.heights.Sample(steps[i].x, steps[i].y, min, size) < source.rules.seaLevel + 1f ||
+                    var wet = i < steps.Count && (source.heights.Sample(steps[i].x, steps[i].y, min, size) < source.rules.seaLevel ||
                                                   source.heights.IsPaintedWater(steps[i].x, steps[i].y, min, size));
                     if (wet && wetFrom == null) wetFrom = i;
                     if (wet || wetFrom == null) continue;
