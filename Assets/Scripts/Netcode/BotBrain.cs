@@ -10,7 +10,9 @@ namespace HunterSystem.Netcode
     /// keyboard would: spend stat points, dodge a hit it saw coming, walk to the nearest enemy,
     /// then swing at it and use whichever skills are ready. In a gate with nothing in sight it walks
     /// on to the next room, after the clear it heads for the portal home, and when it is down it asks
-    /// to get up. In the hub it marks itself ready and waits with the others.
+    /// to get up. In the hub it marks itself ready and waits with the others. In a raid (ticket 29) it plays
+    /// the raid's parts by <see cref="RaidSense"/>: into the shelter when a blast is coming, and to its own
+    /// crystal while the boss is shielded, breaking it together with the other groups.
     /// <para>
     /// It sends commands through the normal path (a client session on a bot, the host's own input on
     /// a bot host), so everything it does is checked by the simulation like anyone else's input.
@@ -81,7 +83,10 @@ namespace HunterSystem.Netcode
             // In the hub: say it is ready, then wait near the others for the host to start.
             if (world.InHub) return self.IsReady ? FollowParty(world, me, self.Position) : new PlayerCommand(0f, 0f, setReady: true);
 
-            var target = NearestLivingEnemy(world, self.Position);
+            if (RaidSense.TryShelter(world, self.Position, out var shelter)) return shelter; // nothing matters more than the blast
+
+            var crystal = RaidSense.CrystalFor(world, me, out var hold);
+            var target = crystal ?? NearestLivingEnemy(world, self.Position);
             if (BossHitDueSoon(world, self.Position, tick, out var escape)) return new PlayerCommand(escape.X, escape.Z, dodge: true);
             if (TakeHitDueSoon(tick))
             {
@@ -96,7 +101,8 @@ namespace HunterSystem.Netcode
             var offset = world.GetEnemy(target.Value).Position - self.Position;
             offset = new Vec3(offset.X, 0f, offset.Z);
             var distance = offset.Length;
-            if (distance > _reach) return new PlayerCommand(offset.X / distance, offset.Z / distance);
+            if (distance > _reach) return new PlayerCommand(offset.X / distance, offset.Z / distance, sprint: crystal.HasValue && distance > 6f);
+            if (hold) return PlayerCommand.None; // at its crystal, waiting for the other groups to be ready
 
             // In reach: attacks turn the player through soft lock-on, so it can stand still and swing.
             var beat = tick + _phase;
@@ -183,7 +189,7 @@ namespace HunterSystem.Netcode
             foreach (var id in world.EnemyIds)
             {
                 var enemy = world.GetEnemy(id);
-                if (enemy.IsDefeated) continue;
+                if (enemy.IsDefeated || RaidSense.IsShieldedBoss(world, enemy)) continue;
                 var distance = Flat(enemy.Position - from).Length;
                 if (distance >= bestDistance) continue;
                 best = id;

@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bc173683bb56dd499cf53daa3ebb9f5, type: 3}
+  m_Name: GoblinKingRaid
+  m_EditorClassIdentifier: HunterSystem.Game::HunterSystem.Game.GateDefinitionAsset
+  id: goblin-king-raid
+  displayName: The Goblin King's Throne
+  rank: 
+  intel: '[Guild notice: a raid gate for up to ten hunters. Split up to break the crystals together, then shelter from the King''s blast: write me]'
+  rooms:
+  - {fileID: 11400000, guid: 768e8c3926cd11a4ba1fc1b7083418cd, type: 2}
+  - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}
+  - {fileID: 11400000, guid: e830a39b74e843e4ba14280295d42577, type: 2}
+  - {fileID: 11400000, guid: 7167274c75b91c749abe00d7d9a0bc11, type: 2}
+  - {fileID: 11400000, guid: b1896e5d7c6a7674da6b08604790d2a4, type: 2}
+  - {fileID: 11400000, guid: 44fc27ae78c1a34409f00680158a8eca, type: 2}
+  soloRevives: 3
+  checkpointRadius: 2
+  wipeDelaySeconds: 3
+  rewardPool:
+  - {fileID: 11400000, guid: 00261d8cc31b452459507cdd56036305, type: 2}
+  - {fileID: 11400000, guid: b50137990e8813f488c3942f6b2ac9f5, type: 2}
+  - {fileID: 11400000, guid: c27b3a3b1a9038b4589fb03218ff0cc0, type: 2}
+  - {fileID: 11400000, guid: 8d7f52e4a7a38da4195ded7bbc7bbe54, type: 2}
+  gearPool: []
+  raid:
+    isRaid: 1
+    crystal: {fileID: 11400000, guid: e5f429f724667d94a89c419480e76fdb, type: 2}
+    crystalPlaces:
+    - {x: -13, y: 0, z: -12}
+    - {x: 13, y: 0, z: 12}
+    - {x: 13, y: 0, z: -12}
+    - {x: -13, y: 0, z: 12}
+    playersPerCrystal: 3
+    crystalRegrowSeconds: 8
+    shelterAtHealthPercent: 35
+    firstShelterAfterSeconds: 2
+    shelterEverySeconds: 12
+    shelterWindupSeconds: 4
+    shelterRadius: 3.5
+    shelterDamagePercent: 80
+    shelterPlaces:
+    - {x: 10, y: 0, z: 9}
+    - {x: -10, y: 0, z: -9}
+    - {x: -10, y: 0, z: 10}
+    - {x: 10, y: 0, z: -10}

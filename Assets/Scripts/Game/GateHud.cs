@@ -113,6 +113,23 @@ namespace HunterSystem.Game
                     case BossEnraged b:
                         Notify($"{_runner.World.GetEnemy(b.Enemy).Definition.Name} is enraged! It strikes faster, and help has arrived.");
                         break;
+                    case RaidShieldRaised r:
+                        Notify(r.Crystals == 1
+                            ? "The boss is shielded. Break the crystal to bring it down."
+                            : $"The boss is shielded. Split up and break all {r.Crystals} crystals together.");
+                        break;
+                    case RaidCrystalsRegrew _:
+                        Notify("Too slow: the broken crystals have grown back. Break them together.");
+                        break;
+                    case RaidShieldBroken _:
+                        Notify("The shield is down! Attack!");
+                        break;
+                    case RaidFinalPhase _:
+                        Notify("The boss is gathering its power. When the floor glows red, get into the green shelter.");
+                        break;
+                    case RaidBlastLanded blast when blast.Caught > 0:
+                        Notify(blast.Caught == 1 ? "One hunter was caught outside the shelter." : $"{blast.Caught} hunters were caught outside the shelter.");
+                        break;
                     case ReturnedToHub home:
                         if (!_rewardShown) Notify(home.Cleared ? "Back in the hub." : "You left the gate. Back in the hub.");
                         break;
@@ -159,6 +176,7 @@ namespace HunterSystem.Game
 
             if (CurrentNotice != null) GUI.Label(new Rect(0, 40, Screen.width, 24), CurrentNotice, _notice);
             DrawBossBar();
+            DrawRaid(gate);
             DrawWayHome(gate);
             if (DeathPanelOpen) DrawDeathPanel(gate);
         }
@@ -171,14 +189,47 @@ namespace HunterSystem.Game
                 var enemy = _runner.World.GetEnemy(_boss.Value);
                 var width = Mathf.Min(560f, Screen.width - 40f);
                 var area = new Rect((Screen.width - width) / 2f, 70, width, 18);
-                GUI.Label(new Rect(area.x, area.y - 22, width, 20), enemy.IsEnraged ? enemy.Definition.Name + "  (ENRAGED)" : enemy.Definition.Name, _title);
+                var shielded = Gate?.Raid != null && Gate.Raid.IsBossShielded;
+                var title = enemy.Definition.Name + (shielded ? "  (SHIELDED)" : enemy.IsEnraged ? "  (ENRAGED)" : "");
+                GUI.Label(new Rect(area.x, area.y - 22, width, 20), title, _title);
                 GUI.Box(area, GUIContent.none);
                 var fill = new Rect(area.x + 2, area.y + 2, (width - 4) * enemy.Health / (float)enemy.MaxHealth, area.height - 4);
                 var old = GUI.color;
-                GUI.color = enemy.IsEnraged ? new Color(1f, 0.35f, 0.2f) : new Color(0.85f, 0.15f, 0.15f);
+                GUI.color = shielded ? new Color(0.45f, 0.85f, 1f) : enemy.IsEnraged ? new Color(1f, 0.35f, 0.2f) : new Color(0.85f, 0.15f, 0.15f);
                 GUI.DrawTexture(fill, Texture2D.whiteTexture);
                 GUI.color = old;
             }
+        }
+
+        /// <summary>
+        /// A raid's state under the boss bar (ticket 29): the crystals while the shield is up, the countdown while a
+        /// blast is coming. Never culled.
+        /// </summary>
+        private void DrawRaid(GateState gate)
+        {
+            var raid = gate.Raid;
+            if (raid == null || !_boss.HasValue) return;
+            var line = RaidLine(raid, _runner.World);
+            if (line == null) return;
+            var old = GUI.color;
+            GUI.color = raid.Shelter.HasValue ? new Color(1f, 0.55f, 0.45f) : new Color(0.6f, 0.9f, 1f);
+            GUI.Label(new Rect(0, 94, Screen.width, 24), line, _title);
+            GUI.color = old;
+        }
+
+        /// <summary>What the raid asks of the party now, in one line; null when it asks nothing special.</summary>
+        public static string RaidLine(RaidState raid, SimulationWorld world)
+        {
+            if (raid.SecondsUntilBlast.HasValue)
+                return $"BLAST IN {Mathf.CeilToInt(raid.SecondsUntilBlast.Value)}  -  get into the green shelter!";
+            if (raid.Phase != RaidPhase.Shielded) return null;
+            var total = raid.Crystals.Count;
+            var broken = 0;
+            foreach (var id in raid.Crystals) if (!world.HasEnemy(id) || world.GetEnemy(id).IsDefeated) broken++;
+            var line = $"Crystals broken {broken}/{total}";
+            var regrow = raid.SecondsUntilRegrow;
+            if (regrow.HasValue) line += $"  -  the rest within {Mathf.CeilToInt(regrow.Value)} s, or they grow back";
+            return line;
         }
 
         private float _confirmLeaveUntil;

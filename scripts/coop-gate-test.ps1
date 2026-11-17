@@ -1,12 +1,13 @@
 <#
 A gate played over the network on one PC (tickets 17 to 19): the built co-op player runs as a bot
 host plus bot clients over local UDP (Fish-Net Tugboat). They gather in the hub and mark themselves
-ready; the host takes them into the first gate; they clear it, boss included, and come home. The bots walk
+ready; the host takes them into -Gate (the first gate by default); they clear it, boss included, and come home. The bots walk
 the rooms, fight what appears and reach the checkpoints. Each copy writes what its own world
 ended with; this script compares them.
 
   powershell -File scripts/coop-gate-test.ps1                      # host + 1 client, Goblin Warren
   powershell -File scripts/coop-gate-test.ps1 -Clients 2 -Seconds 60
+  powershell -File scripts/coop-gate-test.ps1 -Clients 9 -Gate goblin-king-raid -Seconds 240 -WindowedHost   # the ten-player raid (ticket 29)
 
 Passes when every client joined, the host cleared the gate, and every client's own world agrees:
 the same gate, cleared, with the same rooms and latest checkpoint, and it was shown the
@@ -14,7 +15,7 @@ checkpoints being reached. No copy saves anything (-no-save).
 
 Build first with: Unity -batchmode -quit -projectPath . -executeMethod HunterSystem.Editor.CoopPlayerBuild.Build
 #>
-param([int]$Seconds = 80, [int]$Clients = 1, [string]$Gate = 'goblin-warren')
+param([int]$Seconds = 80, [int]$Clients = 1, [string]$Gate = 'goblin-warren', [switch]$WindowedHost)
 $ErrorActionPreference = 'Stop'
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $exe = Join-Path $project 'Builds/Coop/HunterSystem.exe'
@@ -27,7 +28,8 @@ Get-ChildItem $out -Filter '*.json' | Remove-Item
 function Q([string]$path) { '"' + $path + '"' }   # Start-Process does not quote arguments; the path has a space
 $common = @('-batchmode', '-nographics', '-no-save', '-transport', 'local')
 $hostJson = Join-Path $out 'host.json'
-$hostArgs = $common + @('-coop', 'host', '-bot', '1', '-bot-expect', $Clients, '-autotest', $Seconds, (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
+$hostCommon = if ($WindowedHost) { @('-screen-fullscreen', '0', '-screen-width', '1280', '-screen-height', '720', '-no-save', '-transport', 'local') } else { $common }
+$hostArgs = $hostCommon + @('-coop', 'host', '-bot', '1', '-bot-expect', $Clients, '-bot-gate', $Gate, '-autotest', $Seconds, (Q $hostJson), '-logFile', (Q (Join-Path $out 'host.log')))
 $processes = @(Start-Process -FilePath $exe -ArgumentList $hostArgs -PassThru)
 Start-Sleep -Seconds 3
 
@@ -55,6 +57,10 @@ function Line($who, $r) {
 Write-Host (Line 'HOST  ' $h)
 foreach ($b in $bots) { Write-Host (Line "CLIENT" $b) }
 foreach ($r in @($h) + $bots) { Write-Host ("  {0} player {1}: boss attacks seen {2}, reward '{3}', holds [{4}]" -f $r.role, $r.localPlayerId, $r.bossAttacksSeen, $r.rewardSeen, ($r.localModifiers -join ', ')) }
+$measured = [math]::Max([double]$h.measuredSeconds, 1)
+Write-Host ("HOST ({0}): frame time mean {1:0.00} ms, p99 {2:0.00} ms, max {3:0.00} ms over {4:0} s; upload {5:0.0} KB/s total, {6:0.0} KB/s per client" -f `
+    $(if ($WindowedHost) { 'windowed 1280x720' } else { 'headless' }), $h.frameMsMean, $h.frameMsP99, $h.frameMsMax, $measured,
+    ($h.hostBytesSent / $measured / 1024), ($h.hostBytesSent / $measured / 1024 / [math]::Max($Clients, 1)))
 
 $agree = @($bots | Where-Object { $_.gateId -eq $h.gateId -and $_.gateCleared -eq $h.gateCleared -and $_.roomsCleared -eq $h.roomsCleared -and $_.latestCheckpoint -eq $h.latestCheckpoint }).Count
 $checks = [ordered]@{

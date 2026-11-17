@@ -50,9 +50,11 @@ namespace HunterSystem.Online
         }
 
         /// <param name="expectClients">Host only: measure while this many clients are connected (0: from the warm-up on).</param>
-        public void Begin(SimulationRunner runner, int seed, float seconds, string resultPath, int expectClients = 0)
+        /// <param name="gateId">Host only: the gate to take the party into from the hub (a raid, ticket 29); null for the content's first.</param>
+        public void Begin(SimulationRunner runner, int seed, float seconds, string resultPath, int expectClients = 0, string gateId = null)
         {
             _runner = runner;
+            _gateId = gateId;
             _brain = new BotBrain(seed);
             _runner.SetLocalCommandSource(this);
             _expectClients = expectClients;
@@ -97,13 +99,14 @@ namespace HunterSystem.Online
                 var gates = _runner.Content != null ? _runner.Content.Gates : null;
                 // Waits for the whole expected party, so nobody joins mid-gate by accident.
                 var everyoneHere = _runner.Host.ConnectedClients >= _expectClients;
-                if (!_startedAGate && everyoneHere && gates != null && gates.Count > 0 && world.TryStartGateFromHub(gates[0].Id, out _)) _startedAGate = true;
+                if (!_startedAGate && everyoneHere && gates != null && gates.Count > 0 && world.TryStartGateFromHub(_gateId ?? gates[0].Id, out _)) _startedAGate = true;
                 return;
             }
             if (world.Hub == null && !world.HasGate && Time.frameCount % 30 == 0) TopUpEnemies();
         }
 
         private bool _startedAGate;
+        private string _gateId;
         private int _expectClients;
 
         private void TopUpEnemies()

@@ -23,6 +23,7 @@ namespace HunterSystem.Simulation
         private void UpdateBoss(Enemy boss, int tick)
         {
             var definition = boss.Definition.Boss;
+            if (IsChanneling(boss)) return; // a raid boss winding up its blast stands still (ticket 29)
 
             if (boss.Charging)
             {

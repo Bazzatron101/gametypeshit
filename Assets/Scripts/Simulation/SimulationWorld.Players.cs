@@ -145,7 +145,7 @@ namespace HunterSystem.Simulation
         private int DamageEnemy(Player attacker, Enemy enemy, int damage, int tick, SkillDefinition skill, bool secondary = false)
         {
             var amount = Math.Min(Math.Max(0, damage), enemy.Health);
-            if (amount == 0) return 0;
+            if (amount == 0 || IsShielded(enemy)) return 0; // a raid boss behind its crystals' shield takes nothing (ticket 29)
             enemy.Health -= amount;
             _events.Add(new DamageDealt(tick, attacker.Id, enemy.Id, amount, enemy.Health, skill, secondary));
             if (!secondary && skill != null && skill.LifeStealPercent > 0) // drain life (ticket 58)

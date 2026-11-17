@@ -10,6 +10,7 @@ namespace HunterSystem.Simulation
         /// <summary>Winding up: hold still until the hit lands. Otherwise attack a target in reach, or chase the nearest one.</summary>
         private void UpdateEnemy(Enemy enemy, int tick)
         {
+            if (IsCrystal(enemy)) return; // a raid's crystal (ticket 29) only stands there
             if (enemy.Definition.Boss != null)
             {
                 UpdateBoss(enemy, tick);

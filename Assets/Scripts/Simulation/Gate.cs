@@ -62,6 +62,9 @@ namespace HunterSystem.Simulation
         /// <summary>Co-op: how long after the whole party is down before everyone returns at the latest checkpoint.</summary>
         public float WipeDelaySeconds { get; set; } = 3f;
 
+        /// <summary>Set for a raid gate (ticket 29): its boss fight has crystals, a shield and a final phase. Null for a normal gate.</summary>
+        public RaidDefinition Raid { get; set; }
+
         /// <summary>The clear reward: each player present draws one they do not have yet (spec: a fixed pool, random draw, no repeats until it is all owned).</summary>
         public List<LootDefinition> RewardPool { get; } = new List<LootDefinition>();
 
@@ -228,6 +231,9 @@ namespace HunterSystem.Simulation
 
         /// <summary>After the clear, in a game with a hub: seconds until the party is brought home. Null otherwise.</summary>
         public float? SecondsUntilReturn => _world.GateSecondsUntilReturn();
+
+        /// <summary>The raid's phases (ticket 29); null when this gate is not a raid.</summary>
+        public RaidState Raid => _world.GateRaid();
 
         /// <summary>Where a player joining or rejoining the run appears: at the latest checkpoint (ADR 0003), a step to one side.</summary>
         public Vec3 JoinPosition(PlayerId player) => _world.GateStandingPlace(LatestCheckpointPosition, player);

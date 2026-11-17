@@ -56,6 +56,9 @@ namespace HunterSystem.Simulation
 
             /// <summary>XP from this run's enemies, as a percentage: cut for a gate in a region that is not open (ADR 0015).</summary>
             public int XpPercent = 100;
+
+            /// <summary>The raid's phases (ticket 29); null for a gate that is not a raid.</summary>
+            public RaidRun Raid;
         }
 
         private GateRun _gate;
@@ -99,6 +102,7 @@ namespace HunterSystem.Simulation
                 CheckpointActivated = new bool[layout.Checkpoints.Count],
             };
             run.View = new GateState(this, definition, layout);
+            run.Raid = NewRaid(definition);
             ResetRooms(run, onlyUnfinished: false);
             return run;
         }
@@ -170,6 +174,7 @@ namespace HunterSystem.Simulation
                     _events.Add(new RoomCleared(tick, room));
                 }
             }
+            EndRaid();
         }
 
         /// <summary>A boss's add joins the boss's room, so the room is not cleared without it and a wipe takes it away.</summary>
@@ -347,6 +352,7 @@ namespace HunterSystem.Simulation
                 run.RoomEnemies[room].Clear();
                 run.RoomTidyAtTick[room] = 0;
                 run.Rooms[room] = run.Definition.Rooms[room].Spawns.Count == 0 ? RoomState.Cleared : RoomState.NotEntered;
+                if (run.Raid != null && run.Raid.Room == room) run.Raid.Reset(); // the raid starts over with its room
             }
         }
 
@@ -393,6 +399,7 @@ namespace HunterSystem.Simulation
         {
             if (_gate == null) return;
             var layout = _gate.Layout;
+            UpdateRaid(tick); // first: a blast that fells a solo player resets the boss like any other fall
             ResetBossesIfASoloPlayerFell();
 
             for (var room = 0; room < _gate.Rooms.Length; room++)
@@ -407,6 +414,7 @@ namespace HunterSystem.Simulation
                         _gate.RoomEnemies[room].Add(SpawnEnemy(spawn.Enemy, floor.Nearest(centre + offset), tier)); // in this room, not the next
                     _gate.Rooms[room] = RoomState.Entered;
                     _events.Add(new RoomEntered(tick, room));
+                    if (_gate.Raid != null && _gate.Raid.Room == room) StartRaid(tick, tier);
                 }
                 else if (_gate.Rooms[room] == RoomState.Entered && _gate.RoomEnemies[room].All(IsGone))
                 {
@@ -551,6 +559,7 @@ namespace HunterSystem.Simulation
                 w.Write(player);
                 w.Write(checkpoint);
             }
+            WriteRaid(w, _gate.Raid);
         }
 
         /// <summary>Reads a gate run without touching this world's state; the caller swaps it in once the whole snapshot has parsed.</summary>
@@ -592,6 +601,7 @@ namespace HunterSystem.Simulation
             for (var c = 0; c < checkpoints; c++) run.CheckpointActivated[c] = r.ReadBoolean();
             for (int i = 0, n = ReadCount(r); i < n; i++) run.RevivesUsed[new PlayerId(r.ReadInt32())] = r.ReadInt32();
             for (int i = 0, n = ReadCount(r); i < n; i++) run.Inside.Add((r.ReadInt32(), r.ReadInt32()));
+            ReadRaid(r, run);
             return run;
         }
     }

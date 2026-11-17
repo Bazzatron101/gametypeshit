@@ -75,6 +75,9 @@ namespace HunterSystem.Netcode
         /// <summary>How far the host's corrections have moved the local player, at most (metres): a measure of misprediction.</summary>
         public float LargestCorrection { get; private set; }
 
+        /// <summary>How far the latest snapshot's correction moved the local player (metres); 0 before any. For measuring a stretch of play.</summary>
+        public float LastCorrection { get; private set; }
+
         /// <summary>Commands sent but not yet included in a snapshot: roughly the round trip in ticks.</summary>
         public int UnconfirmedCommands => _unconfirmed.Count;
 
@@ -173,7 +176,8 @@ namespace HunterSystem.Netcode
             _unconfirmed.RemoveAll(c => c.sequence <= processed);
             foreach (var (_, command) in _unconfirmed) Predict(command);
 
-            LargestCorrection = Math.Max(LargestCorrection, (World.GetPlayer(me).Position - before).Length);
+            LastCorrection = (World.GetPlayer(me).Position - before).Length;
+            LargestCorrection = Math.Max(LargestCorrection, LastCorrection);
             GlideOthersTowardsSnapshot(snapshot.Tick);
         }
 

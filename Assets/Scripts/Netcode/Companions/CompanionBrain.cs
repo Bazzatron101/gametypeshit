@@ -204,8 +204,10 @@ namespace HunterSystem.Netcode
             if (world.InHub && !world.InOverworld) return Travel(world, self, leader, p);
             // Out in the overworld (ticket 43) it fights what leaks from the gates, as in a gate, and otherwise follows.
 
+            if (RaidSense.TryShelter(world, self.Position, out var shelter)) return shelter; // a raid's blast (ticket 29) comes first
             if (TryAvoidBoss(self, tick, p, out var avoid)) return avoid;
             if (TryDodgeHit(self, tick, out var dodge)) return dodge;
+            if (TryRaidCrystal(world, me, self, out var crystalCommand)) return crystalCommand;
             if (!_chargingSlot.HasValue && TryHeal(world, me, self, tick, p, out var heal)) return heal; // in a fight or after it
 
             _engaged.Clear();
@@ -269,6 +271,24 @@ namespace HunterSystem.Netcode
         }
 
         /// <summary>A command; while a charge is held, its key stays down.</summary>
+        /// <summary>A raid's shield phase (ticket 29): go to its crystal and break it with the others (see <see cref="RaidSense"/>).</summary>
+        private bool TryRaidCrystal(SimulationWorld world, PlayerId me, PlayerState self, out PlayerCommand command)
+        {
+            command = PlayerCommand.None;
+            var crystal = RaidSense.CrystalFor(world, me, out var hold);
+            if (!crystal.HasValue) return false;
+            var at = world.GetEnemy(crystal.Value).Position;
+            var offset = Flat(at - self.Position);
+            var distance = offset.Length;
+            if (distance > 1.5f)
+            {
+                command = Command(offset * (1f / distance), sprint: distance > 6f);
+                return true;
+            }
+            if (!hold) command = Command(Vec3.Zero, light: true, aim: Yaw(self.Position, at));
+            return true;
+        }
+
         private PlayerCommand Command(Vec3 move, bool light = false, bool dodge = false, bool heavy = false, int? skillSlot = null, bool sprint = false, float? aim = null) =>
             new PlayerCommand(move.X, move.Z, lightAttack: light, dodge: dodge, heavyAttack: heavy, useSkillSlot: skillSlot,
                 heldSkillSlots: _chargingSlot.HasValue ? 1 << _chargingSlot.Value : 0, sprint: sprint, aimYawDegrees: aim);

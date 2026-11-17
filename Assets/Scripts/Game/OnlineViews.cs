@@ -66,6 +66,7 @@ namespace HunterSystem.Game
                 var view = GreyboxVisuals.CreateEnemy(state.Definition.Name, _runner.GetRenderPosition(id), null,
                     state.IsBoss && bossMaterial != null ? bossMaterial : enemyMaterial);
                 if (state.IsBoss) view.transform.localScale = Vector3.one * BossScale;
+                if (world.HasGate && world.Gate.Raid != null && world.Gate.Raid.IsCrystal(id)) LookLikeACrystal(view);
                 view.Bind(id);
                 _enemies.Add(id, view);
             }
@@ -86,6 +87,15 @@ namespace HunterSystem.Game
                 _enemies.Remove(id);
             }
         }
+
+        /// <summary>A raid's crystal (ticket 29): a tall, pale-blue standing stone, plainly not a goblin.</summary>
+        private static void LookLikeACrystal(EnemyView view)
+        {
+            view.transform.localScale = new Vector3(1.3f, 1.7f, 1.3f);
+            view.SteadyTint = CrystalColor;
+        }
+
+        public static readonly Color CrystalColor = new Color(0.45f, 0.85f, 1f);
 
         private void Clear()
         {

@@ -498,6 +498,7 @@ namespace HunterSystem.Editor
             Wire(simulation.AddComponent<BossTelegraphView>(),
                 ("areaMaterial", GetOrCreateMaterial("Greybox_TelegraphArea", new Color(0.55f, 0.18f, 0.12f))),
                 ("fillMaterial", GetOrCreateMaterial("Greybox_TelegraphFill", new Color(1f, 0.3f, 0.12f))));
+            Wire(simulation.AddComponent<RaidView>(), ("markMaterial", GetOrCreateMaterial("Greybox_RaidMark", Color.white)));
             Wire(simulation.AddComponent<GateView>(),
                 ("floorMaterial", GetOrCreateMaterial("Greybox_GateFloor", new Color(0.42f, 0.44f, 0.5f))),
                 ("wallMaterial", GetOrCreateMaterial("Greybox_GateWall", new Color(0.3f, 0.3f, 0.34f))),
@@ -621,7 +622,7 @@ namespace HunterSystem.Editor
             var skills = SkillData.Concat(SpecialtyTreeSkills).Select(data => GetOrCreateSkill(data, classes)).ToArray();
             var modifiers = DemoModifierData.Select(GetOrCreateModifier).ToArray();
             var passives = SpecialtyModifierData.Concat(SpecialtyTreePassives).Select(GetOrCreateModifier).ToArray();
-            var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition() };
+            var enemies = new[] { GetOrCreateGoblinDefinition(), GetOrCreateHobgoblinDefinition(), GetOrCreateRaidCrystal() };
 
             // Each class's two trials (ADR 0022), with a clear reward that suits the class.
             var trialRewards = new Dictionary<string, string> { ["warrior"] = "deep-rend", ["rogue"] = "split-shot", ["archer"] = "split-shot", ["wizard"] = "searing", ["monk"] = "split-shot", ["cleric"] = "split-shot", ["warlock"] = "split-shot", ["summoner"] = "split-shot" };
@@ -630,11 +631,11 @@ namespace HunterSystem.Editor
                 var reward = modifiers.Where(m => m.Id == trialRewards[c.Id]).ToArray();
                 return new[] { GetOrCreateTrial(c.DisplayName, "D", reward), GetOrCreateTrial(c.DisplayName, "B", reward) };
             });
-            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow() }.Concat(trials.Values.SelectMany(t => t)).ToArray();
+            var gates = new[] { GetOrCreateGoblinWarren(modifiers), GetOrCreateThornwoodHollow(), GetOrCreateGoblinKingRaid(modifiers) }.Concat(trials.Values.SelectMany(t => t)).ToArray();
             GiveWarriorItsSpecialties(classes.First(c => c.Id == "warrior"), trials["warrior"], passives);
             foreach (var c in classes)
                 if (trials.TryGetValue(c.Id, out var own)) FillSpecialtyTree(c, own, passives);
-            var bosses = new[] { GetOrCreateGoblinWarlord() };
+            var bosses = new[] { GetOrCreateGoblinWarlord(), GetOrCreateGoblinKing() };
             var hub = GetOrCreateSingle<HubAsset>(HubPath);
             var scenes = new[] { GetOrCreateArrivalScene() }.Concat(GetOrCreatePromotionScenes())
                 .Concat(classes.Where(c => trials.ContainsKey(c.Id)).SelectMany(c => trials[c.Id].Select(t => GetOrCreateTrialScene(t, c.DisplayName)))).ToArray();
@@ -805,6 +806,74 @@ namespace HunterSystem.Editor
             return GetOrCreate<GateDefinitionAsset>("Gates", "Goblin Warren",
                 a => a.Set("goblin-warren", "Goblin Warren", new[] { entrance, corridor, den, corridor, guardRoom, corridor, hall, antechamber, bossChamber },
                     rewardPool));
+        }
+
+        // --- The first raid (ticket 29) -------------------------------------------------------------
+
+        /// <summary>A raid's crystal: it only stands there and takes hits. Broken together, they drop the boss's shield.</summary>
+        private static EnemyDefinitionAsset GetOrCreateRaidCrystal() =>
+            GetOrCreate<EnemyDefinitionAsset>("Enemies", "Shield Crystal", a =>
+            {
+                a.SetStats("Shield Crystal", maxHealth: 150, moveSpeed: 0f, stopDistance: 0f);
+                a.SetAttackAndReward(damage: 0, range: 0f, windupSeconds: 0.5f, cooldownSeconds: 1f, xpReward: 0);
+            });
+
+        /// <summary>
+        /// The first raid boss (ticket 29): the Goblin King. The Warlord's three answers (sweep, slam, charge), bigger and
+        /// tougher, with six goblins at its enrage. Its raid phases (shield crystals, then the shelter blasts) are the
+        /// gate's, not the boss's.
+        /// </summary>
+        private static BossDefinitionAsset GetOrCreateGoblinKing()
+        {
+            var goblin = GetOrCreateGoblinDefinition();
+            BossDefinitionAsset.Add At(float x, float z) => new BossDefinitionAsset.Add { enemy = goblin, offset = new Vector3(x, 0f, z) };
+            return GetOrCreate<BossDefinitionAsset>("Bosses", "Goblin King", a => a.Set("Goblin King", health: 2400, speed: 2.4f, stop: 2.2f, xp: 800,
+                new[]
+                {
+                    BossAttack(BossAttackKind.Sweep, damage: 26, windup: 1.0f, cooldown: 1.2f, range: 5.5f, arc: 140f),
+                    BossAttack(BossAttackKind.Slam, damage: 34, windup: 1.2f, cooldown: 1.6f, radius: 4.5f),
+                    BossAttack(BossAttackKind.Charge, damage: 30, windup: 1.1f, cooldown: 1.8f, range: 16f, radius: 1.4f, speed: 12f),
+                },
+                new[] { At(-5f, 0f), At(5f, 0f), At(-3f, -4f), At(3f, -4f), At(-3f, 4f), At(3f, 4f) },
+                enrageAt: 50, enragedTime: 75, turnRate: 55f));
+        }
+
+        /// <summary>
+        /// The first raid gate (ticket 29), for up to ten: a short way in (a barracks fight with a checkpoint, then an
+        /// antechamber checkpoint) and the Goblin King's throne hall, wide enough for groups to split to its four
+        /// corners. Crystals stand in the corners (one per three players present), the shelter moves round the hall.
+        /// </summary>
+        private static GateDefinitionAsset GetOrCreateGoblinKingRaid(ModifierDefinitionAsset[] rewardPool)
+        {
+            var goblin = GetOrCreateGoblinDefinition();
+            var hobgoblin = GetOrCreateHobgoblinDefinition();
+            var entrance = GetOrCreateRoom("Entrance Hall", 10f, 10f, checkpoint: false);
+            var corridor = GetOrCreateRoom("Corridor", 4f, 8f, checkpoint: false);
+            var barracks = GetOrCreateRoom("Raid Barracks", 20f, 22f, checkpoint: true,
+                At(goblin, -6f, 3f), At(goblin, 6f, 3f), At(goblin, -3f, 7f), At(goblin, 3f, 7f), At(hobgoblin, -5f, 10f), At(hobgoblin, 5f, 10f));
+            var antechamber = GetOrCreateRoom("Antechamber", 8f, 8f, checkpoint: true);
+            var throne = GetOrCreate<RoomPieceAsset>("Rooms", "Throne Hall",
+                a => a.Set(36f, 36f, new RoomPieceAsset.Spawn[0], checkpoint: false, roomBoss: GetOrCreateGoblinKing(), bossAt: new Vector3(0f, 0f, 2f)));
+            return GetOrCreate<GateDefinitionAsset>("Gates", "Goblin King Raid", a =>
+            {
+                a.Set("goblin-king-raid", "The Goblin King's Throne", new[] { entrance, corridor, barracks, corridor, antechamber, throne }, rewardPool);
+                a.SetRankAndIntel("", $"[Guild notice: a raid gate for up to ten hunters. Split up to break the crystals together, then shelter from the King's blast: {TextSceneAsset.Unwritten}]");
+                a.SetRaid(new GateDefinitionAsset.RaidSettings
+                {
+                    isRaid = true,
+                    crystal = GetOrCreateRaidCrystal(),
+                    crystalPlaces = new[] { new Vector3(-13f, 0f, -12f), new Vector3(13f, 0f, 12f), new Vector3(13f, 0f, -12f), new Vector3(-13f, 0f, 12f) },
+                    playersPerCrystal = 3,
+                    crystalRegrowSeconds = 8f,
+                    shelterAtHealthPercent = 35,
+                    firstShelterAfterSeconds = 2f,
+                    shelterEverySeconds = 12f,
+                    shelterWindupSeconds = 4f,
+                    shelterRadius = 3.5f,
+                    shelterDamagePercent = 80,
+                    shelterPlaces = new[] { new Vector3(10f, 0f, 9f), new Vector3(-10f, 0f, -9f), new Vector3(-10f, 0f, 10f), new Vector3(10f, 0f, -10f) },
+                });
+            });
         }
 
         /// <summary>

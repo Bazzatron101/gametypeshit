@@ -19,7 +19,7 @@ namespace HunterSystem.Online
     /// <para>
     /// The same can be done from the command line, which is how two built copies are tested
     /// without anyone at the keyboard:
-    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-class ID] [-companions N] [-bot [SEED] [-bot-expect CLIENTS]] [-autotest SECONDS FILE]</c>.
+    /// <c>-coop host|join -transport local|steam [-address IP-or-SteamID] [-player-key K] [-gate GATE-ID] [-class ID] [-companions N] [-bot [SEED] [-bot-expect CLIENTS] [-bot-gate GATE-ID]] [-autotest SECONDS FILE]</c>.
     /// With <c>-bot</c> this copy's player is a <see cref="BotPlayer"/> (the 10-bot stress test).
     /// Steam's "Join Game" passes <c>+connect STEAMID</c>, which joins over Steam; a copy already
     /// running at the menu (or disconnected) gets the same request from Steam and joins straight away.
@@ -275,7 +275,7 @@ namespace HunterSystem.Online
                 var seed = int.TryParse(Arg("-bot"), out var s) ? s : Environment.TickCount;
                 var expect = int.TryParse(Arg("-bot-expect"), out var e) ? e : 0;
                 gameObject.AddComponent<BotPlayer>().Begin(_runner, seed, hasAutotest ? seconds : 0f,
-                    hasAutotest ? Arg("-autotest", 2) ?? "coop-bot.json" : null, expect);
+                    hasAutotest ? Arg("-autotest", 2) ?? "coop-bot.json" : null, expect, Arg("-bot-gate")); // -bot-gate: which gate a bot host takes the party into
             }
             else if (hasAutotest)
             {

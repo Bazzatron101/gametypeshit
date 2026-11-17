@@ -7,7 +7,8 @@ namespace HunterSystem.Game
     /// <summary>
     /// Damage numbers over enemies (ticket 47): every hit that lands shows how much it took, rising
     /// and fading, so you can tell a swing connected before there are animations. Your own hits are
-    /// big and yellow; other players' and teammates' are small and white. Shown, never simulated.
+    /// big and yellow; other players' and teammates' are small and white, and hidden altogether once
+    /// <see cref="EffectCulling.CrowdSize"/> or more players are present (ticket 29). Shown, never simulated.
     /// </summary>
     public sealed class DamageNumbers : MonoBehaviour
     {
@@ -49,12 +50,16 @@ namespace HunterSystem.Game
             _popups.RemoveAll(p => Time.time - p.BornAt > LifeSeconds);
             if (_runner == null || _runner.World == null) return;
             var me = _runner.MyPlayerId;
+            var present = -1; // counted once a frame, only if needed
             foreach (var e in _runner.FrameEvents)
             {
                 if (e is not DamageDealt hit || hit.Amount <= 0 || !_runner.World.HasEnemy(hit.Target)) continue;
+                var mine = me.HasValue && hit.Attacker == me.Value;
+                if (!mine && present < 0) present = EffectCulling.PlayersPresent(_runner.World);
+                if (!EffectCulling.ShowDamageNumber(mine, present)) continue;
                 // Small random spread so several numbers on one enemy do not sit on top of each other.
                 var jitter = new Vector3(Random.Range(-0.35f, 0.35f), Random.Range(0f, 0.3f), Random.Range(-0.35f, 0.35f));
-                _popups.Add(new Popup(hit.Target, hit.Amount, me.HasValue && hit.Attacker == me.Value, Time.time,
+                _popups.Add(new Popup(hit.Target, hit.Amount, mine, Time.time,
                     _runner.GetRenderPosition(hit.Target) + jitter));
             }
         }

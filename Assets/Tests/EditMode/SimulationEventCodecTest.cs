@@ -88,6 +88,12 @@ namespace HunterSystem.Tests
             new AttackJumped(46, E, P),
             new GateRewardGranted(47, P, Ember, isDuplicate: true),
             new ItemSold(48, P, "ember", "guild", 50),
+            new RaidShieldRaised(61, E, 4),
+            new RaidCrystalsRegrew(62, 2),
+            new RaidShieldBroken(63, E),
+            new RaidFinalPhase(64, E),
+            new RaidShelterMarked(65, E, new Vec3(3f, 0f, -4f), 3.5f, 300),
+            new RaidBlastLanded(66, E, 3),
         };
 
         [Test]

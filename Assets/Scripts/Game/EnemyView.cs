@@ -6,7 +6,8 @@ namespace HunterSystem.Game
     /// <summary>
     /// Presentation for one enemy. Its starting transform is the spawn point; after that it
     /// only reads from the simulation. It glows while winding up an attack (the telegraph the
-    /// player dodges on), flashes and swells for a moment when hit, and hides its body when defeated.
+    /// player dodges on), flashes and swells for a moment when hit, and hides its body when defeated
+    /// (showing it again if it comes back, as a raid's crystal can).
     /// </summary>
     public sealed class EnemyView : MonoBehaviour
     {
@@ -27,6 +28,9 @@ namespace HunterSystem.Game
         private float _poppedAt = -1f;
 
         public EnemyId Id { get; private set; }
+
+        /// <summary>A colour the body always shows instead of its material's (a raid's crystal); null for the material's own.</summary>
+        public Color? SteadyTint { get; set; }
 
         /// <summary>True once the body is hidden after defeat.</summary>
         public bool ShowsDefeated => body != null && !body.gameObject.activeSelf;
@@ -77,13 +81,14 @@ namespace HunterSystem.Game
             transform.position = _runner.GetRenderPosition(Id);
 
             if (body == null) return;
+            if (!body.gameObject.activeSelf && _runner.World.GetEnemy(Id).Health > 0) body.gameObject.SetActive(true); // a raid crystal grown back (ticket 29)
             if (_poppedAt >= 0f)
             {
                 var t = (Time.time - _poppedAt) / HitPopSeconds;
                 body.transform.localScale = _bodyScale * (t >= 1f ? 1f : Mathf.Lerp(HitPopScale, 1f, t));
                 if (t >= 1f) _poppedAt = -1f;
             }
-            _tint.Apply(body, _runner.World.Tick < _windupLandsAtTick ? windupColor : (Color?)null);
+            _tint.Apply(body, _runner.World.Tick < _windupLandsAtTick ? windupColor : SteadyTint);
         }
     }
 }

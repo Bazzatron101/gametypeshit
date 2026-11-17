@@ -446,6 +446,73 @@ namespace HunterSystem.Simulation
         public BossEnraged(int tick, EnemyId enemy) : base(tick) => Enemy = enemy;
     }
 
+    /// <summary>A raid's boss room has filled (ticket 29): the boss is shielded until its crystals are all broken together.</summary>
+    public sealed class RaidShieldRaised : SimulationEvent
+    {
+        public EnemyId Boss { get; }
+        public int Crystals { get; }
+
+        public RaidShieldRaised(int tick, EnemyId boss, int crystals) : base(tick)
+        {
+            Boss = boss;
+            Crystals = crystals;
+        }
+    }
+
+    /// <summary>The raid's crystals were not all broken in time: the broken ones have grown back whole.</summary>
+    public sealed class RaidCrystalsRegrew : SimulationEvent
+    {
+        public int Count { get; }
+
+        public RaidCrystalsRegrew(int tick, int count) : base(tick) => Count = count;
+    }
+
+    /// <summary>Every crystal was broken together: the raid boss's shield is down.</summary>
+    public sealed class RaidShieldBroken : SimulationEvent
+    {
+        public EnemyId Boss { get; }
+
+        public RaidShieldBroken(int tick, EnemyId boss) : base(tick) => Boss = boss;
+    }
+
+    /// <summary>The raid boss is low: from now on it also winds up room-wide blasts.</summary>
+    public sealed class RaidFinalPhase : SimulationEvent
+    {
+        public EnemyId Boss { get; }
+
+        public RaidFinalPhase(int tick, EnemyId boss) : base(tick) => Boss = boss;
+    }
+
+    /// <summary>A blast is coming: on <see cref="LandsAtTick"/> everyone outside the shelter (see <see cref="RaidDefinition.InShelter"/>) is hit.</summary>
+    public sealed class RaidShelterMarked : SimulationEvent
+    {
+        public EnemyId Boss { get; }
+        public Vec3 Position { get; }
+        public float Radius { get; }
+        public int LandsAtTick { get; }
+
+        public RaidShelterMarked(int tick, EnemyId boss, Vec3 position, float radius, int landsAtTick) : base(tick)
+        {
+            Boss = boss;
+            Position = position;
+            Radius = radius;
+            LandsAtTick = landsAtTick;
+        }
+    }
+
+    /// <summary>The blast has landed; <see cref="Caught"/> players were outside the shelter.</summary>
+    public sealed class RaidBlastLanded : SimulationEvent
+    {
+        public EnemyId Boss { get; }
+        public int Caught { get; }
+
+        public RaidBlastLanded(int tick, EnemyId boss, int caught) : base(tick)
+        {
+            Boss = boss;
+            Caught = caught;
+        }
+    }
+
     /// <summary>
     /// A player's reward for clearing a gate: an item from the gate's pool, already added to their
     /// character (a modifier kept for good, or gear put in the bag), or a duplicate to sell.

@@ -33,6 +33,7 @@ namespace HunterSystem.Simulation
             SpecialtyUnlocked, SpecialtyChosen,
             PlayerHealed,
             SummonAppeared, SummonDamaged, SummonEnded,
+            RaidShieldRaised, RaidCrystalsRegrew, RaidShieldBroken, RaidFinalPhase, RaidShelterMarked, RaidBlastLanded,
         }
 
         // What a reward is, in GateRewardGranted.
@@ -237,6 +238,24 @@ namespace HunterSystem.Simulation
                 case SpecialtyChosen x:
                     Head(w, Code.SpecialtyChosen, e); w.Write(x.Player.Value); SimulationWorld.WriteNullable(w, x.SpecialtyId);
                     break;
+                case RaidShieldRaised x:
+                    Head(w, Code.RaidShieldRaised, e); w.Write(x.Boss.Value); w.Write(x.Crystals);
+                    break;
+                case RaidCrystalsRegrew x:
+                    Head(w, Code.RaidCrystalsRegrew, e); w.Write(x.Count);
+                    break;
+                case RaidShieldBroken x:
+                    Head(w, Code.RaidShieldBroken, e); w.Write(x.Boss.Value);
+                    break;
+                case RaidFinalPhase x:
+                    Head(w, Code.RaidFinalPhase, e); w.Write(x.Boss.Value);
+                    break;
+                case RaidShelterMarked x:
+                    Head(w, Code.RaidShelterMarked, e); w.Write(x.Boss.Value); SimulationWorld.WriteVec(w, x.Position); w.Write(x.Radius); w.Write(x.LandsAtTick);
+                    break;
+                case RaidBlastLanded x:
+                    Head(w, Code.RaidBlastLanded, e); w.Write(x.Boss.Value); w.Write(x.Caught);
+                    break;
                 default:
                     throw new NotSupportedException($"No encoding for {e.GetType().Name}.");
             }
@@ -420,6 +439,26 @@ namespace HunterSystem.Simulation
                 {
                     var player = Player();
                     return new SpecialtyChosen(tick, player, SimulationWorld.ReadNullable(r));
+                }
+                case Code.RaidShieldRaised:
+                {
+                    var boss = Enemy();
+                    return new RaidShieldRaised(tick, boss, r.ReadInt32());
+                }
+                case Code.RaidCrystalsRegrew: return new RaidCrystalsRegrew(tick, r.ReadInt32());
+                case Code.RaidShieldBroken: return new RaidShieldBroken(tick, Enemy());
+                case Code.RaidFinalPhase: return new RaidFinalPhase(tick, Enemy());
+                case Code.RaidShelterMarked:
+                {
+                    var boss = Enemy();
+                    var position = SimulationWorld.ReadVec(r);
+                    var radius = r.ReadSingle();
+                    return new RaidShelterMarked(tick, boss, position, radius, r.ReadInt32());
+                }
+                case Code.RaidBlastLanded:
+                {
+                    var boss = Enemy();
+                    return new RaidBlastLanded(tick, boss, r.ReadInt32());
                 }
                 default: throw new FormatException($"Unknown event code {(byte)code}.");
             }
