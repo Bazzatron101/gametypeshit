@@ -11,3 +11,7 @@
 - [ ] Its own drop list (ticket 61) and rank
 - [ ] It stays solo-completable at every party size (spec)
 - [ ] Tests or a playtest note cover the gate clearing at solo and full-party sizes
+
+## Comments
+
+**2026-11-17 (developer, recorded by agent):** From ticket 81's triage: hunters are now Australian animal-folk, so gate creatures should read clearly as monsters (for example dire, corrupted or crystal-grown), not ordinary animals.

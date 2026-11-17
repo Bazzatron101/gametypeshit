@@ -12,3 +12,7 @@
 - [ ] The Wolf enemy asset, in the Beasts race, with a placeholder look labelled "AI"
 - [ ] Party scaling, snapshots and co-op work; bot teammates can fight it
 - [ ] Tests cover the lunge, the back-off, the dodge, and snapshots mid-lunge
+
+## Comments
+
+**2026-11-17 (developer, recorded by agent):** From ticket 81's triage: hunters are now Australian animal-folk, so gate creatures should read clearly as monsters (for example dire, corrupted or crystal-grown), not ordinary animals.

@@ -61,5 +61,6 @@ Not done:
 - **Ten built copies, headless host:** passed every check. Host 2.5 ms frames, 3.4 KB/s per client.
 - **Ten built copies, windowed host:** passed every check this time. Host frame time 15.0 ms mean, 56 ms p99. On the same day the ticket-14 windowed script measured 16.4 ms mean and 35 ms p99 on this machine. Upload 3.2 KB/s per client.
 - **Fixed:** the network test now counts gear in the bag as a kept reward. Ticket 61 put gear in the raid's pool, so the old modifier-only check failed.
-- **Still unknown:** why the first two windowed hosts quit. It did not happen again. The p99 frame time is high with ten copies on one laptop. A host with nine remote clients would be the fair measure.
+- **The earlier windowed quits are explained:** the developer closed the game window by mistake. That quits the copy cleanly before it writes a result, so it was not a fault in the game.
+- **Still open:** the p99 frame time is high with ten copies on one laptop. A host with nine remote clients would be the fair measure.
 

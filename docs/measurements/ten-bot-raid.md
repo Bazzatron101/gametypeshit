@@ -47,8 +47,9 @@ unreadable events; no player defeats.
 | Host upload | 29.7 KB/s total, 3.3 KB/s per client |
 
 **Windowed host.** On 2026-11-17 the first two windowed runs ended about 90 s in: the host quit without a result or a
-crash report, though the nine clients had cleared the raid. A third run, after ticket 61 and a fresh build, passed
-every check:
+crash report, though the nine clients had cleared the raid. The developer had closed the game window by mistake, which
+quits the copy cleanly before it writes its result: not a fault in the game. A third run, after ticket 61 and a fresh
+build, passed every check:
 
 | Measure (host windowed 1280x720, nine headless clients, 144 s) | Value |
 |---|---|
@@ -58,7 +59,7 @@ every check:
 The mean is held near 60 fps by this machine: the ticket-14 windowed script measured 16.4 ms mean and 35 ms p99 on the
 same day. So these numbers are not directly comparable with ticket 14's 6.6 to 11.2 ms mean and 12 to 21 ms p99. The
 p99 is worse than either. Ten copies share one laptop's CPU and an integrated GPU. A host with nine remote clients is
-the real measure. Why the first two windowed hosts quit is still unknown; it did not happen again.
+the real measure.
 
 **Rerun after ticket 61** (more gear, rarities): the headless test was unchanged, with the same timings, 4.4 KB/s
 per client and no corrections. Ten built copies with a headless host passed again: 2.5 ms frames, 3.4 KB/s per client.
