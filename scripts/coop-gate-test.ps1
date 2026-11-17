@@ -56,7 +56,7 @@ function Line($who, $r) {
 }
 Write-Host (Line 'HOST  ' $h)
 foreach ($b in $bots) { Write-Host (Line "CLIENT" $b) }
-foreach ($r in @($h) + $bots) { Write-Host ("  {0} player {1}: boss attacks seen {2}, reward '{3}', holds [{4}]" -f $r.role, $r.localPlayerId, $r.bossAttacksSeen, $r.rewardSeen, ($r.localModifiers -join ', ')) }
+foreach ($r in @($h) + $bots) { Write-Host ("  {0} player {1}: boss attacks seen {2}, reward '{3}', holds [{4}]" -f $r.role, $r.localPlayerId, $r.bossAttacksSeen, $r.rewardSeen, ((@($r.localModifiers) + @($r.localGear)) -join ', ')) }
 $measured = [math]::Max([double]$h.measuredSeconds, 1)
 Write-Host ("HOST ({0}): frame time mean {1:0.00} ms, p99 {2:0.00} ms, max {3:0.00} ms over {4:0} s; upload {5:0.0} KB/s total, {6:0.0} KB/s per client" -f `
     $(if ($WindowedHost) { 'windowed 1280x720' } else { 'headless' }), $h.frameMsMean, $h.frameMsP99, $h.frameMsMax, $measured,
@@ -70,7 +70,7 @@ $checks = [ordered]@{
     'every client agrees on the gate (cleared, rooms, checkpoint)' = $agree -eq $Clients
     'every client was shown the checkpoints'          = -not ($bots | Where-Object { $_.checkpointsSeen -lt ($h.latestCheckpoint + 1) })
     'every client saw the boss attack'                = -not ($bots | Where-Object { $_.bossAttacksSeen -lt 1 })
-    'every player was rewarded and keeps it'          = -not (@($h) + $bots | Where-Object { -not $_.rewardSeen -or $_.localModifiers -notcontains $_.rewardSeen })
+    'every player was rewarded and keeps it'          = -not (@($h) + $bots | Where-Object { -not $_.rewardSeen -or ($_.localModifiers -notcontains $_.rewardSeen -and $_.localGear -notcontains $_.rewardSeen) })
     'no unreadable events on clients'                 = -not ($bots | Where-Object { $_.unreadableEventLists -gt 0 })
 }
 foreach ($k in $checks.Keys) { Write-Host ("  [{0}] {1}" -f ($(if ($checks[$k]) { 'ok' } else { 'FAIL' })), $k) }

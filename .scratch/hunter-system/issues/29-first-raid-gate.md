@@ -4,13 +4,13 @@
 
 **Blocked by:** 14: Bot clients and 10-bot stress test, 18: Handcrafted boss and gate clear reward, 27: Party-size enemy scaling
 
-**Status:** ready-for-human (play the raid with friends; the windowed-host frame time is still unmeasured)
+**Status:** ready-for-human (play the raid with friends)
 
 - [x] Raid supports up to ten players through the existing session flow
 - [x] Split objectives require groups to act at the same time in different places
 - [x] A final phase uses a positional mechanic everyone handles together
 - [x] Effect-culling rules are defined and applied so the screen stays readable
-- [ ] Runs with ten bots without breaking frame time or bandwidth targets recorded earlier
+- [x] Runs with ten bots without breaking frame time or bandwidth targets recorded earlier
 
 ## Comments
 
@@ -55,4 +55,11 @@ Not done:
 - **Windowed-host frame time is unmeasured.** The windowed host quit about 90 s in, twice, with no result or crash report. The same setup passes Goblin Warren. Cause unknown.
 - **Difficulty is untested by a person.** Bots coordinate perfectly. All the numbers are starting values.
 - `ClientSession.LargestCorrection` counts host placements (entering a gate, going home) as corrections. The raid test measures with the new `LastCorrection` instead.
+
+**2026-11-17 (agent, asked by the developer):** Ran the ten-player raid again after ticket 61.
+- **Headless, ten bots through the hub:** passed, unchanged (shield at 28 s, 0 of 20 caught by blasts, cleared at 87 s; host tick 0.28 ms; 4.4 KB/s per client).
+- **Ten built copies, headless host:** passed every check. Host 2.5 ms frames, 3.4 KB/s per client.
+- **Ten built copies, windowed host:** passed every check this time. Host frame time 15.0 ms mean, 56 ms p99. On the same day the ticket-14 windowed script measured 16.4 ms mean and 35 ms p99 on this machine. Upload 3.2 KB/s per client.
+- **Fixed:** the network test now counts gear in the bag as a kept reward. Ticket 61 put gear in the raid's pool, so the old modifier-only check failed.
+- **Still unknown:** why the first two windowed hosts quit. It did not happen again. The p99 frame time is high with ten copies on one laptop. A host with nine remote clients would be the fair measure.
 

@@ -151,6 +151,7 @@ namespace HunterSystem.Online
             // This copy's own player: shown a reward for the clear, and the modifiers its world says it holds.
             public string rewardSeen = "";
             public List<string> localModifiers = new List<string>();
+            public List<string> localGear = new List<string>(); // the bag: a clear reward can be gear (ticket 61)
             public int bossAttacksSeen;
             public string returnedHome = "";
             public bool inHubAtEnd;
@@ -239,7 +240,11 @@ namespace HunterSystem.Online
             result.rewardSeen = _rewardSeen;
             result.bossAttacksSeen = _bossAttacksSeen;
             if (world != null && _runner.LocalPlayerId.HasValue)
-                foreach (var m in world.GetPlayer(_runner.LocalPlayerId.Value).ActiveModifiers) result.localModifiers.Add(m.Id);
+            {
+                var me = world.GetPlayer(_runner.LocalPlayerId.Value);
+                foreach (var m in me.ActiveModifiers) result.localModifiers.Add(m.Id);
+                foreach (var g in me.Bag) result.localGear.Add(g.Id);
+            }
             result.revivesSeen = _revivesSeen;
             File.WriteAllText(resultPath, JsonUtility.ToJson(result, prettyPrint: true));
             Application.Quit();

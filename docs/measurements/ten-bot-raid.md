@@ -46,14 +46,27 @@ unreadable events; no player defeats.
 | Host frame time, mean / p99 / max | 2.60 / 9.29 / 79.6 ms |
 | Host upload | 29.7 KB/s total, 3.3 KB/s per client |
 
-**Windowed host: not measured.** With `-WindowedHost` the host exited about 90 s in, twice, without writing its result
-or a crash report; the nine clients had already cleared the raid with it. The same windowed host passes Goblin Warren,
-and the ticket-14 windowed stress script still passes with this build (host frame 16.4 ms mean, held to 60 fps by
-this machine, so not comparable with ticket 14's 6.6 to 11.2 ms). Cause unknown; a follow-up.
+**Windowed host.** On 2026-11-17 the first two windowed runs ended about 90 s in: the host quit without a result or a
+crash report, though the nine clients had cleared the raid. A third run, after ticket 61 and a fresh build, passed
+every check:
+
+| Measure (host windowed 1280x720, nine headless clients, 144 s) | Value |
+|---|---|
+| Host frame time, mean / p99 / max | 15.0 / 56.2 / 213.7 ms |
+| Host upload | 29.0 KB/s total, 3.2 KB/s per client |
+
+The mean is held near 60 fps by this machine: the ticket-14 windowed script measured 16.4 ms mean and 35 ms p99 on the
+same day. So these numbers are not directly comparable with ticket 14's 6.6 to 11.2 ms mean and 12 to 21 ms p99. The
+p99 is worse than either. Ten copies share one laptop's CPU and an integrated GPU. A host with nine remote clients is
+the real measure. Why the first two windowed hosts quit is still unknown; it did not happen again.
+
+**Rerun after ticket 61** (more gear, rarities): the headless test was unchanged, with the same timings, 4.4 KB/s
+per client and no corrections. Ten built copies with a headless host passed again: 2.5 ms frames, 3.4 KB/s per client.
+The raid's pool now holds gear, so the network test's reward check also looks in the bag (`localGear`).
 
 ## Not covered
 
-- **Frame time with ten players drawn on the host** (see above).
+- **Frame time on a host whose nine clients are other machines** (see above).
 - **People.** Bots split, hold and shelter perfectly. Whether the window, the blast and the King's health feel right
   is for playing.
 - The Steam relay and real packet loss, as in ticket 14.
