@@ -392,7 +392,7 @@ Still to settle: which crossed swords are which gate (the region table predates 
 - Still to settle:
   - ~~How many rewards it takes to pinpoint a gate~~ Settled below: five.
   - ~~Whether the bounty is taken before or claimed after~~ Settled below: claimed after.
-  - ~~What the bounty pays~~ Settled below: gold and development of the town. Whether the 25 % beyond-licence cut applies to it is still open.
+  - ~~What the bounty pays~~ Settled below: gold and development of the town. The 25 % beyond-licence cut applies to the gold only; development is a fixed amount (ticket 91).
 
 **2026-11-17 (developer, recorded by agent):** The bounty is **claimed after the clear.** Nothing is taken at the guild first: clear the gate, then go back to the guild to collect the bounty.
 
